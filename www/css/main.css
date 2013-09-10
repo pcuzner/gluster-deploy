@@ -1,0 +1,329 @@
+body {
+	background-color: #ededed;
+	
+}
+
+button {
+	border-radius: 5px;
+	background: #e2e2e2;
+	/*width: 60px; */
+
+	font-family: "arial";
+	font-size:18px;
+	color: black;
+	background: -moz-linear-gradient(top, #e2e2e2 0%, #dbdbdb 50%, #d1d1d1 51%, #fefefe 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e2e2e2), color-stop(50%,#dbdbdb), color-stop(51%,#d1d1d1), color-stop(100%,#fefefe)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* W3C */
+}  
+
+button:disabled {
+	color: #cccccc;
+}
+button:disabled:hover {
+	color: #cccccc;
+	background: -moz-linear-gradient(top, #e2e2e2 0%, #dbdbdb 50%, #d1d1d1 51%, #fefefe 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e2e2e2), color-stop(50%,#dbdbdb), color-stop(51%,#d1d1d1), color-stop(100%,#fefefe)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* IE10+ */
+	background: linear-gradient(to bottom, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* W3C */
+}
+
+button:hover {
+	background-color: #1a82f7; /* Legacy */
+	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#1a82f7), to(#2F2727)); /* Safarai */
+	background: -webkit-linear-gradient(top, #2F2727, #1a82f7); /* Chrome 10+ & Safari 5.1+ */
+	background: -moz-linear-gradient(top, #2F2727, #1a82f7); /* FF 3.6+ */
+	background: -ms-linear-gradient(top, #2F2727, #1a82f7); /* IE10 */
+	background: -o-linear-gradient(top, #2F2727, #1a82f7); /* Opera 11.1+ */
+	color: white ;
+	/*cursor:pointer; */
+}
+
+.nextButton {
+	position: relative;
+	left:85%;
+	top:40px;
+}
+
+#network-select:hover {
+	border:1px solid #FF9900;
+	
+}
+
+h1 {
+	text-align:center;
+	font-family: "arial";
+	font-style: normal;
+	/*font-variant: normal; */
+	text-shadow:0px 2px 3px #555;
+}
+h2 {
+	text-align:left;
+	font-family: "arial";
+	font-style: normal;
+	color:white;
+	/*font-variant: normal; */
+	text-shadow:0px 2px 3px #555;
+}
+
+.active {
+	text-align:left;
+	font-family: "arial";
+	font-size:18px;
+	font-weight: bold;
+	color:white;
+	font-style: normal;
+	/*font-variant: normal;*/
+	/*text-shadow:0px 2px 3px #555;*/
+	text-shadow: 0px 2px 3px #555;
+	margin-bottom:30px;
+}
+
+.pending {
+	text-align:left;
+	font-family: "arial";
+	font-size:18px;
+	font-weight: bold;
+	font-style: normal;
+	color:#505050;
+	/*font-variant: normal;*/
+	/*text-shadow: 0px 2px 3px #555;*/
+	margin-bottom:30px;
+
+}
+
+/* Specify a default font to ensure cross browser consistency */
+* {
+	font-family: "arial";
+	font-style: normal;
+	font-variant: normal;
+}
+
+#access {
+	background-color: #cccccc;
+	display: block;
+	/*width: 98%;*/
+	width: 600px;
+	height: 100px;
+	margin: 0 auto; 
+    box-shadow: 5px 5px 5px #888888;
+    border-radius: 10px;
+    position: relative;
+    z-index:99;
+    top: 100px;
+    opacity: 100;
+    transition: opacity .75s;
+}
+
+#access.fade {
+	opacity:0;
+}
+
+#inputData {
+	display: inline-block;
+	margin-top: 30px;
+	margin-left: 20%;
+	width: 380px;
+	height: 50px;
+}
+
+input[type='text'] {
+	border-color:#FF9900;
+	font-family: monospace;
+	font-size: 14px;
+	background-color: #e5e5e5;
+	color: black;
+	font-weight:bold;
+}
+
+input[type='text'].error {
+	border-color:red;
+}
+
+.separator {
+position: absolute;
+width: 2px;
+background: #717171;
+height:100%;
+float:left;
+border-right: 1px solid #313030;
+z-index: 1;
+opacity: 100;
+}
+
+li {
+margin-left: 15px;
+}
+
+#container {
+	overflow:hidden;
+	position:relative;
+	left:250px;
+	top:-100px;
+	width:600px;
+	height:600px;
+	z-index:1;
+	background-color:#ededed;
+}
+#logo {
+	position: absolute;
+	background:url('../images/glusterAnt.png') no-repeat;
+	width:300px;
+	height:150px;
+	z-index:1;
+}
+#overview {
+	position: absolute;
+	left: 600px;
+	overflow:hidden;
+	top:0px;
+	width:600px;
+	height:600px;
+	z-index:2;
+	text-align:justify;
+	transition: left .7s linear;
+	opacity: 100;
+	background-color:#ededed;
+	
+}
+#overview.slide {
+left:0px;
+}	
+
+#nodes {
+	position: absolute;
+	left: 600px;
+		overflow:hidden;
+	top:0px;
+	width:600px;
+	height:600px;
+	z-index:3;
+	text-align:justify;
+	transition: left .7s linear;
+	opacity: 100;
+	background-color:#ededed;
+}
+#nodes.slide {
+left: 0px;
+}
+
+#keys {
+	position: absolute;
+	left: 600px;
+		overflow:hidden;
+	top:0px;
+	width:600px;
+	height:600px;
+	z-index:4;
+	text-align:justify;
+	transition: left .7s linear;
+	opacity: 100;
+	background-color:#ededed;
+}
+#keys.slide {
+left: 0px;
+}
+
+
+#nodeSelect {
+	opacity:0;
+	z-index:3;
+	transition: opacity .75s;
+}
+#nodeSelect.show {
+	opacity:100;
+
+}
+
+
+#candidateNodes {
+	width: 150px;
+	position:absolute;
+
+}
+
+#addNodes {
+	position:absolute;
+	left:190px;
+
+
+}
+
+#createCluster {
+position:absolute;
+left:480px;
+}
+
+#selectedNodes {
+	width: 150px;
+	position:absolute;
+	left:300px;
+
+}
+
+#steps {
+position:absolute;
+top:90px;
+left:20px;
+z-index:-1;
+width:175px;
+height:400px;
+opacity: 100;
+background-color: #ededed;
+
+}
+
+#busy {
+position:fixed;
+background-color: white;
+top:33%;
+left:40%;
+width:250px;
+height:250px;
+border:1px;
+border-color:#909090;
+border-radius:8px;
+    box-shadow: 5px 5px 5px #888888;
+z-index:100;
+visibility:hidden;
+}
+
+#busyGraphic {
+position:relative;
+height:100px; 
+width:100px;
+    
+    margin: auto auto;
+    top:10px;
+}
+#busyGraphic.spinner {
+background: #ffffff url('../images/busy.gif') no-repeat center top;
+}
+#busyGraphic.success {
+background: #ffffff url('../images/tick.png') no-repeat center top;
+}
+#busyGraphic.error {
+background: #ffffff url('../images/warn.png') no-repeat center top;
+}
+
+#busyMsg {
+position:absolute;
+top:120px;
+width:250px;
+text-align:center;
+}
+
+#page-cover {
+    display: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    z-index: 999;
+    top: 0;
+    left: 0;
+}

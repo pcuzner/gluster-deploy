@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<!--
+   main.html
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	
+   
+   Copyright 2013 Paul Cuzner <paul.cuzner@redhat.com>
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA.
+   
+   browser dependencies
+   * autofocus is html5, needs ie10 or above, or firefox, safari, chrome, opera to work
+     
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<title>Gluster Configuration and Setup</title>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	<script src="js/layoutHandler.js"></script>
+	<script src="js/ajaxHandler.js"></script>
+	<script src="js/accessKey.js"></script>
+	<script src="js/pageLoad.js"></script>
+</head>
+
+<body>
+<h1>Gluster Configuration and Setup</h1>
+
+<div id="steps" >
+		<ul style="list-style:none; padding:0px;">
+			<li id="m-overview" class="pending">Overview</li>
+			<li id="m-nodes" class="pending">Node Discovery</li>
+			<li id="m-keys" class="pending">SSH Keys</li>
+			<li id="m-disks" class="pending">Disk Discovery</li>
+			<li id="m-bricks" class="pending">Brick Definition</li>
+			<li id="m-finish" class="pending">Finish</li>		
+		</ul>
+</div>
+
+
+<div id="access">
+	<span id="inputData">
+		<b>Enter Key</b> 
+		<input type="text" id="password" size="26" maxlength="26" autofocus>
+		<button id="checkKey" type="button" onclick="validateKey()">Next</button>
+	</span>
+</div>
+
+
+
+
+<div class="separator" style="height:600px; top:100px; left:220px"></div> 
+<div id="busy" >
+	<div id="busyGraphic"  class="spinner"></div>
+	<span id="busyMsg" ></span>
+	<button id="busyButton" type="button" disabled style="position:absolute; bottom:10px; right:20px; visibility:hidden; ">Next</button>
+
+</div>
+<div id="container" >
+	<div id="logo" style="left:100px; top:200px;"></div> 
+	<div id="overview"><h2>Overview</h2><p>This tools enables you to quickly setup a gluster cluster, by moving through several discrete phases;</p>
+	<p><li><b>Node discovery :</b> scan a subnet to identify candidate nodes to build a cluster from</li></p>
+	<p><li><b>SSH keys :</b> push ssh keys out to the cluster nodes to enable remote scripts to be run</li></p>
+	<p><li><b>Disk discovery :</b> select which disks on the nodes are to be used as gluster 'bricks'</li></p>
+	<p><li><b>Brick definition :</b> execution of scripts across nodes to create bricks in a standard manner</li></p>
+	<button id="overviewNext" type="button" disabled onclick='startNodesPage()' class="nextButton">Next</button>
+	</div>
+	
+	<div id="nodes"><h2>Node Discovery</h2><p>Subnet to scan&nbsp;
+	  <select id="network-select">
+	  </select>
+	  <button id="network-scan-btn" type="button" disabled onclick="scanSubnet()">Scan</button>
+	  </p>
+	  <div id="nodeSelect">
+		<select id="candidateNodes" onchange="enableButton('addNodes')" multiple size=28>
+		</select>
+		<button id="addNodes" type="button" disabled onclick="promoteNodes()">Add</button>
+		<select id="selectedNodes"  multiple size=28>
+		</select>
+		<button id="createCluster" type="button" disabled onclick="createCluster()">Create</button>
+	  </div>
+	</div>
+
+
+	
+	<div id="keys"><h2>SSH Keys</h2>
+	<p>SSH keys are available on this host to push to the nodes in the cluster. Once the public key
+	has been distributed, disks on the nodes can be discovered and formatted as gluster bricks.</p>
+	<button id="pushKeys" type="button">Push Keys</button>
+		
+	</div>
+	
+	<div id="disks">
+	</div>
+	
+	<div id="bricks">
+	</div>
+	
+	<div id="finish">
+	</div>
+		
+	<div id="help">
+	</div>
+	
+
+
+</div>
+
+</body>
+
+</html>

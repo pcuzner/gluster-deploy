@@ -1,0 +1,4 @@
+DEBUG:root:Wed Sep  4 20:38:13 2013 Random key generated as UEsIoFNdjaIQNrkPkadiRIeJk3
+DEBUG:root:Wed Sep  4 20:38:13 2013 Host has 1 IP's to bind the web server to
+INFO:root:Wed Sep  4 20:38:13 2013 http server started on using port 8080
+INFO:root:Wed Sep  4 20:38:15 2013 http server stopped

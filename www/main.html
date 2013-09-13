@@ -35,7 +35,12 @@
 	<title>Gluster Configuration and Setup</title>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
 	<link rel="stylesheet" type="text/css" href="css/main.css">
-	<script src="js/layoutHandler.js"></script>
+	<!-- <script src="js/layoutHandler.js"></script> -->
+	<script src="js/config.js"></script>
+	<script src="js/layoutMgmt.js"></script>
+	<script src="js/loginPage.js"></script>
+	<script src="js/nodeDiscovery.js"></script>
+	<script src="js/keyMgmt.js"></script>
 	<script src="js/ajaxHandler.js"></script>
 	<script src="js/accessKey.js"></script>
 	<script src="js/pageLoad.js"></script>
@@ -102,9 +107,28 @@
 
 	
 	<div id="keys"><h2>SSH Keys</h2>
-	<p>SSH keys are available on this host to push to the nodes in the cluster. Once the public key
-	has been distributed, disks on the nodes can be discovered and formatted as gluster bricks.</p>
-	<button id="pushKeys" type="button">Push Keys</button>
+		<p>SSH keys are available on this host to push to the nodes in the cluster. Once the public key
+		has been distributed, disks on the nodes can be discovered and formatted as gluster bricks.</p>
+		<input type="radio" name="passwordMethod" value="generic" checked="checked" onclick="togglePassword('generic');">Use a generic password for all hosts/nodes&nbsp;
+		  <span >
+			  <input type="text" id="genericPassword" size="26" maxlength="26" >
+		  </span><br>
+		<input type="radio" name="passwordMethod" value="unique" onclick="togglePassword('unique');">Each node has a unique password&nbsp;<br>
+		<br>
+		<div id="keysArea">
+			<table id="keysTable" cellspacing='0'>
+				<thead>
+				
+					<tr>
+						<th>Server Name</th>
+						<th>Password</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+		<button id="pushKeys" type="button" onclick="pushKeys()">Distribute</button>
 		
 	</div>
 	

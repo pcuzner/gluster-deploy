@@ -66,30 +66,48 @@ function keyResponse() {
 	//			activate button if all successful
 }
 
-
 function pushKeys() {
+	// 1st validate the keys
+	//	if valid carry on, if not then do nothing
+
+	passwordType = document.querySelector('input[name="passwordMethod"]:checked').value;
+	
+	if (keysValid(passwordType) ) {
+		alert('keys are ok to use');
+	}
+	else {
+		alert('keys are duff');
+	}
+	
+}
+
+function keysValid(passwordType) {
 	// if generic password selected - ensure the password field is not blank
 	
 	// validate the password 
 	
-	passwordType = document.querySelector('input[name="passwordMethod"]:checked').value;
+	rc = true;
+
 	
 	if (passwordType == 'generic') {
 		if (document.getElementById('genericPassword').value.length == 0) {
 			document.getElementById('genericPassword').className = 'error';
+			rc = false;
 		}
 		else { // user selected generic password and provided a password
-			
+			rc = true;
+			document.getElementById('genericPassword').className = '';
 		}
 	}
 	else { // each node in the table must have a password provided
-		passwordsOK = true;
-		for (var n=0; n<glusterNodes.length; n++) {
+
+		numNodes = glusterNodes.length;
+		for (var n=0; n < numNodes; n++) {
 			boxName = glusterNodes[n] + '-pswd';
 			thisPassword = document.getElementById(boxName).value;
 			if (thisPassword.length == 0) {
 				document.getElementById(boxName).className = 'error';
-				passwordsOK = false;
+				rc = false;
 			}
 			else {
 				document.getElementById(boxName).className = '';
@@ -98,16 +116,8 @@ function pushKeys() {
 		}
 		
 		
-	}
 		
-	// if unique is selected - ensure each row has a password
-	
-	
-	// if passwords are ready
-	// 	disable all boxes and button
-	// 	enable showbusy and set a message indicating the key distribution has started
-	//	for each node
-	// 		send request to webserver - nodename/password and establish handler
+	}
+	return rc	
 
-	
 }

@@ -145,6 +145,15 @@ def generateKey(length=26, charsAvailable=string.letters + string.digits):
 	return key
 
 
+def distributeKeys(keyState, keyData):
+	"""	receive a progress task containing the nodes to act upon, and the data from the
+		web in the form nodename*password<space> repeated
+	"""
+	print "key data"
+	print keyData
+	
+	pass
+
 if __name__ == "__main__":
 	print "Testing function with 26 character key"
 	print "--> " + generateKey(26);

@@ -49,26 +49,28 @@ def getPeers():
 	pass
 	return
 	
-def peerProbe(nodeList):
-	"""	Receive a list of nodes to form a cluster """
+def peerProbe(clusterState):
+	"""	Receive an object containing a list of nodes to form a cluster """
 
-	nodes = nodeList.split(" ")
-	success = 0
-	failed = 0
-		
-	glusterLog.debug("%s Gluster 'peer probe' for %d nodes started", time.asctime(), len(nodes))
+	# create a copy of the nodes to work from 
+	nodes = list(clusterState.targetList)
 	
 	for thisNode in nodes:
-		probeOut = issueCMD("gluster peer probe " + thisNode)
-		if ('failed' in probeOut[0]) or ('invalid' in probeOut[0]):
-			failed += 1
-		else:
-			success += 1
-			
-	glusterLog.debug("%s peer probe results - Success: %d, Failed: %d", time.asctime(), success, failed) 
-			
-	return (success,failed)
 
+		clusterState.targetList.remove(thisNode)
+		
+		probeOutput = issueCMD("gluster peer probe " + thisNode)
+		
+		if ('failed' in probeOutput[0]) or ('invalid' in probeOutput[0]):
+			# update the clusterState properties
+			glusterLog.debug("%s peer probe for %s failed", time.asctime(), thisNode)
+			clusterState.failureList.append(thisNode)
+		else:
+			# update the clusterState properties
+			glusterLog.debug("%s peer probe for %s succeeded", time.asctime(), thisNode)
+			clusterState.successList.append(thisNode)
+
+	return 
 
 def main():
 	

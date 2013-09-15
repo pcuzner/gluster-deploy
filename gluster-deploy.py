@@ -24,8 +24,10 @@
 #  1. review the logging capability and how to set by variable
 
 from functions.network import getSubnets,findService, getHostIP
-from functions.syscalls import issueCMD, generateKey
+from functions.syscalls import issueCMD, generateKey, distributeKeys
 from functions.glusterInterface import peerProbe
+from functions.utils import TaskProgress
+
 
 import logging
 import BaseHTTPServer
@@ -79,21 +81,64 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.wfile.write(" ".join(nodeList))
 		
 		elif (cmd == "createCluster"):
-			nodeList = parms[0]
 
-			numNodes = nodeList.split(" ")
-			logging.info('%s gluster.createCluster joining %s nodes to the cluster', time.asctime(), numNodes)
-
-			# run peer probe - returns success and failure list
-			probeResults = peerProbe(nodeList)
-			retString = ' '.join(str(n) for n in probeResults)
-			logging.debug('%s gluster.createCluster results - %s',time.asctime(),retString)
+			targetList = parms[0].split(" ")			
+			clusterState = TaskProgress(targetList)
 			
-			# return success and failed counts to the caller
+			logging.info('%s createCluster joining %s nodes to the cluster', time.asctime(), len(targetList))
+
+			# run peer probe to try and add nodes to the cluster
+			peerProbe(clusterState)
+			
+			(success,failed) = clusterState.query()
+			
+			logging.debug('%s createCluster results - success %d, failed %d',time.asctime(), success, failed)
+
+			# return success and failed counts to the caller (webpage)			
+			retString = str(success) + " " + str(failed)
 			self.wfile.write(retString)
 			
 			logging.info('%s gluster.createCluster complete', time.asctime())			
+		
+		elif (cmd == "queryCluster"):
+			pass
+		
+		elif (cmd == "pushKeys"):
+			keyData = parms[0].split(" ")
+			targetList = []
+			for n in keyData:
+				[nodeName, nodePassword] = n.split('*')
+				targetList.append(nodeName)
 
+			keyState = TaskProgress(targetList)
+			
+			logging.info('%s pushKeys distributing ssh keys to %d nodes', time.asctime(), len(targetList))
+			
+			print ">>> " + "<".join(targetList)
+
+			distributeKeys(keyState, keyData)
+			
+			#self.wfile.write(retString)
+			
+			logging.info('%s pushKeys complete', time.asctime())
+
+			
+		elif (cmd == "queryKeys"):
+			pass
+			
+			
+		elif (cmd == "getDisks"):
+			disksState = TaskProgress()
+			
+		elif (cmd == "queryDisks"):
+			pass
+		
+			
+		elif (cmd == "buildBricks"):
+			brickState = TaskProgress()
+		
+		elif (cmd == "queryBuild"):
+			pass
 		
 
 		
@@ -109,6 +154,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 def updateKeyFile(accessKey):
 	"""	Update the keyfile that holds this sessions access password """
 	
+	# TODO: This is a hack and needs to be replaced by an ajax call!
+	
 	pwdFile = open(PASSWDFILE,'w')
 	pwdFile.write("var accessKey = '%s'" % accessKey)
 	pwdFile.close()
@@ -123,12 +170,12 @@ def sshKeyOK():
 	
 	if os.path.exists('/root/.ssh/id_rsa.pub'):
 		keyOK = True
-		logging.debug('%s root has an ssh key ready to push out', time.asctime())
+		logging.info('%s root has an ssh key ready to push out', time.asctime())
 	else:
 		genOut = issueCMD("ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa")
 		for line in genOut:
 			if 'Your public key has been saved' in line:
-				logging.debug('%s ssh key has been generated successfully', time.asctime())
+				logging.info('%s SSH key has been generated successfully', time.asctime())
 				keyOK = True
 				break
 		

@@ -11,7 +11,9 @@ function startKeyMgmt() {
 	
 	for (var n=0; n<glusterNodes.length; n++) {
 		thisNode = glusterNodes[n];
-		// need to add code to define a class for the row to highlight
+		
+		// TODO - tr css class has a highlight, so could use it here when building the table
+		
 		var newRow = keysTable.insertRow(-1);
 		var col1 = newRow.insertCell(0);
 		var col2 = newRow.insertCell(1);
@@ -54,16 +56,10 @@ function togglePassword(passwordType) {
 
 }
 
-function keyResponse() {
-	// receive a nodename and a response - success or fail
-	// if good, then add this node to the keyAdded array
-	//	else add to the keyFailed array
+function keyHandler() {
+
+	showBusy();
 	
-	// check size of the keyAdded + keyFailed array - 
-	// 		if it matches the size of the glusterNodes array - we're done
-	//			update the spinner indicating success/failure
-	//			update the text
-	//			activate button if all successful
 }
 
 function pushKeys() {
@@ -74,6 +70,34 @@ function pushKeys() {
 	
 	if (keysValid(passwordType) ) {
 		alert('keys are ok to use');
+		
+		showBusy('Distributing SSH keys');
+		
+		var keyData = '';
+		
+		if (passwordType == 'generic') {
+			thisPassword = document.getElementById('genericPassword').value;
+		}
+		
+		numNodes = glusterNodes.length;
+		for (var n=0; n < numNodes; n++) {
+			nodeName = glusterNodes[n];
+			if (passwordType == 'generic') {
+				nodePassword = thisPassword;
+			}
+			else {
+				boxName = nodeName + "-pswd";
+				nodePassword = document.getElementById(boxName).value;
+			}
+			keyData = keyData + " " + nodeName + "*" + nodePassword; 
+		}
+	
+		
+		
+		callerString = 'pushKeys|' + keyData.trim() ;
+	
+		// pass back to python to execute peer probe
+		xml_http_post('../www/main.html', callerString, keyHandler);		
 	}
 	else {
 		alert('keys are duff');
@@ -87,7 +111,6 @@ function keysValid(passwordType) {
 	// validate the password 
 	
 	rc = true;
-
 	
 	if (passwordType == 'generic') {
 		if (document.getElementById('genericPassword').value.length == 0) {

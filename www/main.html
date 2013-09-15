@@ -41,6 +41,7 @@
 	<script src="js/loginPage.js"></script>
 	<script src="js/nodeDiscovery.js"></script>
 	<script src="js/keyMgmt.js"></script>
+	<script src="js/diskDiscovery.js"></script>
 	<script src="js/ajaxHandler.js"></script>
 	<script src="js/accessKey.js"></script>
 	<script src="js/pageLoad.js"></script>
@@ -132,7 +133,12 @@
 		
 	</div>
 	
-	<div id="disks">
+	<div id="disks"><h2>Disk Discovery</h2>
+		<p>With the ssh keys in place, the nodes can now be probed to collect a list of candidate disks to be used as gluster bricks<br>
+		</p>
+		<button id="getDisks" type="button" onclick="getDisks()">Find Disks</button>
+		<div id="diskTable">
+		</div>
 	</div>
 	
 	<div id="bricks">

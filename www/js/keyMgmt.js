@@ -56,9 +56,30 @@ function togglePassword(passwordType) {
 
 }
 
-function keyHandler() {
+function keyHandler(req) {
+	
+	var respData = req.responseText.split(' ');
 
-	showBusy();
+	var failed = parseInt(respData[1]);
+
+	document.getElementById('busyMsg').innerHTML = "Key Distribution Complete<br>" +
+													"Successful: " + respData[0] + " Failures: " + respData[1];
+	if (failed > 0) {
+		// change the spinner to a warning sign
+		document.getElementById('busyGraphic').className = 'error';
+
+	}
+	else {
+		document.getElementById('busyGraphic').className = 'success';
+		// change the spinner to a green tick
+																										
+		document.getElementById('busyButton').disabled = false;
+		document.getElementById('busyButton').style.visibility = 'visible';
+		document.getElementById('busyButton').onclick = function() { startDiskDiscovery();};
+		//document.getElementById('selectedNodes').disabled = true;
+
+	}
+
 	
 }
 
@@ -69,9 +90,13 @@ function pushKeys() {
 	passwordType = document.querySelector('input[name="passwordMethod"]:checked').value;
 	
 	if (keysValid(passwordType) ) {
-		alert('keys are ok to use');
 		
 		showBusy('Distributing SSH keys');
+		document.getElementById('pushKeys').disabled = true;
+		
+		// Disable the radio Buttons
+		disableRadio('passwordMethod');
+		
 		
 		var keyData = '';
 		

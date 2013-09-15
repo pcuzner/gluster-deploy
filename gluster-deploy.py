@@ -114,13 +114,14 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 			logging.info('%s pushKeys distributing ssh keys to %d nodes', time.asctime(), len(targetList))
 			
-			print ">>> " + "<".join(targetList)
-
 			distributeKeys(keyState, keyData)
+
+			(success, failed) = keyState.query()
 			
-			#self.wfile.write(retString)
+			retString = str(success) + " " + str(failed)
+			self.wfile.write(retString)
 			
-			logging.info('%s pushKeys complete', time.asctime())
+			logging.info('%s pushKeys complete - success %d, failed %d', time.asctime(), success, failed)
 
 			
 		elif (cmd == "queryKeys"):

@@ -46,6 +46,8 @@ function showBusy(msg) {
 	document.getElementById('busyMsg').innerHTML = msg;
 	if (document.getElementById('busy').style.visibility == 'visible') {
 		document.getElementById('busy').style.visibility = 'hidden';
+		document.getElementById('busyButton').disabled = true;
+		document.getElementById('busyButton').style.visibility = 'hidden';
 	}
 	else {
 		document.getElementById('busy').style.visibility = 'visible';
@@ -56,4 +58,13 @@ function showBusy(msg) {
 function enableButton(buttonName) {
 
 	document.getElementById(buttonName).disabled = false;
+}
+
+
+function disableRadio(radioName) {
+	radioButtons = document.getElementsByName(radioName);
+	numButtons = radioButtons.length;
+	for (var n =0; n < numButtons; n++) {
+		radioButtons[n].disabled = true;
+	}
 }

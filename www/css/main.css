@@ -241,6 +241,24 @@ height:350px;
 
 }
 
+#disks {
+	position: absolute;
+	left: 600px;
+		overflow:hidden;
+	top:0px;
+	width:600px;
+	height:600px;
+	z-index:4;
+	text-align:justify;
+	transition: left .7s linear;
+	opacity: 100;
+	background-color:#ededed;
+}
+#disks.slide {
+left: 0px;
+}
+
+
 #nodeSelect {
 	opacity:0;
 	z-index:3;

@@ -53,6 +53,14 @@ function showBusy(msg) {
 	
 }
 
+function disableRadio(radioName) {
+	radioButtons = document.getElementByName(radio);
+	numButtons = radioButtons.length;
+	for (var n =0; n < numButtons; n++) {
+		radioButtons[n].disabled = true;
+	}
+}
+
 function enableButton(buttonName) {
 
 	document.getElementById(buttonName).disabled = false;

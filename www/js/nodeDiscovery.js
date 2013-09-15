@@ -103,12 +103,10 @@ function promoteNodes() {
 	}
 }
 
+// TODO - make this handler generic to be used for cluster, key and disk summary
+
 function clusterHandler(req) {
-	// Handle the response from creating a cluster
-	// turn off show busy
-	// showBusy(); // turn show busy off
-	
-	// [0] = success, [1] failed
+
 	var respData = req.responseText.split(' ');
 
 	var failed = parseInt(respData[1]);
@@ -118,7 +116,7 @@ function clusterHandler(req) {
 	if (failed > 0) {
 		document.getElementById('busyGraphic').className = 'error';
 		// change the spinner to a warning sign
-		alert('Problems creating the cluster\nPlease Investigate');
+		alert('! Problems encountered !\nCheck the log file');
 	}
 	else {
 		document.getElementById('busyGraphic').className = 'success';

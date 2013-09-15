@@ -61,15 +61,25 @@ class SSHsession:
 		""" handle the ssh-copy-id process """
 		
 		keyFile = os.path.expanduser('~') + '/.ssh/id_rsa.pub'
-		command='ssh-copy-id -i ' + keyFile + ' ' + self.user + '@' + self.host
+		cmd = 'ssh-copy-id -i ' + keyFile + ' ' + self.user + '@' + self.host
+		rc = 0
+		cmdOut = self.__exec(cmd)
 		
-		copyOutput = self.__exec(command)
-		if 'key(s) added' in copyOutput[2]:
-			glusterLog.info('%s ssh key added successfully to %s', time.asctime(), self.host)
-		elif 'already exist' in copyOutput[2]:
-			glusterLog.info('%s ssh key already existed on %s', time.asctime(), self.host)
+		# check for permission denied response - i.e. bad password
+		if 'Permission' in cmdOut[1]:
+			glusterLog.debug('%s ssh key not added due to bad password for node %s', time.asctime(), self.host)
+			rc = 8
+			
+		# /usr/bin/ssh-copy-id: WARNING: All keys were skipped because they already exist
+		elif 'keys were skipped' in cmdOut[2]:
+			glusterLog.debug('%s ssh key already exists in %s authorized_keys file', time.asctime(), self.host)
+			rc = 1
+			
+		else:
+			glusterLog.debug('%s ssh key added to %s', time.asctime(), self.host)
+			
 			 
-		return copyOutput
+		return rc 
 		
 	def __repr__(self):
 		"""	Display the object's attribute info """
@@ -103,7 +113,11 @@ class SSHsession:
 				
 		elif ptr == 1:
 			child.sendline(self.password)
-			child.expect(pexpect.EOF)
+			
+			i = child.expect(['[dD]enied',pexpect.EOF])
+			if i == 0:
+				# wrong password given
+				child.close(True)
 		
 		elif ptr == 2:
 			# key change detected - man in the middle error mesage
@@ -149,10 +163,22 @@ def distributeKeys(keyState, keyData):
 	"""	receive a progress task containing the nodes to act upon, and the data from the
 		web in the form nodename*password<space> repeated
 	"""
-	print "key data"
-	print keyData
 	
-	pass
+	for nodeData in keyData:
+		(nodeName, nodePassword) = nodeData.split('*')
+		
+		keyState.targetList.remove(nodeName)
+		
+		sshTarget = SSHsession('root', nodeName, nodePassword)
+		copyRC = sshTarget.sshCopyID()
+		
+		if copyRC <= 4:
+			keyState.successList.append(nodeName)
+			glusterLog.info('%s ssh key added successfully to %s', time.asctime(), nodeName)
+		else:
+			keyState.failureList.append(nodeName)
+			glusterLog.info('%s Adding ssh key to %s failed', time.asctime(), nodeName)
+
 
 if __name__ == "__main__":
 	print "Testing function with 26 character key"

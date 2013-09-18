@@ -248,7 +248,7 @@ height:350px;
 	top:0px;
 	width:600px;
 	height:600px;
-	z-index:4;
+	z-index:5;
 	text-align:justify;
 	transition: left .7s linear;
 	opacity: 100;
@@ -258,6 +258,20 @@ height:350px;
 left: 0px;
 }
 
+#diskArea {
+position: absolute;
+left:90px;
+top: 160px;
+width:400px;
+height:350px;
+z-index: 5;
+transition: opacity .75s; 
+opacity: 0;
+
+}
+#diskArea.show {
+opacity: 100;
+}
 
 #nodeSelect {
 	opacity:0;
@@ -346,6 +360,8 @@ top:120px;
 width:250px;
 text-align:center;
 }
+
+
 
 #page-cover {
     display: none;

@@ -24,8 +24,8 @@
 #  1. review the logging capability and how to set by variable
 
 from functions.network import getSubnets,findService, getHostIP
-from functions.syscalls import issueCMD, generateKey, distributeKeys
-from functions.glusterInterface import peerProbe
+from functions.syscalls import issueCMD, generateKey
+from functions.gluster import peerProbe, GlusterNode
 from functions.utils import TaskProgress
 
 
@@ -44,7 +44,8 @@ LOGFILE='gluster-deploy.log'
 
 LOGLEVEL=logging.getLevelName('DEBUG')		# DEBUG | INFO | ERROR
 
-
+# define a dict to hold gluster node objects, indexed by the node name
+glusterNodes = {}	
 
 
 class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -53,6 +54,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		""" Handle a post request looking at it's contents to determine
 			the action to take.
 		"""
+		
 		
 		length = int(self.headers.getheader('content-length'))        
 		dataString = self.rfile.read(length)
@@ -82,15 +84,30 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		
 		elif (cmd == "createCluster"):
 
-			targetList = parms[0].split(" ")			
-			clusterState = TaskProgress(targetList)
+			nodeList = parms[0].split(" ")	
+			success = 0 
+			failed = 0
+			logging.info('%s createCluster joining %s nodes to the cluster', time.asctime(), len(nodeList))
+						
+			# create the node objects and add to the management dict		
+			for node in nodeList:
+				glusterNodes[node] = GlusterNode(node)
+				glusterNodes[node].joinCluster()
+				if glusterNodes[node].inCluster:
+					success += 1
+				else:
+					failed +=1
+				
+			# clusterState = TaskProgress(targetList)
 			
-			logging.info('%s createCluster joining %s nodes to the cluster', time.asctime(), len(targetList))
+
 
 			# run peer probe to try and add nodes to the cluster
-			peerProbe(clusterState)
+			#peerProbe(clusterState)
+			#
+			#(success,failed) = clusterState.query()
 			
-			(success,failed) = clusterState.query()
+			# create a node object - just the node name and add to the list
 			
 			logging.debug('%s createCluster results - success %d, failed %d',time.asctime(), success, failed)
 
@@ -104,19 +121,30 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			pass
 		
 		elif (cmd == "pushKeys"):
+			
 			keyData = parms[0].split(" ")
-			targetList = []
+			success = 0
+			failed = 0
+			
+			logging.info('%s pushKeys distributing ssh keys to %d nodes', time.asctime(), len(keyData))
+			#targetList = []
 			for n in keyData:
 				[nodeName, nodePassword] = n.split('*')
-				targetList.append(nodeName)
+				glusterNodes[nodeName].userPassword = nodePassword
+				glusterNodes[nodeName].pushKey()
+				if glusterNodes[nodeName].hasKey:
+					success += 1
+				else:
+					failed += 1
+				# update the node object with credentials
+				
+				#targetList.append(nodeName)
 
-			keyState = TaskProgress(targetList)
-			
-			logging.info('%s pushKeys distributing ssh keys to %d nodes', time.asctime(), len(targetList))
-			
-			distributeKeys(keyState, keyData)
+			#keyState = TaskProgress(targetList)
+						
+			#distributeKeys(keyState, keyData)
 
-			(success, failed) = keyState.query()
+			#(success, failed) = keyState.query()
 			
 			retString = str(success) + " " + str(failed)
 			self.wfile.write(retString)
@@ -129,7 +157,40 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 			
 		elif (cmd == "getDisks"):
-			disksState = TaskProgress()
+			# receive the same list as sent to the keys
+			# it only makes sense to try to get disk info from the successful
+			# nodes where the ssh key copy worked
+
+			# separate 
+			
+			#targetNodes = []
+			
+			#diskState = TaskProgress(targetNodes)
+			
+			retString = '<CLUSTER>'
+			
+			logging.info('%s getDisks invoked', time.asctime())
+			for node in sorted(glusterNodes.iterkeys()):
+				
+				# Scan this node for unused disks
+				glusterNodes[node].getDisks()
+				
+				# Look at this nodes diskList - if it's not empty form an XML string 
+				# to return to the caller
+				if glusterNodes[node].diskList:
+					
+					retString = retString + "<NODE><NODENAME>" + node + "</NODENAME>"
+					for disk in glusterNodes[node].diskList:
+						retString = retString + "<DISK><DEVID>" + disk + "</DEVID><SIZE>" + str(glusterNodes[node].diskList[disk]) + "</SIZE></DISK>"
+					retString = retString + "</NODE>"
+
+			# getDisks(diskState)
+			retString = retString + "</CLUSTER>"
+
+			self.wfile.write(retString)
+			
+			logging.info('%s getDisks complete', time.asctime())
+			
 			
 		elif (cmd == "queryDisks"):
 			pass

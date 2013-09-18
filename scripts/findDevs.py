@@ -23,6 +23,7 @@
 #  
 
 import subprocess
+import sys
 
 def issueCMD(command):
 	""" issueCMD takes a command to issue to the host and returns the response
@@ -105,9 +106,17 @@ def main():
 	disks = filterPartitions(partitions)	# dict
 	unusedDisks = filterBTRFS(disks)
 
+	retString = ''
+
 	for disk in unusedDisks:
-		print disk + "\t" + size
-		
+			sys.stdout.write(disk + " " + unusedDisks[disk] + "\n") 
+			#retString = retString + disk + " " + unusedDisks[disk] + ","
+
+	#retString = retString[:-1]	# remove the trailing ','
+
+	# Using sys.stdout.write avoids the carriage return/newline info being passed back
+	#sys.stdout.write(retString)
+
 	return 
 
 if __name__ == '__main__':

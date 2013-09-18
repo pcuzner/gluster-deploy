@@ -72,6 +72,31 @@ def peerProbe(clusterState):
 
 	return 
 
+class GlusterNode:
+	def __init__(self, nodeName):
+		self.nodeName = nodeName
+		self.userName = 'root'
+		self.userPassword = ''
+		self.inCluster = False
+		self.hasKey = False
+		self.diskScanned = False
+		self.brickCreated = False
+		self.diskList = []
+		
+	def pushKeys(self):
+		""" push the local machines root account ssh key to this node """
+		
+		pass
+		
+	def joinCluster(self):
+		"""	run peer probe against this node """
+		pass
+		
+	def getDisks(self):
+		"""	return candidate disks from this node """
+		pass
+
+
 def main():
 	
 	return 0

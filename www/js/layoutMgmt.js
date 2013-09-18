@@ -46,6 +46,7 @@ function showBusy(msg) {
 	document.getElementById('busyMsg').innerHTML = msg;
 	if (document.getElementById('busy').style.visibility == 'visible') {
 		document.getElementById('busy').style.visibility = 'hidden';
+		document.getElementById('busyGraphic').className = 'spinner';
 		document.getElementById('busyButton').disabled = true;
 		document.getElementById('busyButton').style.visibility = 'hidden';
 	}

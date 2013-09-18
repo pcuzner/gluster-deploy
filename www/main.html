@@ -137,7 +137,19 @@
 		<p>With the ssh keys in place, the nodes can now be probed to collect a list of candidate disks to be used as gluster bricks<br>
 		</p>
 		<button id="getDisks" type="button" onclick="getDisks()">Find Disks</button>
-		<div id="diskTable">
+		<div id="diskArea">
+			<table id="diskTable" cellspacing='0'>
+				<thead>
+					<tr>
+						<th>Server Name</th>
+						<th>Device</th>
+						<th>Capacity<br>(GB)</th>
+						<th>Select</th>
+					</tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
 		</div>
 	</div>
 	

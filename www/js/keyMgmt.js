@@ -77,6 +77,8 @@ function keyHandler(req) {
 		document.getElementById('busyButton').style.visibility = 'visible';
 		document.getElementById('busyButton').onclick = function() { startDiskDiscovery();};
 		//document.getElementById('selectedNodes').disabled = true;
+		
+		// create the glusternode objects from the successful nodes
 
 	}
 

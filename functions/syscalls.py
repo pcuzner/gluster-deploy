@@ -32,11 +32,16 @@ class SSHsession:
 	
 	def sshScript(self,scriptName):
 		""" Execute a bash script on the remote machine """
+		response =[]
 		
 		if os.path.exists(scriptName):
 		
 			command = """/bin/bash -c "/usr/bin/ssh  %s@%s 'bash -s' < %s" """ % (self.user, self.host, scriptName)
-			response = self.__exec(command)
+			
+			output = self.__exec(command)
+			for line in output:
+				if line > '':
+					response.append(line.replace('\r',''))
 		else:
 			glusterLog.debug('%s script provided to SSHsession.sshScript can not be found', time.asctime())
 			response = ['ERROR-SCRIPT-NOT-FOUND']
@@ -45,11 +50,16 @@ class SSHsession:
 
 	def sshPython(self,scriptName):
 		""" Execute a local python script on the remote machine """
+		response =[]
 		
 		if os.path.exists(scriptName):
 		
 			command = """/bin/bash -c "/usr/bin/ssh  %s@%s 'python' < %s" """ % (self.user, self.host, scriptName)
-			response = self.__exec(command)
+			
+			output = self.__exec(command)
+			for line in output:
+				if line > '':
+					response.append(line.replace('\r',''))
 		else:
 			glusterLog.debug('%s script provided to SSHsession.sshPython can not be found', time.asctime())
 			response = ['ERROR-SCRIPT-NOT-FOUND']
@@ -159,26 +169,39 @@ def generateKey(length=26, charsAvailable=string.letters + string.digits):
 	return key
 
 
-def distributeKeys(keyState, keyData):
-	"""	receive a progress task containing the nodes to act upon, and the data from the
-		web in the form nodename*password<space> repeated
-	"""
-	
-	for nodeData in keyData:
-		(nodeName, nodePassword) = nodeData.split('*')
-		
-		keyState.targetList.remove(nodeName)
-		
-		sshTarget = SSHsession('root', nodeName, nodePassword)
-		copyRC = sshTarget.sshCopyID()
-		
-		if copyRC <= 4:
-			keyState.successList.append(nodeName)
-			glusterLog.info('%s ssh key added successfully to %s', time.asctime(), nodeName)
-		else:
-			keyState.failureList.append(nodeName)
-			glusterLog.info('%s Adding ssh key to %s failed', time.asctime(), nodeName)
-
+#def distributeKeys(keyState, keyData):
+#	"""	receive a progress task containing the nodes to act upon, and the data from the#
+#		web in the form nodename*password<space> repeated
+#	"""
+#	
+#	for nodeData in keyData:
+#		(nodeName, nodePassword) = nodeData.split('*')
+#		
+#		keyState.targetList.remove(nodeName)
+#		
+#		sshTarget = SSHsession('root', nodeName, nodePassword)
+#		copyRC = sshTarget.sshCopyID()
+#		
+#		if copyRC <= 4:
+#			keyState.successList.append(nodeName)
+#			glusterLog.info('%s ssh key added successfully to %s', time.asctime(), nodeName)
+#		else:
+#			keyState.failureList.append(nodeName)
+#			glusterLog.info('%s Adding ssh key to %s failed', time.asctime(), nodeName)
+#
+#def getDisks(diskState, nodeData):
+#	"""	get a list of disks from the nodes """
+#	
+#	nodeList = list(diskState.targetList)
+#	
+#	for node in nodeList:
+#		glusterLog.debug('%s getDisks processing node %s', time.asctime(), node)
+#		
+#		glusterLog.debug('%s getDisks completed for node %s',time.asctime(),node)	
+#		
+#		
+#	pass
+#
 
 if __name__ == "__main__":
 	print "Testing function with 26 character key"

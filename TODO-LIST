@@ -1,0 +1,10 @@
+
+Bug List
+scan is looking outward from the running node, so the local node is not scanned for disks
+
+Fix ME's
+Update the password code to be ajax based
+gluster.GlusterNode.getDisks is using a hardcoded path for the script
+
+Futures
+change the web server to use a self signed cert for https access

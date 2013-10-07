@@ -25,6 +25,7 @@
    
    browser dependencies
    * autofocus is html5, needs ie10 or above, or firefox, safari, chrome, opera to work
+   * input type of number requires html5 support
      
 -->
 
@@ -42,6 +43,7 @@
 	<script src="js/nodeDiscovery.js"></script>
 	<script src="js/keyMgmt.js"></script>
 	<script src="js/diskDiscovery.js"></script>
+	<script src="js/brickDefinition.js"></script>
 	<script src="js/ajaxHandler.js"></script>
 	<script src="js/accessKey.js"></script>
 	<script src="js/pageLoad.js"></script>
@@ -73,16 +75,18 @@
 
 
 
-<div class="separator" style="height:600px; top:100px; left:220px"></div> 
+<!--<div class="separator" style="height:600px; top:100px; left:220px"></div> -->
+
 <div id="busy" >
 	<div id="busyGraphic"  class="spinner"></div>
 	<span id="busyMsg" ></span>
 	<button id="busyButton" type="button" disabled style="position:absolute; bottom:10px; right:20px; visibility:hidden; ">Next</button>
 
 </div>
+
 <div id="container" >
 	<div id="logo" style="left:100px; top:200px;"></div> 
-	<div id="overview"><h2>Overview</h2><p>This tools enables you to quickly setup a gluster cluster, by moving through several discrete phases;</p>
+	<div id="overview"><h2>Overview</h2><p>This tools enables you to quickly setup a gluster cluster, by moving through several configuration phases;</p>
 	<p><li><b>Node discovery :</b> scan a subnet to identify candidate nodes to build a cluster from</li></p>
 	<p><li><b>SSH keys :</b> push ssh keys out to the cluster nodes to enable remote scripts to be run</li></p>
 	<p><li><b>Disk discovery :</b> select which disks on the nodes are to be used as gluster 'bricks'</li></p>
@@ -134,9 +138,9 @@
 	</div>
 	
 	<div id="disks"><h2>Disk Discovery</h2>
-		<p>With the ssh keys in place, the nodes can now be probed to collect a list of candidate disks to be used as gluster bricks<br>
+		<p>With the ssh keys in place, the nodes can now be scanned to collect a list of 'unclaimed' disks to be used as gluster bricks<br>
 		</p>
-		<button id="getDisks" type="button" onclick="getDisks()">Find Disks</button>
+		<button id="getDisks" type="button" onclick="findDisks()">Find Disks</button>
 		<div id="diskArea">
 			<table id="diskTable" cellspacing='0'>
 				<thead>
@@ -144,19 +148,48 @@
 						<th>Server Name</th>
 						<th>Device</th>
 						<th>Capacity<br>(GB)</th>
-						<th>Select</th>
+						<th>Select<br>
+						<input type='checkbox' id='allDisks' onclick="selectAll();" />
+						</th>
 					</tr>
 				</thead>
 				<tbody>
 				</tbody>
 			</table>
+				<button id="registerBricks" class="registerButton hidden" type="button" onclick="registerBricks()">Next</button>
 		</div>
+
 	</div>
 	
-	<div id="bricks">
+	<div id="bricks"><h2>Brick Definition</h2>
+		<p>Typically each node in the cluster will have an identical configuration to ensure balanced application performance. This final
+		configuration page, gathers the metrics that allow bricks to be defined optimally for a given workload. </p>
+		<p>Complete the items below, then click on the "Build Bricks" button to start the formatting process.
+		</p>
+		Use Case
+		<select id="useCase">
+			<option value="generic" selected="selected">Generic File Serving</option>
+			<option value="virtualisation">Virtualisation</option>
+			<option value="object">Object Storage</option>
+		</select>
+		<p>Space reserved for snapshots&nbsp;<span id="snapshotValue" style="position:relative;top:0px;width:30px;height:20px;border:1px solid;display:inline-block;text-align:center;border-radius:5px;">10</span>&nbsp;&nbsp;&nbsp;0
+		<input id="snapshotSpace" onkeyup="updateSnapshot();" onmouseup="updateSnapshot();" type='range' min="0" max="30" value="10" style="position:relative; left:0px;top:5px;margin:0px; padding:0px;">30</p>
+		<p>Volume Group to create (if needed) 
+		<input type='text' id="volGroupName" value="glustervg" ></p>
+		<p>Mount point for the disk
+		<input type="text" id="mountPoint" value="/gluster/brick1" disabled></p>
+		<button id="buildBricks" class="bricksButton" type="button" onclick="buildBricks()">Build Bricks</button>
 	</div>
 	
-	<div id="finish">
+	<div id="finish"><h2>Finish</h2>
+		<p>Initial configuration is now complete.
+		<ul>
+			<li class="tick">Cluster created	</li>
+			<li class="tick">Disks discovered</li>
+			<li class="tick">Bricks formated and mounted</li>
+		</ul>
+		</p>
+		<p>Next steps...Create a volume.</p>
 	</div>
 		
 	<div id="help">
@@ -164,8 +197,8 @@
 	
 
 
-</div>
 
+</div>
 </body>
 
 </html>

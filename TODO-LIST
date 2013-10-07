@@ -1,10 +1,20 @@
 
 Bug List
-scan is looking outward from the running node, so the local node is not scanned for disks
+scan is looking outward from the running node, so the local node is not scanned for disks - FIXED 22/09
 
 Fix ME's
-Update the password code to be ajax based
-gluster.GlusterNode.getDisks is using a hardcoded path for the script
+Update the password code to be ajax based 
+gluster.GlusterNode.getDisks is using a hardcoded path for the script...FIXED 19/09
+Switch to xml for data exchange instead of plain text - easier, more flexible parsing - INPROGESS 20/09
+
 
 Futures
+before sending the key, attempt a login just involing 'ls' - if it works skip the ssh-copyid
+After a key has been sent verify a remote passwordless login works OK.
+perform a peer status or pool list at the start to determine existing nodes, and show them in the selected list
 change the web server to use a self signed cert for https access
+Switch from 'menu' on left to a breadcrumb trail bar across the bottom of the screen
+
+add a progress tracker, or message queue that can be queried by the web client code to track long running tasks
+
+

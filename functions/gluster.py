@@ -27,6 +27,9 @@ from xml.dom import minidom
 import logging
 import time
 import os
+import sys
+
+PGMROOT = os.path.split(os.path.abspath(os.path.realpath(sys.argv[0])))[0]
 
 glusterLog = logging.getLogger()
 
@@ -73,15 +76,55 @@ def peerProbe(clusterState):
 
 	return 
 
+class GlusterDisk:
+	def __init__(self,nodeName,deviceID, size,formatRequired=False):
+		self.nodeName = nodeName
+		self.deviceID = deviceID
+		self.sizeGB = size
+		self.formatRequired = formatRequired
+		self.mountPoint = ""
+		self.snapReserved = 0
+		self.workload = ""
+		self.vgName = ""
+		self.localDisk = False
+		
+	def formatBrick(self,userPassword,vgName,snapSpace,mountPoint,workload):
+		"""	Pass the node the format script for this brick """
+		
+		self.mountPoint = mountPoint
+		self.snapReserved = snapSpace
+		self.workload = workload
+		self.vgName = vgName
+		
+		glusterLog.debug('%s formatting %s as a brick on %s', time.asctime(), self.deviceID, self.nodeName )
+
+		scriptPath = os.path.join(PGMROOT,'scripts/formatBrick.sh')
+		scriptParms = " -d %s -v %s -s %s -m %s -w %s"%(self.deviceID, vgName, snapSpace, mountPoint, workload)
+
+
+		scriptName = scriptPath + scriptParms
+
+		if self.localDisk:
+			resp = issueCMD(scriptName)
+		else:
+			
+			ssh=SSHsession('root',self.nodeName,userPassword)
+			resp=ssh.sshScript(scriptName)
+		
+		glusterLog.debug('%s formatBrick complete on %s', time.asctime(), self.nodeName)
+		
+		return 0			
+
 class GlusterNode:
 	def __init__(self, nodeName):
 		self.nodeName = nodeName
 		self.userName = 'root'
+		self.localNode = False
 		self.userPassword = ''
 		self.inCluster = False
 		self.hasKey = False
 		self.diskScanned = False
-		self.brickCreated = False
+		self.brickCreated = False			# not needed?
 		self.diskList = {}
 		
 	def pushKey(self):
@@ -120,21 +163,24 @@ class GlusterNode:
 			self.inCluster = True
 		pass
 		
-	def getDisks(self):
+	def findDisks(self):
 		"""	pass a scan script to the node to populate the nodes diskList """
 
 		glusterLog.debug('%s getDisks scanning %s', time.asctime(), self.nodeName)
 		
+		scriptName = os.path.join(PGMROOT,'scripts/findDevs.py')
 		
-		# SOLVE ME - need a method for getting the absolute path of the script 
-		scriptPath = '/root/gluster-deploy/scripts/findDevs.py'
-		
-		
-		glusterLog.debug('%s getDisks using script from %s', time.asctime(), scriptPath)
+		glusterLog.debug('%s getDisks using script from %s', time.asctime(), scriptName)
 
 		#sshPython runs the script, returning a list containing ',' separated values of disk <spc> size
-		sshTarget = SSHsession(self.userName, self.nodeName, self.userPassword)
-		diskData = sshTarget.sshPython(scriptPath)
+		
+		# check if this is the local node, if so, use issueCMD not ssh
+		if self.localNode:
+			diskData = issueCMD(scriptName)
+		else:
+			sshTarget = SSHsession(self.userName, self.nodeName, self.userPassword)
+			diskData = sshTarget.sshPython(scriptName)
+			
 		self.diskScanned = True
 
 		if len(diskData) > 0:
@@ -142,10 +188,14 @@ class GlusterNode:
 				
 				(deviceName,sizeStr) = diskInfo.split(" ")
 				size = int(sizeStr) / 1024**2						# convert to KB -> GB
-				self.diskList[deviceName] = size
+				thisDisk = GlusterDisk(self.nodeName, deviceName, size)
+				if self.localNode:
+					thisDisk.localDisk = True
+				self.diskList[deviceName] = thisDisk
 		
 				
 		glusterLog.debug('%s getDisks found %d devices on %s', time.asctime(), len(self.diskList), self.nodeName)
+		
 		
 
 if __name__ == '__main__':

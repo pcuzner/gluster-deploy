@@ -2,6 +2,9 @@ body {
 	background-color: #ededed;
 	
 }
+.tick {
+list-style-image:url("../images/bullet-tick.png") ;
+}
 
 button {
 	border-radius: 5px;
@@ -48,6 +51,23 @@ button:hover {
 	left:85%;
 	top:40px;
 }
+.registerButton {
+	position: absolute;
+	left:100%;
+	top:50px;
+}
+
+.bricksButton {
+	position: relative;
+	left:80%;
+	top:80px;
+}
+
+
+.hidden {
+visibility:hidden;
+}
+
 
 #network-select:hover {
 	border:1px solid #FF9900;
@@ -72,24 +92,60 @@ h2 {
 
 .active {
 	text-align:left;
+	text-indent:10px;
+	line-height:30px;
+	font-family: "arial";
+	font-size:18px;
+	font-weight: bold;
+	color:white;
+	width:160px;
+	/*height:30px;*/
+	background-color:#505050;
+	border-radius:5px;
+	font-style: normal;
+	/*text-shadow: 0px 2px 3px #555;*/
+	/*margin-left:10px;*/
+	margin-bottom:20px;
+}
+
+
+
+.active_saved {
+	text-align:left;
 	font-family: "arial";
 	font-size:18px;
 	font-weight: bold;
 	color:white;
 	font-style: normal;
-	/*font-variant: normal;*/
-	/*text-shadow:0px 2px 3px #555;*/
 	text-shadow: 0px 2px 3px #555;
 	margin-bottom:30px;
 }
 
 .pending {
 	text-align:left;
+	text-indent:10px;
+	line-height:30px;
+	/*height:30px;*/
 	font-family: "arial";
 	font-size:18px;
 	font-weight: bold;
 	font-style: normal;
 	color:#505050;
+	/*font-variant: normal;*/
+	/*text-shadow: 0px 2px 3px #555;*/
+	margin-bottom:20px;
+
+}
+
+.done {
+	text-align:left;
+	text-indent:10px;
+	line-height:30px;
+	font-family: "arial";
+	font-size:18px;
+	font-weight: bold;
+	font-style: normal;
+	color:#1a82f7;
 	/*font-variant: normal;*/
 	/*text-shadow: 0px 2px 3px #555;*/
 	margin-bottom:30px;
@@ -107,7 +163,7 @@ h2 {
 	background-color: #cccccc;
 	display: block;
 	/*width: 98%;*/
-	width: 600px;
+	width: 475px;
 	height: 100px;
 	margin: 0 auto; 
     box-shadow: 5px 5px 5px #888888;
@@ -126,7 +182,7 @@ h2 {
 #inputData {
 	display: inline-block;
 	margin-top: 30px;
-	margin-left: 20%;
+	margin-left: 14%;
 	width: 380px;
 	height: 50px;
 }
@@ -169,11 +225,14 @@ margin-left: 15px;
 	position:relative;
 	left:250px;
 	top:-100px;
-	width:600px;
+	width:650px;
 	height:600px;
 	z-index:1;
 	background-color:#ededed;
 }
+
+
+
 #logo {
 	position: absolute;
 	background:url('../images/glusterAnt.png') no-repeat;
@@ -183,10 +242,10 @@ margin-left: 15px;
 }
 #overview {
 	position: absolute;
-	left: 600px;
+	left: 650px;
 	overflow:hidden;
 	top:0px;
-	width:600px;
+	width:650px;
 	height:600px;
 	z-index:2;
 	text-align:justify;
@@ -201,10 +260,10 @@ left:0px;
 
 #nodes {
 	position: absolute;
-	left: 600px;
+	left: 650px;
 		overflow:hidden;
 	top:0px;
-	width:600px;
+	width:650px;
 	height:600px;
 	z-index:3;
 	text-align:justify;
@@ -218,10 +277,10 @@ left: 0px;
 
 #keys {
 	position: absolute;
-	left: 600px;
+	left: 650px;
 		overflow:hidden;
 	top:0px;
-	width:600px;
+	width:650px;
 	height:600px;
 	z-index:4;
 	text-align:justify;
@@ -243,10 +302,10 @@ height:350px;
 
 #disks {
 	position: absolute;
-	left: 600px;
+	left: 650px;
 		overflow:hidden;
 	top:0px;
-	width:600px;
+	width:650px;
 	height:600px;
 	z-index:5;
 	text-align:justify;
@@ -271,6 +330,38 @@ opacity: 0;
 }
 #diskArea.show {
 opacity: 100;
+}
+#bricks {
+	position: absolute;
+	left: 650px;
+		overflow:hidden;
+	top:0px;
+	width:650px;
+	height:600px;
+	z-index:6;
+	text-align:justify;
+	transition: left .7s linear;
+	opacity: 100;
+	background-color:#ededed;
+}
+#bricks.slide {
+left: 0px;
+}
+#finish {
+	position: absolute;
+	left: 650px;
+		overflow:hidden;
+	top:0px;
+	width:650px;
+	height:600px;
+	z-index:7;
+	text-align:justify;
+	transition: left .7s linear;
+	opacity: 100;
+	background-color:#ededed;
+}
+#finish.slide {
+left: 0px;
 }
 
 #nodeSelect {
@@ -313,11 +404,13 @@ left:480px;
 position:absolute;
 top:90px;
 left:20px;
+border:1px solid #d8d8d8;
+border-radius:8px;
 z-index:-1;
-width:175px;
+width:185px;
 height:400px;
 opacity: 100;
-background-color: #ededed;
+background-color: #f8f8f8;
 
 }
 

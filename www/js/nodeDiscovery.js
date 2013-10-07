@@ -153,11 +153,19 @@ function createCluster() {
 	
 	for (var n = 0 ; n < selected.options.length; n++) {
 		thisNode = selected.options[n].value; 
-		if (thisNode.indexOf("*") == -1) {
-			nodesString = nodesString + thisNode + " ";
-			glusterNodes.push(thisNode)
+		
+		nodesString = nodesString + thisNode + " ";
+
+		if (thisNode.indexOf('*') == -1) {
 			nodeCount +=1;
+			glusterNodes.push(thisNode)
 		}
+		
+		//if (thisNode.indexOf("*") == -1) {
+		//	nodesString = nodesString + thisNode + " ";
+		//	glusterNodes.push(thisNode)
+		//	nodeCount +=1;
+		//}
 	}
 
 	showBusy('Adding ' + nodeCount + ' nodes') ;	

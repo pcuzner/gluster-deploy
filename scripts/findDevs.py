@@ -3,7 +3,7 @@
 #
 #  findDevs.py
 #  
-#  Copyright 2013 Paul <paul@rhlaptop>
+#  Copyright 2013 Paul Cuzner <paul.cuzner@gmail.com>
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ def issueCMD(command):
 	
 	return response.split('\n')								# use split to return a list
 
-def filterDevices(partList):
+def filterDisks(partList):
 	""" Take a list of devices from proc/partitions and retun only the disk devices """
 
 	validDevs = ('sd', 'vd', 'hd')
@@ -72,13 +72,14 @@ def filterPartitions(partitions):
 	return disks
 	
 def filterLVM(disks):
-	
 	pvsOut = issueCMD('pvs --noheading')
 	for pvData in pvsOut:
-		fullDevName = pvData.split()[0]
-		diskName = fullDevName.replace('/dev/','')
-		if disks.has_key[diskName]:
-			del disks[diskName]
+		if pvData:
+		
+			fullDevName = pvData.split()[0]
+			diskName = fullDevName.replace('/dev/','')
+			if diskName in disks:
+				del disks[diskName]
 	return disks
 
 def filterBTRFS(disks):
@@ -102,15 +103,18 @@ def main():
 	# get list of partitions on this host
 	partList = issueCMD('cat /proc/partitions')[2:-1]			# take element 2 onwards
 
-	partitions = filterDevices(partList)	# list
-	disks = filterPartitions(partitions)	# dict
-	unusedDisks = filterBTRFS(disks)
+
+
+	devices = filterDisks(partList)	# list
+	disks = filterPartitions(devices)	# dict
+	noLVM = filterLVM(disks)
+	unusedDisks = filterBTRFS(noLVM)
 
 	retString = ''
 
 	for disk in unusedDisks:
-			sys.stdout.write(disk + " " + unusedDisks[disk] + "\n") 
-			#retString = retString + disk + " " + unusedDisks[disk] + ","
+		sys.stdout.write(disk + " " + unusedDisks[disk] + "\n") 
+		#retString = retString + disk + " " + unusedDisks[disk] + ","
 
 	#retString = retString[:-1]	# remove the trailing ','
 

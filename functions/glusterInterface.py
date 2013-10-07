@@ -80,7 +80,7 @@ class GlusterNode:
 		self.inCluster = False
 		self.hasKey = False
 		self.diskScanned = False
-		self.brickCreated = False
+		self.brickCreated = False		# not needed anymore - delete me?
 		self.diskList = []
 		
 	def pushKeys(self):

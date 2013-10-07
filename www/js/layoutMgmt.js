@@ -61,6 +61,19 @@ function enableButton(buttonName) {
 	document.getElementById(buttonName).disabled = false;
 }
 
+function updateCheckbox(checkboxName, state) {
+	
+	
+	// function that just toggles the checked state of all checkboxes in a given group
+	var checkboxes = document.getElementsByName(checkboxName);
+	var numCheckboxes = checkboxes.length;
+	
+	for (var i=0; i<numCheckboxes; i++) {
+		checkboxes[i].checked = state;
+	}
+		
+}
+
 
 function disableRadio(radioName) {
 	radioButtons = document.getElementsByName(radioName);

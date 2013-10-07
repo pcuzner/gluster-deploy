@@ -34,9 +34,11 @@ class SSHsession:
 		""" Execute a bash script on the remote machine """
 		response =[]
 		
-		if os.path.exists(scriptName):
+		scriptPath=scriptName.split(" ")[0]
 		
-			command = """/bin/bash -c "/usr/bin/ssh  %s@%s 'bash -s' < %s" """ % (self.user, self.host, scriptName)
+		if os.path.exists(scriptPath):
+			# The -- is critical to stop bash from claiming any parameter string passed to the script
+			command = """/bin/bash -c "/usr/bin/ssh  %s@%s 'bash -s' -- < %s" """ % (self.user, self.host, scriptName)
 			
 			output = self.__exec(command)
 			for line in output:
@@ -154,7 +156,8 @@ def issueCMD(command):
 	except Exception:
 		response = 'command failed\n'						# string that includes \n
 	
-	return response.split('\n')								# use split to return a list	
+	return response.split('\n')[:-1]							# use split to return a list and
+																# skip the last null entry
 	
 
 def generateKey(length=26, charsAvailable=string.letters + string.digits):

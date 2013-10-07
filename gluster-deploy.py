@@ -28,15 +28,19 @@ from functions.syscalls import issueCMD, generateKey
 from functions.gluster import peerProbe, GlusterNode
 from functions.utils import TaskProgress
 
+import xml.etree.ElementTree as ETree
 
 import logging
 import BaseHTTPServer
 import SimpleHTTPServer
 import time
 import os
+import sys
 
 HTTPPORT=8080
 SVCPORT=24007
+
+PGMROOT = os.path.split(os.path.abspath(os.path.realpath(sys.argv[0])))[0]
 
 PASSWDFILE='www/js/accessKey.js'
 LOGFILE='gluster-deploy.log'
@@ -77,6 +81,17 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			logging.info('%s network.findService starting to scan %s', time.asctime(), scanTarget)
 			nodeList = findService(scanTarget,SVCPORT)
 			
+			#for host in nodeList:
+			#	if host.endswith('*'):
+			#		node = host[:-1]
+			#		localNode = True
+			#	else:
+			#		node = host
+			#		localNode = False
+			#	
+			#	glusterNodes[node] = GlusterNode(node)
+			#	glusterNodes[node].localNode = localNode
+					
 			logging.info('%s network.findService scan complete', time.asctime())
 			logging.debug("%s network.findService found %s services on %s", time.asctime(), str(len(nodeList)), scanTarget)
 
@@ -91,12 +106,25 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						
 			# create the node objects and add to the management dict		
 			for node in nodeList:
-				glusterNodes[node] = GlusterNode(node)
-				glusterNodes[node].joinCluster()
-				if glusterNodes[node].inCluster:
-					success += 1
+
+				if node.endswith('*'):
+					# this is the local node, lose the last char
+					node = node[:-1]
+					glusterNodes[node] = GlusterNode(node)
+					glusterNodes[node].localNode = True
+
+					# create a node object and set to local
+					# no need for joincluster or success/fail increment on the local node
+					pass
 				else:
-					failed +=1
+					# create a node object
+					glusterNodes[node] = GlusterNode(node)
+
+					glusterNodes[node].joinCluster()
+					if glusterNodes[node].inCluster:
+						success += 1
+					else:
+						failed +=1
 				
 			# clusterState = TaskProgress(targetList)
 			
@@ -123,6 +151,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		elif (cmd == "pushKeys"):
 			
 			keyData = parms[0].split(" ")
+			#print keyData
 			success = 0
 			failed = 0
 			
@@ -156,7 +185,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			pass
 			
 			
-		elif (cmd == "getDisks"):
+		elif (cmd == "findDisks"):
 			# receive the same list as sent to the keys
 			# it only makes sense to try to get disk info from the successful
 			# nodes where the ssh key copy worked
@@ -167,41 +196,97 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 			#diskState = TaskProgress(targetNodes)
 			
-			retString = '<CLUSTER>'
+			retString = '<cluster>'
 			
-			logging.info('%s getDisks invoked', time.asctime())
+			logging.info('%s findDisks invoked', time.asctime())
 			for node in sorted(glusterNodes.iterkeys()):
 				
 				# Scan this node for unused disks
-				glusterNodes[node].getDisks()
+				glusterNodes[node].findDisks()
 				
-				# Look at this nodes diskList - if it's not empty form an XML string 
+				# Look at this nodes diskList - if it's not empty add it to an XML string 
 				# to return to the caller
 				if glusterNodes[node].diskList:
-					
-					retString = retString + "<NODE><NODENAME>" + node + "</NODENAME>"
-					for disk in glusterNodes[node].diskList:
-						retString = retString + "<DISK><DEVID>" + disk + "</DEVID><SIZE>" + str(glusterNodes[node].diskList[disk]) + "</SIZE></DISK>"
-					retString = retString + "</NODE>"
+					#print glusterNodes[node].diskList
+				
+					retString = retString + "<node><nodename name='" + node + "'/><disks>"
+					for deviceID in glusterNodes[node].diskList:
+						diskObj = glusterNodes[node].diskList[deviceID]
+						retString = retString + "<device id='" + deviceID + "' size='" + str(diskObj.sizeGB) + "' />"
+					retString = retString + "</disks></node>"
 
-			# getDisks(diskState)
-			retString = retString + "</CLUSTER>"
+			retString = retString + "</cluster>"
 
 			self.wfile.write(retString)
 			
-			logging.info('%s getDisks complete', time.asctime())
+			logging.info('%s findDisks complete', time.asctime())
 			
 			
 		elif (cmd == "queryDisks"):
 			pass
 		
 			
-		elif (cmd == "buildBricks"):
-			brickState = TaskProgress()
-		
-		elif (cmd == "queryBuild"):
+		elif (cmd == "registerBricks"):
+			diskXML = parms[0]
+			
+			xmlRoot = ETree.fromstring(diskXML)
+			for device in xmlRoot:
+				targetHost = device.attrib['host']
+				targetDevice = device.attrib['device']
+				
+				disk = glusterNodes[targetHost].diskList[targetDevice]
+				disk.formatRequired=True 
+			
+			# brickState = TaskProgress()
+			# return an update complete message back to the caller
+			self.wfile.write('OK')
 			pass
 		
+
+		elif (cmd == "buildBricks"):
+			parmsXML = parms[0]
+			
+			# process the parameter XML file to set variables up for the script			
+			xmlRoot = ETree.fromstring(parmsXML)
+			
+			useCase = xmlRoot.find('./parms').attrib['usecase']
+			snapReserve = xmlRoot.find('./parms').attrib['snapreserve']
+			vgName = xmlRoot.find('./parms').attrib['volgroup']
+			mountPoint = xmlRoot.find('./parms').attrib['mountpoint']
+		
+			for node in sorted(glusterNodes.iterkeys()):
+				pass
+				thisHost = glusterNodes[node]
+				# take a loook at this nodes disk list 
+				# for each disk with formatrequired
+				# call the formatbrick method
+				# check the ret code
+				# if ok update the state of the brick and post message to queue
+				if thisHost.diskList:
+					
+					for diskID in thisHost.diskList:
+						thisDisk = thisHost.diskList[diskID]
+						
+						if thisDisk.formatRequired:
+							logging.debug('%s format requested for node %s, disk %s',time.asctime(), node, thisDisk.deviceID)
+							# issue command, get rc
+
+							thisDisk.formatBrick(thisHost.userPassword,vgName,snapReserve,mountPoint,useCase)
+							#if state == 0:
+								# set message success
+							#	pass
+							#else:
+								# set message failed
+							#	pass
+							# push node and device info onto message stack
+							
+			
+			# Run the script for each required brick
+			self.wfile.write('OK')
+			pass
+		
+		elif (cmd == "queryBuild"):
+			pass		
 
 		
 
@@ -295,8 +380,6 @@ def main():
 		
 
 if __name__ == '__main__':
-	
-
 	
 	main()
 

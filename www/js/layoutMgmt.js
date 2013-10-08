@@ -35,7 +35,7 @@ function slide(oldDiv, newDiv) {
 	document.getElementById(newDiv).className = 'slide';
 	var oldTask = 'm-' + oldDiv
 	var newTask = 'm-' + newDiv
-	document.getElementById(oldTask).className = 'pending';
+	document.getElementById(oldTask).className = 'done';
 	document.getElementById(newTask).className = 'active';
 	disableDiv(oldDiv);
 	

@@ -3,13 +3,21 @@ gluster-deploy
 The project is intended to provide admins with a simple to use UI, to bootstrap a glusterfs or Red Hat Storage installation. The goal is to remove the laborious tasks, and ensure that configuration steps are the same across all nodes in a cluster.
 
 **Design Goal**  
-The goal of the project is to produce something that has only depends on the standard python packages. The UI is web based, but just uses standard javascript/css3 techniques - so no jquery dependencies either.
+The goal of the project is to produce something that has only depends on the standard python packages. The UI is web based, but just uses standard javascript/css3 techniques - so no jquery or web frameworks like django to worry about ;o)
 
 **Status**  
-Currently, the 'plumbing' is in place for most of the functions that need doing but the UI stops after running the 'peer probe' steps.
+Currently the 'wizard' implements the following;
+
+ - Discover listening glusterd processes  
+ - Form a cluster from the discovered nodes  
+ - distribute local ssh keys to all nodes  
+ - scan each node for unused disks  
+ - gather information about the use case for gluster  
+ - Apply the use case information to format and mount the bricks across all nodes
 
 **Requirements**  
- - python 2.7 
+ - python >= 2.6  
+ - openssh server and client on each gluster node
 
 **Tested on**  
  - Red Hat Storage 2.1

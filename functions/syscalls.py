@@ -7,6 +7,7 @@ import string
 import logging
 import time
 import pexpect
+import shlex
 
 glusterLog = logging.getLogger()
 
@@ -144,21 +145,41 @@ class SSHsession:
 		return child.before.split('\n')
 
 
-def issueCMD(command):
-	""" issueCMD takes a command to issue to the host and returns the response
-		as a list
-	"""
+def issueCMD(command, shellNeeded=False):
+        """ issueCMD takes a command to issue to the host and returns the response
+                as a list
+        """
 
-	cmdWords = command.split()
-	try:
-		out = subprocess.Popen(cmdWords,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		(response, errors)=out.communicate()				# Get the output...response is a byte
-	except Exception:
-		response = 'command failed\n'						# string that includes \n
-	
-	return response.split('\n')[:-1]							# use split to return a list and
-																# skip the last null entry
-	
+        if shellNeeded:
+                args =command
+        else:
+                args = shlex.split(command)
+
+        try:
+                out = subprocess.Popen(args,shell=shellNeeded,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                (response, errors)=out.communicate()	 # Get output...response is a byte string that includes \n
+        except Exception:
+                response = 'command failed\n' 
+
+        return response.split('\n')[:-1]                 # use split to return a list, skipping the last null entry
+
+
+
+#def issueCMD(command):
+#	""" issueCMD takes a command to issue to the host and returns the response
+#		as a list
+#	"""
+#
+#	cmdWords = command.split()
+#	try:
+#		out = subprocess.Popen(cmdWords,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#		(response, errors)=out.communicate()				# Get the output...response is a byte
+#	except Exception:
+#		response = 'command failed\n'						# string that includes \n
+#	
+#	return response.split('\n')[:-1]							# use split to return a list and
+#																# skip the last null entry
+#	
 
 def generateKey(length=26, charsAvailable=string.letters + string.digits):
 

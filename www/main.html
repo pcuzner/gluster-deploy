@@ -172,7 +172,7 @@
 			<option value="virtualisation">Virtualisation</option>
 			<option value="object">Object Storage</option>
 		</select>
-		<p>Space reserved for snapshots&nbsp;<span id="snapshotValue" style="position:relative;top:0px;width:30px;height:20px;border:1px solid;display:inline-block;text-align:center;border-radius:5px;">10</span>&nbsp;&nbsp;&nbsp;0
+		<p>% Space reserved for snapshots&nbsp;<span id="snapshotValue" style="position:relative;top:0px;width:30px;height:20px;border:1px solid;display:inline-block;text-align:center;border-radius:5px;">10</span>&nbsp;&nbsp;&nbsp;0
 		<input id="snapshotSpace" onkeyup="updateSnapshot();" onmouseup="updateSnapshot();" type='range' min="0" max="30" value="10" style="position:relative; left:0px;top:5px;margin:0px; padding:0px;">30</p>
 		<p>Volume Group to create (if needed) 
 		<input type='text' id="volGroupName" value="glustervg" ></p>
@@ -189,7 +189,7 @@
 			<li class="tick">Bricks formated and mounted</li>
 		</ul>
 		</p>
-		<p>Next steps...Create a volume.</p>
+		<p>At this point you can stop the gluster-deploy script with CTRL-C, and proceed to create the volume(s) manually from the CLI.</p>
 	</div>
 		
 	<div id="help">

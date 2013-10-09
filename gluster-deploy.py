@@ -319,7 +319,9 @@ def sshKeyOK():
 		keyOK = True
 		logging.info('%s root has an ssh key ready to push out', time.asctime())
 	else:
-		genOut = issueCMD("ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa")
+		
+		# Run ssh-keygen, in shell mode to generate the key i.e. using the 'True' parameter
+		genOut = issueCMD("ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa",True)
 		for line in genOut:
 			if 'Your public key has been saved' in line:
 				logging.info('%s SSH key has been generated successfully', time.asctime())

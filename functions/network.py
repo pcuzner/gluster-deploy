@@ -33,7 +33,7 @@ import time
 
 glusterLog = logging.getLogger()
 
-VALIDPREFIX = ('eth', 'bond', 'em','virbr0')
+VALIDPREFIX = ('eth', 'bond', 'em','virbr0','ovirtmgmt','rhevm')
 
 def atod(a): # ascii_to_decimal
     return struct.unpack("!L",socket.inet_aton(a))[0]

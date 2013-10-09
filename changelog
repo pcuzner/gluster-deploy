@@ -1,0 +1,9 @@
+Change Log
+
+* Wed Oct 9 2013 Paul Cuzner <paul.cuzner@redhat.com>
+- Add shell option to issueCMD function, that fixed the ssh-keygen failures
+- minor text updates to the UI
+- merged additional interface fix to network.py from John Hoffer
+
+* Tue Oct 8 2013 Paul Cuzner <paul.cuzner@redhat.com>
+- first milestone reached. code push to gluster forge 

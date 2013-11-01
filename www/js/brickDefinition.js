@@ -25,14 +25,54 @@ function buildBricks() {
 	showBusy('Creating Bricks');
 	
 	// Pass the string back to the server
-	xml_http_post('../www/main.html', callerString, finish);
-	// --> handler is finish
+	xml_http_post('../www/main.html', callerString, bricksDefined);
+
 }
 
-function finish(req) {
+function bricksDefined(req) {
 	
-	showBusy();
+	/* req is an xml string defining the bricks just created in the format
 	
-	slide('bricks','finish');
-	slide('bricks','finish');
+	 	<data>
+			<summary success='6' failed='0' />"
+				<brick fsname='/gluster/brick' size='10' servername='rhs1-1' />
+				<brick fsname='/gluster/brick2' size='10' servername='rhs1-1' />				  
+		</data>
+	*/
+	
+	showBusy(); // Turn off the showbusy spinner
+	
+	slide('bricks','volCreate'); // slide the volcreate page into view
+	
+	xmlString = req.responseText;
+	
+	xmlDoc = loadXML(xmlString);
+	
+	// move this to a generic function - pass string, return xmldoc object?
+	//if ( window.DOMParser ) {
+		//parser=new DOMParser();
+		//xmlDoc=parser.parseFromString(xmlString,"text/xml");
+	//}
+	//else { // Internet Explorer
+		//xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
+		//xmlDoc.async=false;
+		//xmlDoc.loadXML(xmlString);
+	//} 
+	
+	var brick = xmlDoc.getElementsByTagName("brick");
+	var brickPool = document.getElementById("brickPool");
+	
+	for (var i=0 ; i< brick.length; i++ ) {
+		var svr = brick[i].getAttribute("servername");
+		var gb  = brick[i].getAttribute("size");
+		var fsname = brick[i].getAttribute("fsname");
+		
+		var thisBrick = new Brick(svr,fsname,gb);
+		var key = svr + ":" + fsname;
+		
+		brickList[key] = thisBrick;
+		
+	}
+		
+	populateBrickPool();
 }

@@ -1,19 +1,19 @@
 
 var glusterNodes = new Array();
-// var keyAdded = new Array();
-// var keyFailed = new Array();
 
-// define a function to
-//function person(firstname,lastname,age,eyecolor)
-//{
-//this.firstname=firstname;
-//this.lastname=lastname;
-//this.age=age;
-//this.eyecolor=eyecolor;
-//}
 
-// and then create with 
+var brickList = {}; 	/* Assoc. Array, indexed by the server:/brick */
 
-// person={firstname:"John",lastname:"Doe",age:50,eyecolor:"blue"}; 
-// myFather=new person("John","Doe",50,"blue");
+var MAXREPLICA = 2;
+var RAWGB = 0;
+var BRICKSUSED = 0;
 
+
+/* Brick Object creator Method */
+function Brick(svr, fsname, size) {
+	this.server=svr;
+	this.fsname=fsname;
+	this.sizeGB = parseInt(size);
+	this.brickPath=svr + ":" + fsname;
+	this.selected= false;
+}

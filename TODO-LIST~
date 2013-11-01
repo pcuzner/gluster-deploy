@@ -11,7 +11,7 @@ Switch to xml for data exchange instead of plain text - easier, more flexible pa
 Futures
 
 - Near term
-  - add an option for lvm control on brick definition page (to be extended later for btrfs support)
+  - add an option for lvm control to brick definition page (to be extended later for btrfs support)
   - detect whether the lvm supports dm-thinp - if so prefer this over standard lv
   - add a progress tracker, or message queue that can be queried by the web client code to track long running tasks
 

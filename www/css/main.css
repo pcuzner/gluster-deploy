@@ -1,50 +1,5 @@
-body {
-	background-color: #ededed;
-	
-}
-.tick {
-list-style-image:url("../images/bullet-tick.png") ;
-}
 
-button {
-	border-radius: 5px;
-	background: #e2e2e2;
-	/*width: 60px; */
 
-	font-family: "arial";
-	font-size:18px;
-	color: black;
-	background: -moz-linear-gradient(top, #e2e2e2 0%, #dbdbdb 50%, #d1d1d1 51%, #fefefe 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e2e2e2), color-stop(50%,#dbdbdb), color-stop(51%,#d1d1d1), color-stop(100%,#fefefe)); /* Chrome,Safari4+ */
-	background: -webkit-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Chrome10+,Safari5.1+ */
-	background: -o-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* IE10+ */
-	background: linear-gradient(to bottom, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* W3C */
-}  
-
-button:disabled {
-	color: #cccccc;
-}
-button:disabled:hover {
-	color: #cccccc;
-	background: -moz-linear-gradient(top, #e2e2e2 0%, #dbdbdb 50%, #d1d1d1 51%, #fefefe 100%); /* FF3.6+ */
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e2e2e2), color-stop(50%,#dbdbdb), color-stop(51%,#d1d1d1), color-stop(100%,#fefefe)); /* Chrome,Safari4+ */
-	background: -webkit-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Chrome10+,Safari5.1+ */
-	background: -o-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Opera 11.10+ */
-	background: -ms-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* IE10+ */
-	background: linear-gradient(to bottom, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* W3C */
-}
-
-button:hover {
-	background-color: #1a82f7; /* Legacy */
-	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#1a82f7), to(#2F2727)); /* Safarai */
-	background: -webkit-linear-gradient(top, #2F2727, #1a82f7); /* Chrome 10+ & Safari 5.1+ */
-	background: -moz-linear-gradient(top, #2F2727, #1a82f7); /* FF 3.6+ */
-	background: -ms-linear-gradient(top, #2F2727, #1a82f7); /* IE10 */
-	background: -o-linear-gradient(top, #2F2727, #1a82f7); /* Opera 11.1+ */
-	color: white ;
-	/*cursor:pointer; */
-}
 
 .nextButton {
 	position: relative;
@@ -64,9 +19,6 @@ button:hover {
 }
 
 
-.hidden {
-visibility:hidden;
-}
 
 
 #network-select:hover {
@@ -74,28 +26,12 @@ visibility:hidden;
 	
 }
 
-h1 {
-	text-align:center;
-	font-family: "arial";
-	font-style: normal;
-	/*font-variant: normal; */
-	text-shadow:0px 2px 3px #555;
-}
-h2 {
-	text-align:left;
-	font-family: "arial";
-	font-style: normal;
-	color:white;
-	/*font-variant: normal; */
-	text-shadow:0px 2px 3px #555;
-}
-
 .active {
 	text-align:left;
 	text-indent:10px;
 	line-height:30px;
 	font-family: "arial";
-	font-size:18px;
+	font-size:16px;
 	font-weight: bold;
 	color:white;
 	width:160px;
@@ -110,24 +46,13 @@ h2 {
 
 
 
-.active_saved {
-	text-align:left;
-	font-family: "arial";
-	font-size:18px;
-	font-weight: bold;
-	color:white;
-	font-style: normal;
-	text-shadow: 0px 2px 3px #555;
-	margin-bottom:30px;
-}
-
 .pending {
 	text-align:left;
 	text-indent:10px;
 	line-height:30px;
 	/*height:30px;*/
 	font-family: "arial";
-	font-size:18px;
+	font-size:16px;
 	font-weight: bold;
 	font-style: normal;
 	color:#505050;
@@ -142,22 +67,17 @@ h2 {
 	text-indent:10px;
 	line-height:30px;
 	font-family: "arial";
-	font-size:18px;
+	font-size:16px;
 	font-weight: bold;
 	font-style: normal;
 	color:#1a82f7;
 	/*font-variant: normal;*/
 	/*text-shadow: 0px 2px 3px #555;*/
-	margin-bottom:30px;
+	margin-bottom:20px;
 
 }
 
-/* Specify a default font to ensure cross browser consistency */
-* {
-	font-family: "arial";
-	font-style: normal;
-	font-variant: normal;
-}
+
 
 #access {
 	background-color: #cccccc;
@@ -165,7 +85,7 @@ h2 {
 	/*width: 98%;*/
 	width: 475px;
 	height: 100px;
-	margin: 0 auto; 
+	left:250px; 
     box-shadow: 5px 5px 5px #888888;
     border-radius: 10px;
     position: relative;
@@ -205,16 +125,6 @@ input[type='text'].error {
 	border-color:red;
 }
 
-.separator {
-position: absolute;
-width: 2px;
-background: #717171;
-height:100%;
-float:left;
-border-right: 1px solid #313030;
-z-index: 1;
-opacity: 100;
-}
 
 li {
 margin-left: 15px;
@@ -223,6 +133,7 @@ margin-left: 15px;
 #container {
 	overflow:hidden;
 	position:relative;
+	/*border:1px solid gray; */
 	left:250px;
 	top:-100px;
 	width:650px;
@@ -233,13 +144,8 @@ margin-left: 15px;
 
 
 
-#logo {
-	position: absolute;
-	background:url('../images/glusterAnt.png') no-repeat;
-	width:300px;
-	height:150px;
-	z-index:1;
-}
+
+
 #overview {
 	position: absolute;
 	left: 650px;
@@ -299,6 +205,13 @@ width:400px;
 height:350px;
 
 }
+#keysTable th:first-child {
+width:200px;
+}
+#keysTable th:last-child {
+width:150px;
+}
+
 
 #disks {
 	position: absolute;
@@ -316,6 +229,22 @@ height:350px;
 #disks.slide {
 left: 0px;
 }
+#diskTable th:first-child {
+width:200px;
+}
+#snapshotValue {
+	position:relative;
+	top:-2px;
+	width:30px;
+	height:18px;
+	background:#606060;
+	color:white;
+	font-weight:bold;
+	border:1px solid #909090;
+	display:inline-block;
+	text-align:center;
+	border-radius:8px;
+}
 
 #diskArea {
 position: absolute;
@@ -328,9 +257,11 @@ transition: opacity .75s;
 opacity: 0;
 
 }
+
 #diskArea.show {
 opacity: 100;
 }
+
 #bricks {
 	position: absolute;
 	left: 650px;
@@ -347,10 +278,10 @@ opacity: 100;
 #bricks.slide {
 left: 0px;
 }
-#finish {
+#volCreate {
 	position: absolute;
 	left: 650px;
-		overflow:hidden;
+	overflow:hidden;
 	top:0px;
 	width:650px;
 	height:600px;
@@ -360,9 +291,44 @@ left: 0px;
 	opacity: 100;
 	background-color:#ededed;
 }
+#volCreate.slide {
+left: 0px;
+}
+#finish {
+	position: absolute;
+	left: 650px;
+		overflow:hidden;
+	top:0px;
+	width:650px;
+	height:600px;
+	z-index:50;
+	text-align:justify;
+	transition: left .7s linear;
+	opacity: 100;
+	background-color:#ededed;
+}
 #finish.slide {
 left: 0px;
 }
+
+#error {
+	position: absolute;
+	left: 650px;
+		overflow:hidden;
+	top:0px;
+	width:650px;
+	height:600px;
+	z-index:98;
+	text-align:justify;
+	transition: left .7s linear;
+	opacity: 100;
+	background-color:#ededed;
+}
+
+#error.slide {
+left: 0px;
+}
+
 
 #nodeSelect {
 	opacity:0;
@@ -384,8 +350,7 @@ left: 0px;
 #addNodes {
 	position:absolute;
 	left:190px;
-
-
+	width:37px;
 }
 
 #createCluster {
@@ -408,7 +373,7 @@ border:1px solid #d8d8d8;
 border-radius:8px;
 z-index:-1;
 width:185px;
-height:400px;
+height:370px;
 opacity: 100;
 background-color: #f8f8f8;
 
@@ -467,87 +432,95 @@ text-align:center;
     left: 0;
 }
 
-/* Table code example from http://johnsardine.com/freebies/dl-html-css/simple-little-tab/ */
+		/********************************/
+		/* Create Volume CSS attributes */
+		/********************************/
 
-table {
-	font-family:Arial, Helvetica, sans-serif;
-	color:#666;
+.brickPool {
+	width: 208px;
+	min-height:305px;
 	font-size:12px;
-	text-shadow: 1px 1px 0px #fff;
-	background:#eaebec;
-	margin:20px;
-	border:#ccc 1px solid;
+	font-family:monospace;
+}
 
-	-moz-border-radius:3px;
-	-webkit-border-radius:3px;
-	border-radius:3px;
+.useBrick {
+	position:absolute;
+	left:214px;
+	/* top:-328px; */
+	color:#404040;
+	width:37px;
 
-	-moz-box-shadow: 0 1px 2px #d1d1d1;
-	-webkit-box-shadow: 0 1px 2px #d1d1d1;
-	box-shadow: 0 1px 2px #d1d1d1;
 }
-table th {
-	padding:21px 25px 22px 25px;
-	border-top:1px solid #fafafa;
-	border-bottom:1px solid #e0e0e0;
 
-	background: #ededed;
-	background: -webkit-gradient(linear, left top, left bottom, from(#ededed), to(#ebebeb));
-	background: -moz-linear-gradient(top,  #ededed,  #ebebeb);
+.delbtn {
+	padding: 0px 0px 2px 8px ;
+	font-weight:bold;
+	width:30px;
+	height:25px;
 }
-table th:first-child {
-	text-align: left;
-	padding-left:20px;
+.createBtn {
+	height:25px;
+	color:#404040;
+	font-size:12px;
+	font-weight:bold;
+	width:80px;
 }
-table tr:first-child th:first-child {
-	-moz-border-radius-topleft:3px;
-	-webkit-border-top-left-radius:3px;
-	border-top-left-radius:3px;
-}
-table tr:first-child th:last-child {
-	-moz-border-radius-topright:3px;
-	-webkit-border-top-right-radius:3px;
-	border-top-right-radius:3px;
-}
-table tr {
-	text-align: center;
-	padding-left:20px;
-}
-table td:first-child {
-	text-align: left;
-	padding-left:20px;
-	border-left: 0;
-}
-table td {
-	padding:18px;
-	border-top: 1px solid #ffffff;
-	border-bottom:1px solid #e0e0e0;
-	border-left: 1px solid #e0e0e0;
 
-	background: #fafafa;
-	background: -webkit-gradient(linear, left top, left bottom, from(#fbfbfb), to(#fafafa));
-	background: -moz-linear-gradient(top,  #fbfbfb,  #fafafa);
+
+#brickLayout {
+	position:absolute;
+	overflow-y:auto;
+	border:0px solid black; /*debug only */
+	top:222px;
+	left:260px;
+	width:343px;
+	height:297px;
 }
-table tr.even td {
-	background: #f6f6f6;
-	background: -webkit-gradient(linear, left top, left bottom, from(#f8f8f8), to(#f6f6f6));
-	background: -moz-linear-gradient(top,  #f8f8f8,  #f6f6f6);
+#brickTable {
+	margin:0px;
+	width:330px;
 }
-table tr:last-child td {
-	border-bottom:0;
+#brickTable td:first-child {
+	width:295px;
 }
-table tr:last-child td:first-child {
-	-moz-border-radius-bottomleft:3px;
-	-webkit-border-bottom-left-radius:3px;
-	border-bottom-left-radius:3px;
+#brickTable td:last-child {
+	width:35px;
 }
-table tr:last-child td:last-child {
-	-moz-border-radius-bottomright:3px;
-	-webkit-border-bottom-right-radius:3px;
-	border-bottom-right-radius:3px;
+#brickHeaders {
+	position:absolute;
+	top:170px;
+	left:240px;
+	width:330px;
 }
-table tr:hover td {
-	background: #f2f2f2;
-	background: -webkit-gradient(linear, left top, left bottom, from(#f2f2f2), to(#f0f0f0));
-	background: -moz-linear-gradient(top,  #f2f2f2,  #f0f0f0);	
+
+#protocols {
+	position:relative;
+	left:20px;
 }
+.protocols {
+	left:2px;
+	top:4px;
+}
+
+#configSummary {
+    position: relative;
+    top:-25px;
+	/*margin:5px auto;*/
+	width:550px;
+	height:60px;
+}
+#configSummary th {
+padding:5px 10px 5px 10px; 
+}
+
+#goodbye {
+	display:block;
+	opacity: 0;
+    transition: opacity .75s;
+    width:400px;
+}
+	
+#goodbye.reveal {
+	opacity:100;
+}
+	

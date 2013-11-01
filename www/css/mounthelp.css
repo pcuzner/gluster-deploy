@@ -1,0 +1,27 @@
+
+/* CSS for formating the mount help page */
+
+
+p {
+	text-align:justify;
+}
+
+.cli {
+	position:relative;
+	display:block;
+	margin-left:20px;
+	font-family:monospace;
+	font-size:12px;
+	background: #888888;
+	color:white;
+	/*border: 1px dashed #404040;*/
+	width:700px;
+	border-radius:4px;
+}
+.cli:hover {
+	background:#b0b0b0;
+}
+.indent {
+	position:relative;
+	left:4em;
+}

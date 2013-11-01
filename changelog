@@ -1,5 +1,17 @@
 Change Log
 
+* XXX Nov xx 2013 Paul Cuzner <paul.cuzner@redhat.com>
+- Added optparse module for command line arguments. Added -n to bypass accesskey checking
+- Added password check code to RequestHandler class, and updated js use xml and ajax request
+- Added globals module to share config across modules
+- http server default 'run' method overridden to enable it to be stopped (e.g. when error met)
+- added ability to create a volume after bricks are defined
+- some minor UI fixes 
+- added initial error page
+- Added help page showing mount option syntax for smb,nfs and native client
+- css split to place theme type elements in the same file
+
+
 * Wed Oct 9 2013 Paul Cuzner <paul.cuzner@redhat.com>
 - Add shell option to issueCMD function, that fixed the ssh-keygen failures
 - minor text updates to the UI

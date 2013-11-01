@@ -1,3 +1,6 @@
+
+
+
 if (window.addEventListener) { // Mozilla, Netscape, Firefox
     window.addEventListener('load', pageLoad, false);
 } else if (window.attachEvent) { // IE

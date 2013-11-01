@@ -31,9 +31,11 @@ import struct
 import logging
 import time
 
-glusterLog = logging.getLogger()
+import globalvars as g
 
-VALIDPREFIX = ('eth', 'bond', 'em','virbr0','ovirtmgmt','rhevm')
+# glusterLog = logging.getLogger()
+
+#VALIDPREFIX = ('eth', 'bond', 'em','virbr0','ovirtmgmt','rhevm')
 
 def atod(a): # ascii_to_decimal
     return struct.unpack("!L",socket.inet_aton(a))[0]
@@ -59,7 +61,7 @@ def listIPRange(subnet):
 		if not host.endswith(excludedSuffixes):
 			IPList.append(host)
 	
-	glusterLog.debug('%s IP range for %s has %d addresses', time.asctime(), subnet, len(IPList))
+	g.LOGGER.debug('%s IP range for %s has %d addresses', time.asctime(), subnet, len(IPList))
 	
 	return IPList
 
@@ -102,7 +104,7 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 			
 			result = sock.connect_ex((IPaddr,targetPort))
 			if result == 0:
-				glusterLog.debug('%s port %d found open on %s', time.asctime(),targetPort,IPaddr)
+				g.LOGGER.debug('%s port %d found open on %s', time.asctime(),targetPort,IPaddr)
 				
 				# check if this IP is from this host - if so set suffix
 				suffix = '*' if IPaddr in hostsIP else ''
@@ -126,13 +128,13 @@ def getSubnets():
 	"""getSubnets returns a list of the IPv4 subnets available of the host"""
 	
 	subnetList = []
-	validPrefix = ['eth', 'bond', 'em','virbr']
+	#validPrefix = ['eth', 'bond', 'em','virbr']
 	ipInfo = issueCMD("ip addr show")
 	
-	for dataLine in ipInfo:
+	for dataLine in ipInfo[1:]:
 		if 'inet ' in dataLine:
 			interface = dataLine.split()[-1]
-			if interface.startswith(VALIDPREFIX):
+			if interface.startswith(g.NICPREFIX):
 				IPinfo = dataLine.split()[1]
 				thisSubnet = calcSubnet(IPinfo)
 				subnetList.append(thisSubnet)
@@ -145,14 +147,14 @@ def getHostIP():
 
 	ipInfo = issueCMD("ip addr show")
 	
-	for dataLine in ipInfo:
+	for dataLine in ipInfo[1:]:
 		if 'inet ' in dataLine:
 			interface = dataLine.split()[-1]
-			if interface.startswith(VALIDPREFIX):
+			if interface.startswith(g.NICPREFIX):
 				dataLine = dataLine.replace('/',' ')
 				hostIP.append(dataLine.split()[1])
 
-	glusterLog.debug("%s Host has %s IP's to bind the web server to", time.asctime(), len(hostIP))
+	g.LOGGER.debug("%s Host has %s IP's to bind the web server to", time.asctime(), len(hostIP))
 
 
 	return hostIP

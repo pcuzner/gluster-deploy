@@ -20,13 +20,21 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
 #  
-# TODO 
-#  1. review the logging capability and how to set by variable
+# FUTURES 
+#  1. Code written for python 2.6 and above. optparse changes to argparse in 2.7 onwards
+#     so code changes will be necessary later
+#
+
+
 
 from functions.network import getSubnets,findService, getHostIP
 from functions.syscalls import issueCMD, generateKey
-from functions.gluster import peerProbe, GlusterNode
-from functions.utils import TaskProgress
+from functions.gluster import GlusterNode, createVolume
+# from functions.utils import TaskProgress		... FUTURE
+
+import functions.globalvars as g					# Import globals shared across the modules
+
+from optparse import OptionParser					# command line option parsing
 
 import xml.etree.ElementTree as ETree
 
@@ -37,16 +45,6 @@ import time
 import os
 import sys
 
-HTTPPORT=8080
-SVCPORT=24007
-
-PGMROOT = os.path.split(os.path.abspath(os.path.realpath(sys.argv[0])))[0]
-
-PASSWDFILE='www/js/accessKey.js'
-LOGFILE='gluster-deploy.log'
-
-
-LOGLEVEL=logging.getLevelName('DEBUG')		# DEBUG | INFO | ERROR
 
 # define a dict to hold gluster node objects, indexed by the node name
 glusterNodes = {}	
@@ -66,35 +64,51 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		cmd = dataString.split('|')[0]
 		parms = dataString.split('|')[1:]
 		
+		if cmd == "passwordCheck":
 			
-		if (cmd == "subnetList"):
+			if g.PASSWORDCHECK:
+				xmlString = parms[0]
+			
+				# Read the xml string, and extract the password the user has supplied
+				# <data><password>PASSWORD_STRING</password></data>		
+				xmlRoot = ETree.fromstring(xmlString)
+				userKey = xmlRoot.find('password').text
+				
+				if userKey == g.ACCESSKEY:
+					g.LOGGER.debug('%s passwordCheck matched users access key',time.asctime())
+					retString = 'OK'
+				else:
+					g.LOGGER.debug('%s passwordCheck unable to match users password(%s)',time.asctime(),userKey)
+					retString = 'NOTOK'
+
+			else:
+				# PASSWORDCHECK turned off so just return OK
+				g.LOGGER.info('%s passwordCheck bypassed by -n parameter',time.asctime())
+				retString = 'OK'
+				
+			self.wfile.write(retString)	
+				
+			
+		elif (cmd == "subnetList"):
+
 			subnets = getSubnets()
 			subnetString = ' '.join(subnets)
 			
-			logging.debug("%s network.getSubnets found - %s", time.asctime(), subnetString)
-				
+			g.LOGGER.debug("%s network.getSubnets found - %s", time.asctime(), subnetString)
+			
+			print "\t\tHost checked for active NIC's"				
 			self.wfile.write(subnetString)
 			
 		elif (cmd == "findNodes"):
 			scanTarget= parms[0]
 			
-			logging.info('%s network.findService starting to scan %s', time.asctime(), scanTarget)
-			nodeList = findService(scanTarget,SVCPORT)
-			
-			#for host in nodeList:
-			#	if host.endswith('*'):
-			#		node = host[:-1]
-			#		localNode = True
-			#	else:
-			#		node = host
-			#		localNode = False
-			#	
-			#	glusterNodes[node] = GlusterNode(node)
-			#	glusterNodes[node].localNode = localNode
+			g.LOGGER.info('%s network.findService starting to scan %s', time.asctime(), scanTarget)
+			nodeList = findService(scanTarget,g.SVCPORT)
 					
-			logging.info('%s network.findService scan complete', time.asctime())
-			logging.debug("%s network.findService found %s services on %s", time.asctime(), str(len(nodeList)), scanTarget)
+			g.LOGGER.info('%s network.findService scan complete', time.asctime())
+			g.LOGGER.debug("%s network.findService found %s services on %s", time.asctime(), str(len(nodeList)), scanTarget)
 
+			print "\t\tSubnet scanned for glusterd ports - " + str(len(nodeList)) + " found"
 			self.wfile.write(" ".join(nodeList))
 		
 		elif (cmd == "createCluster"):
@@ -102,7 +116,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			nodeList = parms[0].split(" ")	
 			success = 0 
 			failed = 0
-			logging.info('%s createCluster joining %s nodes to the cluster', time.asctime(), len(nodeList))
+			g.LOGGER.info('%s createCluster joining %s nodes to the cluster', time.asctime(), len(nodeList))
 						
 			# create the node objects and add to the management dict		
 			for node in nodeList:
@@ -126,24 +140,17 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					else:
 						failed +=1
 				
-			# clusterState = TaskProgress(targetList)
 			
-
-
-			# run peer probe to try and add nodes to the cluster
-			#peerProbe(clusterState)
-			#
-			#(success,failed) = clusterState.query()
 			
-			# create a node object - just the node name and add to the list
+			g.LOGGER.debug('%s createCluster results - success %d, failed %d',time.asctime(), success, failed)
 			
-			logging.debug('%s createCluster results - success %d, failed %d',time.asctime(), success, failed)
+			print "\t\tCluster created - added " + str(success) + " nodes to this node (" + str(failed) + " nodes failed)"
 
 			# return success and failed counts to the caller (webpage)			
 			retString = str(success) + " " + str(failed)
 			self.wfile.write(retString)
 			
-			logging.info('%s gluster.createCluster complete', time.asctime())			
+			g.LOGGER.info('%s gluster.createCluster complete', time.asctime())			
 		
 		elif (cmd == "queryCluster"):
 			pass
@@ -155,8 +162,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			success = 0
 			failed = 0
 			
-			logging.info('%s pushKeys distributing ssh keys to %d nodes', time.asctime(), len(keyData))
-			#targetList = []
+			g.LOGGER.info('%s pushKeys distributing ssh keys to %d nodes', time.asctime(), len(keyData))
+
 			for n in keyData:
 				[nodeName, nodePassword] = n.split('*')
 				glusterNodes[nodeName].userPassword = nodePassword
@@ -165,21 +172,13 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					success += 1
 				else:
 					failed += 1
-				# update the node object with credentials
-				
-				#targetList.append(nodeName)
 
-			#keyState = TaskProgress(targetList)
-						
-			#distributeKeys(keyState, keyData)
-
-			#(success, failed) = keyState.query()
 			
 			retString = str(success) + " " + str(failed)
 			self.wfile.write(retString)
 			
-			logging.info('%s pushKeys complete - success %d, failed %d', time.asctime(), success, failed)
-
+			g.LOGGER.info('%s pushKeys complete - success %d, failed %d', time.asctime(), success, failed)
+			print "\t\tSSH keys distributed"
 			
 		elif (cmd == "queryKeys"):
 			pass
@@ -189,16 +188,11 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			# receive the same list as sent to the keys
 			# it only makes sense to try to get disk info from the successful
 			# nodes where the ssh key copy worked
-
-			# separate 
-			
-			#targetNodes = []
-			
-			#diskState = TaskProgress(targetNodes)
 			
 			retString = '<cluster>'
+			diskCount = 0
 			
-			logging.info('%s findDisks invoked', time.asctime())
+			g.LOGGER.info('%s findDisks invoked', time.asctime())
 			for node in sorted(glusterNodes.iterkeys()):
 				
 				# Scan this node for unused disks
@@ -213,13 +207,15 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					for deviceID in glusterNodes[node].diskList:
 						diskObj = glusterNodes[node].diskList[deviceID]
 						retString = retString + "<device id='" + deviceID + "' size='" + str(diskObj.sizeGB) + "' />"
+						diskCount += 1
 					retString = retString + "</disks></node>"
 
 			retString = retString + "</cluster>"
 
 			self.wfile.write(retString)
 			
-			logging.info('%s findDisks complete', time.asctime())
+			g.LOGGER.info('%s findDisks complete', time.asctime())
+			print "\t\tNodes scanned for available (free) disks (" + str(diskCount) + " found)"
 			
 			
 		elif (cmd == "queryDisks"):
@@ -253,59 +249,103 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			snapReserve = xmlRoot.find('./parms').attrib['snapreserve']
 			vgName = xmlRoot.find('./parms').attrib['volgroup']
 			mountPoint = xmlRoot.find('./parms').attrib['mountpoint']
-		
+
+			brickList = []	# Maintain a list of bricks that were formatted
+			
 			for node in sorted(glusterNodes.iterkeys()):
 				pass
 				thisHost = glusterNodes[node]
-				# take a loook at this nodes disk list 
+				# take a look at this nodes disk list 
 				# for each disk with formatrequired
-				# call the formatbrick method
-				# check the ret code
-				# if ok update the state of the brick and post message to queue
+				# 	call the formatbrick method
+				# 	if ret_code is ok update the state of the brick and post message to queue(future)
 				if thisHost.diskList:
 					
 					for diskID in thisHost.diskList:
 						thisDisk = thisHost.diskList[diskID]
 						
 						if thisDisk.formatRequired:
-							logging.debug('%s format requested for node %s, disk %s',time.asctime(), node, thisDisk.deviceID)
+							g.LOGGER.debug('%s format requested for node %s, disk %s',time.asctime(), node, thisDisk.deviceID)
+							
 							# issue command, get rc
 
 							thisDisk.formatBrick(thisHost.userPassword,vgName,snapReserve,mountPoint,useCase)
+							brickList.append(thisDisk)
+
 							#if state == 0:
 								# set message success
 							#	pass
 							#else:
 								# set message failed
 							#	pass
-							# push node and device info onto message stack
-							
 			
-			# Run the script for each required brick
-			self.wfile.write('OK')
-			pass
+			# Future: check the brickList to only allow bricks of the same size through to vol create
+			
+			# Now the bricks have been formatted, we process the list
+			# to assemble an xml string ready for the UI to load into an
+			# array for use in the volCreate step				
+			xmlDoc =  "<data>"
+			xmlDoc += "<summary success='0' failed='0' />"
+			
+			for brick in brickList:
+				# e.g. <brick fsname='/gluster/brick' size='10' servername='rhs1-1' />"
+				xmlDoc += "<brick fsname='" + brick.mountPoint + "' size='" + str(brick.sizeGB) + "' servername='" + brick.nodeName + "' />"
+			xmlDoc += "</data>"
+
+			# Send to UI
+			self.wfile.write(xmlDoc)
+			
+			print "\t\tBricks formatted"
+
 		
 		elif (cmd == "queryBuild"):
 			pass		
 
-		
+		elif (cmd == "volCreate"):
+			g.LOGGER.info('%s Initiating vol create process', time.asctime())
+			rc = createVolume(parms[0])
+
+			if rc == 0:
+				# Create volume was successful
+				g.LOGGER.info('%s Volume creation was successful', time.asctime())
+				msg = 'success'
+				pass
+			else:
+				# Problem creating the volume
+				g.LOGGER.info('%s Volume creation failed rc=%d', time.asctime(), rc)
+				msg = 'failed'
+				pass
+				
+			self.wfile.write(msg)	
+			
+			print "\t\tVolume create result: " + msg		
+			
+			
+		elif (cmd == "quit"):
+			# Update the httpd servers state, so the run forever loop can be exited
+			self.server.stop = True
+			
+			print "\t\tQuit received from the UI, shutting down\n"
+			
 
 	def log_message(self, format, *args):
 		""" Override std log_message method to record http messages 
 			only when our loglevel is debug """
 			
-		if LOGLEVEL == 10:				# 10 = DEBUG, 20=INFO, 30=WARN
-			logging.debug("%s %s %s", time.asctime(), self.address_string(), args)
+		if g.LOGLEVEL == 10:				# 10 = DEBUG, 20=INFO, 30=WARN
+			g.LOGGER.debug("%s %s %s", time.asctime(), self.address_string(), args)
 		return
 
-def updateKeyFile(accessKey):
-	"""	Update the keyfile that holds this sessions access password """
+class StoppableHTTPServer (BaseHTTPServer.HTTPServer):
+	""" Standard HTTPServer extended with a Stop capability """
 	
-	# TODO: This is a hack and needs to be replaced by an ajax call!
-	
-	pwdFile = open(PASSWDFILE,'w')
-	pwdFile.write("var accessKey = '%s'" % accessKey)
-	pwdFile.close()
+	def serve_forever(self):
+		""" Overridden method to insert the stop process """
+		self.stop = False
+		
+		while not self.stop:
+			self.handle_request()
+
 
 def sshKeyOK():
 	"""	
@@ -317,14 +357,14 @@ def sshKeyOK():
 	
 	if os.path.exists('/root/.ssh/id_rsa.pub'):
 		keyOK = True
-		logging.info('%s root has an ssh key ready to push out', time.asctime())
+		g.LOGGER.info('%s root has an ssh key ready to push out', time.asctime())
 	else:
 		
-		# Run ssh-keygen, in shell mode to generate the key i.e. using the 'True' parameter
+		# Run ssh-keygen, in shell mode to generate the key i.e. use the 'True' parameter
 		genOut = issueCMD("ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa",True)
 		for line in genOut:
 			if 'Your public key has been saved' in line:
-				logging.info('%s SSH key has been generated successfully', time.asctime())
+				g.LOGGER.info('%s SSH key has been generated successfully', time.asctime())
 				keyOK = True
 				break
 		
@@ -334,11 +374,12 @@ def sshKeyOK():
 def main():
 	""" main control routine """
 	
-	logging.basicConfig(filename=LOGFILE, 
-						level=LOGLEVEL, 
-						filemode='w')
 	
-	accessKey = generateKey()
+	#g.LOGGER.basicConfig(filename=LOGFILE, 
+	#					level=LOGLEVEL, 
+	#					filemode='w')
+	
+	#accessKey = generateKey()
 
 	hostIPs = getHostIP()
 	
@@ -348,20 +389,26 @@ def main():
 	# nodes, so if we can't get an sshkey generated...GAME OVER...
 	if sshKeyOK():
 		
+		keyMsg = '' if g.PASSWORDCHECK else ' (Bypassed with the -n option)'
+		
 		print "\n\tWeb server details:"
-		print "\t\tAccess key  - " + accessKey
+		print "\t\tAccess key  - " + g.ACCESSKEY + keyMsg
 		print "\t\tWeb Address - "
 		for i in hostIPs:
-				print "\t\t\thttp://" + i + ":8080/"	
+			print "\t\t\thttp://" + i + ":" + str(g.HTTPPORT) + "/"	
+		
+		print "\n\tSetup Progress"
 				
-		updateKeyFile(accessKey)							# Hack - password should be an xml call
+		#updateKeyFile(ACCESSKEY)							# Hack - password should be an xml call
 		
 	
 		# Create a basic httpd class
-		serverClass = BaseHTTPServer.HTTPServer
+		#serverClass = BaseHTTPServer.HTTPServer
 		
-		httpd = serverClass(("",HTTPPORT), RequestHandler)
-		logging.info('%s http server started on using port %s', time.asctime(), HTTPPORT)
+		# httpd = serverClass(("",HTTPPORT), RequestHandler)
+		httpd = StoppableHTTPServer(("",g.HTTPPORT), RequestHandler)
+		
+		g.LOGGER.info('%s http server started on using port %s', time.asctime(), g.HTTPPORT)
 		
 		try:
 			# Run the httpd service
@@ -369,19 +416,33 @@ def main():
 			
 			# User has hit CTRL-C, so catch it to stop an error being thrown
 		except KeyboardInterrupt:
-			pass
+			print '\ngluster-deploy web server stopped by user hitting - CTRL-C\n'
+			
 			
 		httpd.server_close()
-		logging.info('%s http server stopped', time.asctime())	
 		
-		print '\ngluster-deploy web server stopped by user - CTRL-C\n'
+		g.LOGGER.info('%s http server stopped', time.asctime())	
+
 	else:
 		print '\n\n-->Problem generating an ssh key, program aborted\n\n'
 		
-	print 'gluster-deploy stopped.'
+	print '\ngluster-deploy stopped.'
 		
 
 if __name__ == '__main__':
+
+	usageInfo = "usage: %prog [options]"
+	
+	parser = OptionParser(usage=usageInfo,version="%prog 0.2")
+	parser.add_option("-n","--no-password",dest="skipPassword",action="store_true",default=False,help="Skip access key checking (debug only)")
+	(options, args) = parser.parse_args()
+	
+	g.init()		# Initialise the global variables
+	
+	g.PASSWORDCHECK = not options.skipPassword
+	
+	g.ACCESSKEY = generateKey()
+	
 	
 	main()
 

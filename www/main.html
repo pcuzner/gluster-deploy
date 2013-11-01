@@ -35,8 +35,11 @@
 <head>
 	<title>Gluster Configuration and Setup</title>
 	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+	
+	<link rel="stylesheet" type="text/css" href="css/theme.css">
 	<link rel="stylesheet" type="text/css" href="css/main.css">
-	<!-- <script src="js/layoutHandler.js"></script> -->
+	<link rel="stylesheet" type="text/css" href="css/switch.css">	
+
 	<script src="js/config.js"></script>
 	<script src="js/layoutMgmt.js"></script>
 	<script src="js/loginPage.js"></script>
@@ -45,8 +48,9 @@
 	<script src="js/diskDiscovery.js"></script>
 	<script src="js/brickDefinition.js"></script>
 	<script src="js/ajaxHandler.js"></script>
-	<script src="js/accessKey.js"></script>
+	<script src="js/volCreate.js"></script>
 	<script src="js/pageLoad.js"></script>
+	
 </head>
 
 <body>
@@ -59,6 +63,7 @@
 			<li id="m-keys" class="pending">SSH Keys</li>
 			<li id="m-disks" class="pending">Disk Discovery</li>
 			<li id="m-bricks" class="pending">Brick Definition</li>
+			<li id="m-volCreate" class="pending">Create Volume</li>			
 			<li id="m-finish" class="pending">Finish</li>		
 		</ul>
 </div>
@@ -72,11 +77,6 @@
 	</span>
 </div>
 
-
-
-
-<!--<div class="separator" style="height:600px; top:100px; left:220px"></div> -->
-
 <div id="busy" >
 	<div id="busyGraphic"  class="spinner"></div>
 	<span id="busyMsg" ></span>
@@ -85,24 +85,34 @@
 </div>
 
 <div id="container" >
-	<div id="logo" style="left:100px; top:200px;"></div> 
-	<div id="overview"><h2>Overview</h2><p>This tools enables you to quickly setup a gluster cluster, by moving through several configuration phases;</p>
+	
+	<div id="logo" ></div> 
+	<div id="overview"><h2>Overview</h2>
+	<p>
+	Once the glusterfs packages are installed, you need to configure the gluster environment
+	before any volumes can be presented to 'clients'. This tools enables you to quickly setup a 
+	gluster cluster, by moving through several configuration phases;</p>
 	<p><li><b>Node discovery :</b> scan a subnet to identify candidate nodes to build a cluster from</li></p>
 	<p><li><b>SSH keys :</b> push ssh keys out to the cluster nodes to enable remote scripts to be run</li></p>
 	<p><li><b>Disk discovery :</b> select which disks on the nodes are to be used as gluster 'bricks'</li></p>
 	<p><li><b>Brick definition :</b> execution of scripts across nodes to create bricks in a standard manner</li></p>
+	<p><li><b>Volume creation :</b> create and optimise a volume for a specific use case</li></p>
+	<p>
+	Once this process is complete you will have a fully functioning gluster environment, with the first volume
+	created and available for client connections.
+	</p>
 	<button id="overviewNext" type="button" disabled onclick='startNodesPage()' class="nextButton">Next</button>
 	</div>
 	
 	<div id="nodes"><h2>Node Discovery</h2><p>Subnet to scan&nbsp;
 	  <select id="network-select">
 	  </select>
-	  <button id="network-scan-btn" type="button" disabled onclick="scanSubnet()">Scan</button>
+	  <button id="network-scan-btn" type="button" disabled onclick="scanSubnet()"><i class="icon-search"></i>Scan</button>
 	  </p>
 	  <div id="nodeSelect">
 		<select id="candidateNodes" onchange="enableButton('addNodes')" multiple size=28>
 		</select>
-		<button id="addNodes" type="button" disabled onclick="promoteNodes()">Add</button>
+		<button id="addNodes" type="button" disabled onclick="promoteNodes()"><i class="icon-right-big"></i></button>
 		<select id="selectedNodes"  multiple size=28>
 		</select>
 		<button id="createCluster" type="button" disabled onclick="createCluster()">Create</button>
@@ -133,14 +143,14 @@
 				</tbody>
 			</table>
 		</div>
-		<button id="pushKeys" type="button" onclick="pushKeys()">Distribute</button>
+		<button id="pushKeys" type="button" onclick="pushKeys()"><i class="icon-keys"></i>Distribute</button>
 		
 	</div>
 	
 	<div id="disks"><h2>Disk Discovery</h2>
 		<p>With the ssh keys in place, the nodes can now be scanned to collect a list of 'unclaimed' disks to be used as gluster bricks<br>
 		</p>
-		<button id="getDisks" type="button" onclick="findDisks()">Find Disks</button>
+		<button id="getDisks" type="button" onclick="findDisks()"><i class="icon-search"></i>Find Disks</button>
 		<div id="diskArea">
 			<table id="diskTable" cellspacing='0'>
 				<thead>
@@ -162,8 +172,8 @@
 	</div>
 	
 	<div id="bricks"><h2>Brick Definition</h2>
-		<p>Typically each node in the cluster will have an identical configuration to ensure balanced application performance. This final
-		configuration page, gathers the metrics that allow bricks to be defined optimally for a given workload. </p>
+		<p>Typically each node in the cluster will have an identical configuration to ensure balanced application performance. 
+		This configuration page, gathers the metrics that allow bricks to be defined optimally for a given workload. </p>
 		<p>Complete the items below, then click on the "Build Bricks" button to start the formatting process.
 		</p>
 		Use Case
@@ -172,31 +182,160 @@
 			<option value="virtualisation">Virtualisation</option>
 			<option value="object">Object Storage</option>
 		</select>
-		<p>% Space reserved for snapshots&nbsp;<span id="snapshotValue" style="position:relative;top:0px;width:30px;height:20px;border:1px solid;display:inline-block;text-align:center;border-radius:5px;">10</span>&nbsp;&nbsp;&nbsp;0
+		<p>% Space reserved for snapshots&nbsp;<span id="snapshotValue" >10</span>&nbsp;&nbsp;&nbsp;0
 		<input id="snapshotSpace" onkeyup="updateSnapshot();" onmouseup="updateSnapshot();" type='range' min="0" max="30" value="10" style="position:relative; left:0px;top:5px;margin:0px; padding:0px;">30</p>
 		<p>Volume Group to create (if needed) 
 		<input type='text' id="volGroupName" value="glustervg" ></p>
 		<p>Mount point for the disk
 		<input type="text" id="mountPoint" value="/gluster/brick1" disabled></p>
-		<button id="buildBricks" class="bricksButton" type="button" onclick="buildBricks()">Build Bricks</button>
+		<button id="buildBricks" class="bricksButton" type="button" onclick="buildBricks()"><i class="icon-commit-config"></i>Build Bricks</button>
 	</div>
 	
+	<div id="volCreate"><h2>Create a Volume</h2>
+		<p style="position:relative; top:-15px;line-height:2;">
+			Volume Name: 
+			<input id="volNameInput" type="text" size=26 onkeyup="updateSummary('volume')">
+			<br>
+			
+			Use Case:&nbsp;
+			<select id="volUseCase" style="position:relative; left:21px; width:130px;" onchange="addOptions(this.options[this.selectedIndex].value);">
+				<option>Generic</option>
+				<option>Virtualisation</option>
+				<option>Streaming</option>
+			</select>
+			<span id="virtInput" style="position:relative;left:40px;opacity:0;transition: opacity .75s;">
+				Target environment&nbsp;
+				<select id="virtUser" disabled>
+					<option>glance</option>
+					<option>cinder</option>
+					<option>RHEV / oVirt</option>
+				</select>
+			</span>
+			<span id="streamingInput">
+			</span>
+			<span id="genericInput">
+			</span>
+			<br>
+			Volume Type:&nbsp;
+			<select id="volType" onchange="addOptions(this.options[this.selectedIndex].value)" >
+				<option>Distributed</option>
+				<option>Replicated</option>
+			</select>
+			<span id="replicaCount" style="opacity:0;transition: opacity .75s;">
+				Replica Count&nbsp;
+				<select id="replicaCountInput" disabled >
+					<option>2</option>
+				</select>
+			</span>
+			
+			<br>
+			Additional Protocols:
+			<span id="protocols" >
+			NFS
+			<label class="switch protocols" >
+				<input id="nfsRequired" type="checkbox" class="switch-input" >
+				<span class="switch-label" data-on="On" data-off="Off"></span>
+				<span class="switch-handle"></span>
+			</label>
+			</span>
+			
+			<span id="protocols">
+			&nbsp;&nbsp;CIFS
+			<label class="switch protocols" >
+				<input id="cifsRequired" type="checkbox" class="switch-input">
+				<span class="switch-label" data-on="On" data-off="Off"></span>
+				<span class="switch-handle"></span>
+			</label>
+			</span>
+		</p>
+		<span style="position:relative; top:-25px;">
+		Available Bricks<br>
+		<select id="brickPool" class="brickPool" multiple >
+		</select>
+		</span>
+		<button id="useBrick" class="useBrick" onclick="useBrick()" ><i class="icon-right-big"></i></button>
+		
+		<!-- two tables are used - one for headers, the other for data. This allows the 
+			table rows to be scrolled leaving the table headings in place. -->
+			
+		<table id="brickHeaders" cellspacing="0">
+			<thead>
+				<tr>
+					<th >Bricks</th>
+					<th >&nbsp;</th>					
+				</tr>
+			</thead>
+		</table>
+		
+		<div id="brickLayout">
+			<table id="brickTable" cellspacing="0" >
+				<tbody>
+					<tr>
+						<td>
+						</td>
+						<td><button class="delbtn" onclick='delBrickRow(this)'><i class="icon-cancel"></i></button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<table id="configSummary" cellspacing="0">
+			<thead style="height:20;">
+				<tr >
+					<th style="width:165px;">Volume Summary</th>
+					<th style="width:60px;"># Bricks</th>
+					<th style="width:60px;">Raw</th>
+					<th style="width:60px;">Usable</th>
+					<th style="width:120px;">Fault Tolerance</th>
+					<th style="width:85px;">&nbsp;</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr style="height:30px;">
+					<td></td>
+					<td>0</td>
+					<td>0</td>
+					<td>0</td>
+					<td>None</td>
+					<td>
+						<button id="volCreateBtn" class="createBtn" onclick="createVolume()"><i class="icon-commit-config"></i>Create</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+	</div>	
 	<div id="finish"><h2>Finish</h2>
 		<p>Initial configuration is now complete.
 		<ul>
 			<li class="tick">Cluster created	</li>
 			<li class="tick">Disks discovered</li>
 			<li class="tick">Bricks formated and mounted</li>
+			<li class="tick">Volume created and optimised</li>
 		</ul>
 		</p>
-		<p>At this point you can stop the gluster-deploy script with CTRL-C, and proceed to create the volume(s) manually from the CLI.</p>
-	</div>
+		<p>At this point the initial configuration steps are complete.</p>
+		<p>For examples of how to mount the volume click <a id="mountHelp" href="javascript:showMountHelp();">here</a>, or
+		click on the button below to quit the installer.</p>
+		<button id="quitButton" type="button" onclick='finish();' class="nextButton">Quit</button>
+		<p>
+			<span id="goodbye">This browser window/tab may now be closed.</span>
+		</p>
+	</div>	
 		
-	<div id="help">
+	<div id="error"><h2>It's all gone wrong!</h2>
+		<p>
+		Sorry, it looks like a 'bad' thing just happened, so the setup can not continue.
+		</p>
+		<div style="position:relative; margin: 0 auto; width:330px; height:230px; border-radius:8px;background:white; border-color:#909090;box-shadow: 5px 5px 5px #888888;">
+			<img style="display:block; margin: auto auto;" src="images/computer-error.jpg"></img>
+		</div><br>
+		<span style="position:relative;  color:red; font-weight: bold; font-size:22px;">DON'T PANIC</span>
+		<p>On the node that you started the gluster-deploy script, there is a log file called 'gluster-deploy.log'. 
+		Take a look at this file to see if the error has been captured. If not, you can try rerunning gluster-deploy
+		with logging set to debug to capture more verbose information during the setup steps.
+		</p>	
 	</div>
-	
-
-
 
 </div>
 </body>

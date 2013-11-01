@@ -9,7 +9,9 @@ import time
 import pexpect
 import shlex
 
-glusterLog = logging.getLogger()
+import globalvars as g 
+
+# glusterLog = logging.getLogger()
 
 class SSHsession:
 	"""	SSH session class """
@@ -46,7 +48,7 @@ class SSHsession:
 				if line > '':
 					response.append(line.replace('\r',''))
 		else:
-			glusterLog.debug('%s script provided to SSHsession.sshScript can not be found', time.asctime())
+			g.LOGGER.debug('%s script provided to SSHsession.sshScript can not be found', time.asctime())
 			response = ['ERROR-SCRIPT-NOT-FOUND']
 
 		return response
@@ -64,7 +66,7 @@ class SSHsession:
 				if line > '':
 					response.append(line.replace('\r',''))
 		else:
-			glusterLog.debug('%s script provided to SSHsession.sshPython can not be found', time.asctime())
+			g.LOGGER.debug('%s script provided to SSHsession.sshPython can not be found', time.asctime())
 			response = ['ERROR-SCRIPT-NOT-FOUND']
 
 		return response
@@ -80,16 +82,16 @@ class SSHsession:
 		
 		# check for permission denied response - i.e. bad password
 		if 'Permission' in cmdOut[1]:
-			glusterLog.debug('%s ssh key not added due to bad password for node %s', time.asctime(), self.host)
+			g.LOGGER.debug('%s ssh key not added due to bad password for node %s', time.asctime(), self.host)
 			rc = 8
 			
 		# /usr/bin/ssh-copy-id: WARNING: All keys were skipped because they already exist
 		elif 'keys were skipped' in cmdOut[2]:
-			glusterLog.debug('%s ssh key already exists in %s authorized_keys file', time.asctime(), self.host)
+			g.LOGGER.debug('%s ssh key already exists in %s authorized_keys file', time.asctime(), self.host)
 			rc = 1
 			
 		else:
-			glusterLog.debug('%s ssh key added to %s', time.asctime(), self.host)
+			g.LOGGER.debug('%s ssh key added to %s', time.asctime(), self.host)
 			
 			 
 		return rc 
@@ -134,52 +136,40 @@ class SSHsession:
 		
 		elif ptr == 2:
 			# key change detected - man in the middle error mesage
-			glusterLog.debug('%s ssh login with %s to %s failed - Conflict in known_hosts file', time.asctime(), self.user, self.host)
+			g.LOGGER.debug('%s ssh login with %s to %s failed - Conflict in known_hosts file', time.asctime(), self.user, self.host)
 			return ['ERROR-HOSTID-CHANGED']
 			
 		elif ptr == 3:
 			# connect timeout!
-			glusterLog.debug('%s Connection timeout in SSHsession.__exec %s@%s', time.asctime(), self.user, self.host)
+			g.LOGGER.debug('%s Connection timeout in SSHsession.__exec %s@%s', time.asctime(), self.user, self.host)
 			pass
 
 		return child.before.split('\n')
 
 
 def issueCMD(command, shellNeeded=False):
-        """ issueCMD takes a command to issue to the host and returns the response
-                as a list
-        """
+	""" issueCMD takes a command to issue to the host and returns the response
+		as a list
+	"""
 
-        if shellNeeded:
-                args =command
-        else:
-                args = shlex.split(command)
+	if shellNeeded:
+		args =command
+	else:
+		args = shlex.split(command)
 
-        try:
-                out = subprocess.Popen(args,shell=shellNeeded,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                (response, errors)=out.communicate()	 # Get output...response is a byte string that includes \n
-        except Exception:
-                response = 'command failed\n' 
+	try:
+		child = subprocess.Popen(args,shell=shellNeeded,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		(response, errors)=child.communicate()	 # Get output...response is a byte string that includes \n
+	except Exception:
+		response = 'command failed\n' 
 
-        return response.split('\n')[:-1]                 # use split to return a list, skipping the last null entry
+	cmdText = response.split('\n')[:-1]
+	
+	retList = [child.returncode] + cmdText				# Merge the lists together - [0] = RC	
+
+	return retList                 # use split to return a list, skipping the last null entry
 
 
-
-#def issueCMD(command):
-#	""" issueCMD takes a command to issue to the host and returns the response
-#		as a list
-#	"""
-#
-#	cmdWords = command.split()
-#	try:
-#		out = subprocess.Popen(cmdWords,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-#		(response, errors)=out.communicate()				# Get the output...response is a byte
-#	except Exception:
-#		response = 'command failed\n'						# string that includes \n
-#	
-#	return response.split('\n')[:-1]							# use split to return a list and
-#																# skip the last null entry
-#	
 
 def generateKey(length=26, charsAvailable=string.letters + string.digits):
 
@@ -188,44 +178,12 @@ def generateKey(length=26, charsAvailable=string.letters + string.digits):
 	"""
 	
 	key = ''.join([random.choice(charsAvailable) for n in range(length)])
-	glusterLog.debug('%s Access key generated was %s', time.asctime(), key)
+	g.LOGGER.debug('%s Access key generated was %s', time.asctime(), key)
 		
 	return key
 
 
-#def distributeKeys(keyState, keyData):
-#	"""	receive a progress task containing the nodes to act upon, and the data from the#
-#		web in the form nodename*password<space> repeated
-#	"""
-#	
-#	for nodeData in keyData:
-#		(nodeName, nodePassword) = nodeData.split('*')
-#		
-#		keyState.targetList.remove(nodeName)
-#		
-#		sshTarget = SSHsession('root', nodeName, nodePassword)
-#		copyRC = sshTarget.sshCopyID()
-#		
-#		if copyRC <= 4:
-#			keyState.successList.append(nodeName)
-#			glusterLog.info('%s ssh key added successfully to %s', time.asctime(), nodeName)
-#		else:
-#			keyState.failureList.append(nodeName)
-#			glusterLog.info('%s Adding ssh key to %s failed', time.asctime(), nodeName)
-#
-#def getDisks(diskState, nodeData):
-#	"""	get a list of disks from the nodes """
-#	
-#	nodeList = list(diskState.targetList)
-#	
-#	for node in nodeList:
-#		glusterLog.debug('%s getDisks processing node %s', time.asctime(), node)
-#		
-#		glusterLog.debug('%s getDisks completed for node %s',time.asctime(),node)	
-#		
-#		
-#	pass
-#
+
 
 if __name__ == "__main__":
 	print "Testing function with 26 character key"

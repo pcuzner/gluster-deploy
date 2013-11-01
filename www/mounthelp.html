@@ -1,0 +1,84 @@
+<!--
+   mounthelp.html
+   
+   Copyright 2013 Paul Cuzner <paul.cuzner@redhat.com>
+   
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+   
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+   MA 02110-1301, USA.
+   
+   
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+	<title>untitled</title>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+	<meta name="generator" content="Geany 1.23.1" />
+	<link rel="stylesheet" type="text/css" href="css/theme.css">
+	<link rel="stylesheet" type="text/css" href="css/mounthelp.css">
+</head>
+
+<body>
+	<h2>Mounting a Glusterfs Volume</h2>
+	<p>
+	A gluster volume can be mounted with several protocols, although not all at
+	the same time!<br><br>
+	The sections below provide examples for mounting volumes across;<br>
+	<ul>
+	<li>SMB</li>
+	<li>NFS</li>
+	<li>Native</li>
+	</ul>
+	</p>
+	<p ><b>SMB</b><br>
+	The SMB protocol relies upon the Samba service being setup across the gluster nodes.
+	Once samba has been installed and configured, the volume can be mounted from a Windows 
+	or OSX machine using the following syntax.<br>&nbsp;
+	<span class="cli"><br>
+	&nbsp;net use &lt;drive_letter&gt; \\gluster-node-name\volume-name<br>
+	&nbsp;eg.<br>
+	&nbsp;net use y: \\glusternode\myvolume<br><br>
+	</span>
+	</p>
+	<p><b>NFS</b><br>
+	Gluster support NFS v3, and so mount options from a client must adhere to the general 
+	v3 syntax rules appropriate for the Unix/Linux platform you're using.<br><br>
+	For NFS, two examples are shown. One showing typical Linux mount syntax, and the other showing 
+	the updates necessary to /etc/fstab to make the mount persistent across client reboots.<br>&nbsp;
+	<span class="cli"><br>
+	&nbsp;mount -t nfs -o vers=3,proto=tcp gluster-node-name:/volume-name &lt;mount-point&gt;<br>
+	<br>
+	&nbsp;For /etc/fstab<br>
+	&nbsp;gluster-node-name:/volume-name &lt;mount-point&gt; nfs defaults,proto=tcp,vers=3,_netdev 0 0<br>&nbsp;
+	</span>
+	</p>
+	<p><b>Native</b><br>
+	The most efficient way to access a glusterfs volume is through the glusterfs client. The client understand the
+	topology of the cluster and provides load balancing and failover capabilties. <br>&nbsp;
+	<span class="cli"><br>
+	&nbsp;mount -t glusterfs -o backupvolfile-server=gluster-node2 gluster-node-name1:/volume-name \<br>
+	<span class="indent">&lt;mount-point&gt;</span><br>
+	<br>
+	&nbsp;For /etc/fstab<br>
+	&nbsp;gluster-node-name:/volume-name &lt;mount-point&gt; glusterfs defaults,_netdev 0 0<br>&nbsp;
+	</span>
+	</p>	
+
+</body>
+
+</html>

@@ -34,3 +34,19 @@ function xml_http_post(url, data, callback) {
     }
     request.send(data);
 }
+
+
+function loadXML(xmlString) {
+	
+	if ( window.DOMParser ) {
+		parser=new DOMParser();
+		xmlDoc=parser.parseFromString(xmlString,"text/xml");
+	}
+	else { // Internet Explorer
+		xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
+		xmlDoc.async=false;
+		xmlDoc.loadXML(xmlString);
+	} 
+	
+	return xmlDoc
+}

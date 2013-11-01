@@ -382,8 +382,8 @@ background-color: #f8f8f8;
 #busy {
 position:fixed;
 background-color: white;
-top:33%;
-left:40%;
+top:180px;
+left:390px;
 width:250px;
 height:250px;
 border:1px;

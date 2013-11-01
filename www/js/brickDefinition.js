@@ -7,6 +7,8 @@ function buildBricks() {
 	// gather th values from the promppts and form some xml to 
 	// govern the brick format process
 	
+	document.getElementById('buildBricks').disabled=true;	// turn the button off
+	
 	var useCase = document.getElementById('useCase').value;
 	var snapshotReserve = document.getElementById('snapshotSpace').value;
 	var volumeGroup = document.getElementById('volGroupName').value;
@@ -47,17 +49,6 @@ function bricksDefined(req) {
 	xmlString = req.responseText;
 	
 	xmlDoc = loadXML(xmlString);
-	
-	// move this to a generic function - pass string, return xmldoc object?
-	//if ( window.DOMParser ) {
-		//parser=new DOMParser();
-		//xmlDoc=parser.parseFromString(xmlString,"text/xml");
-	//}
-	//else { // Internet Explorer
-		//xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
-		//xmlDoc.async=false;
-		//xmlDoc.loadXML(xmlString);
-	//} 
 	
 	var brick = xmlDoc.getElementsByTagName("brick");
 	var brickPool = document.getElementById("brickPool");

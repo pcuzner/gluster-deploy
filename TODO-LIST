@@ -3,7 +3,7 @@ Bug List
 scan is looking outward from the running node, so the local node is not scanned for disks - FIXED 22/09
 
 Fix ME's
-Update the password code to be ajax based 
+Update the password code to be ajax based - DONE
 gluster.GlusterNode.getDisks is using a hardcoded path for the script...FIXED 19/09
 Switch to xml for data exchange instead of plain text - easier, more flexible parsing - INPROGESS 20/09
 
@@ -18,3 +18,5 @@ Futures
 - Longer Term
   - change the webserver to use a self signed cert for http access
   - Review the ssh code - it's untidy and could do with a spring clean
+  - print option
+  

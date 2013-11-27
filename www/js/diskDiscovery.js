@@ -1,5 +1,6 @@
-
-// disk management
+//
+// disk discovery and selection logic
+//
 
 function startDiskDiscovery() {
 
@@ -10,25 +11,19 @@ function startDiskDiscovery() {
 }
 
 function showDisks(req) {
+	
 	showBusy();
 
-	document.getElementById('getDisks').disabled = true;
+
 	
 	document.getElementById('diskArea').className = 'show';
-	
-	// Load the data received into an DOM for easier navigation
-	if (window.DOMParser) {
-		parser = new DOMParser();
-		xmlDoc = parser.parseFromString(req.responseText,"text/xml");
-	}
-	else { // for IE
-		xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
-		xmlDoc.async=false;
-		xmlDoc.loadXML(req.responseText); 
-	}
+
+	var xmlDoc = req.responseXML;
+	var t = req.responseText;
+	alert(t);
 	
 	// populate the table with the data received
-	var diskTable = document.getElementById('diskTable');
+	var diskTable = document.getElementById('diskTable').getElementsByTagName('tbody')[0];
 	var nodes = xmlDoc.getElementsByTagName('node');	// nodes is an array
 	var numNodes = nodes.length;						// how many nodes have I got?
 	
@@ -42,13 +37,21 @@ function showDisks(req) {
 			devID=devices[i].getAttribute('id');
 			devSize=devices[i].getAttribute('size');
 			
-			var newRow = diskTable.insertRow(-1);
-			var col1 = newRow.insertCell(0); // Server Name
-			col1.rowSpan = numDevs;						// set number of rows for this cell based on 
+			var newRow = diskTable.insertRow(-1);		// insert to the end of the table
+			
+			var col1 = newRow.insertCell(0); 	// Insert the column for Server Name
+			
+			/* if ( i == 0 ) {
+				
+				col1.rowSpan = numDevs;						// set number of rows for this cell based on 
 														// the number of devices found on this host
-			var col2 = newRow.insertCell(1); // device ID
-			var col3 = newRow.insertCell(2); // Size (GB)
-			var col4 = newRow.insertCell(3); // checkbox
+				}
+				 		
+*/
+
+			var col2 = newRow.insertCell(-1); // device ID
+			var col3 = newRow.insertCell(-1); // Size (GB)
+			var col4 = newRow.insertCell(-1); // checkbox
 			
 			col1.innerHTML=nodeName;
 			col2.innerHTML=devID;
@@ -62,7 +65,8 @@ function showDisks(req) {
 }
 
 function selectAll() {
-	// flip all 
+	// Called when the user clicks the check box in the column heading
+	// to trigger all the row checkboxes to be selected/unselected
 	if (document.getElementById('allDisks').checked == true) {
 		updateCheckbox('selectDisk',true)
 	}
@@ -75,22 +79,55 @@ function selectAll() {
 
 function findDisks() {
 	//alert('run get disks process')
-	
+
+	document.getElementById('getDisks').disabled = true;
+		
 	showBusy('Scanning nodes for unused disks');
 	
-	xml_http_post('../www/main.html', 'findDisks', showDisks);
+	var xmlString = "<data><request-type>find-disks</request-type></data>";
+	
+	xml_http_post('../www/main.html', xmlString, showDisks);
 	
 	
 }
 
 function registerHandler(req) {
 
-	response = req.responseText;
-	if (response == 'OK') {
+	xmlDoc = req.responseXML;
+	// Example XML input
+	// <response><status-text>OK</status-text><features snapshot='YES' btrfs='NO' /></response>
+	
+	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
+	
+	if (state == 'OK') {
+		// trigger slide transition to build bricks page
+		// slide('disks','bricks');
+		var features = xmlDoc.getElementsByTagName('features')[0].attributes;
+		var snapshotEnabled = features.getNamedItem('snapshot').value;
+		var btrfsEnabled = features.getNamedItem('btrfs').value;
+		
+		if (btrfsEnabled == 'YES' ) {
+			// Add btrfs to the select options
+			var target = document.getElementById('brickProvider');
+			var newOption = document.createElement('option');
+			newOption.text = "BTRFS";
+			target.add(newOption, null);	// FF, Chrome, Opera IE8+
+			
+		}
+		
+
+		if (snapshotEnabled == 'YES') {
+			// change the class of the 
+			document.getElementById('snapRequired').className = 'show';
+			
+		}
+	
 		slide('disks','bricks');
+    
 	}
 	
-	// trigger slide transition to build bricks page
+
+
 	
 }	
 
@@ -109,7 +146,7 @@ function registerBricks() {
 	
 	if (workToDo) {
 	// loop through each check box
-		var callerParms = '<disks>';
+		var xmlString = '<data><request-type>register-bricks</request-type>';
 		var numBricks = 0;
 		
 		for (var n = 0; n<numCheckboxes; n++ ) {
@@ -121,14 +158,14 @@ function registerBricks() {
 				var nodeName = part[0];
 				var devID = part[1];
 				
-				callerParms = callerParms + "<device host='" + nodeName + "' device='" + devID +"' />"
+				xmlString += "<device host='" + nodeName + "' device='" + devID + "' />"
 			}
 		}
-		callerParms = callerParms + '</disks>';
-		callerString = 'registerBricks|' + callerParms;
+		xmlString += '</data>';
+		//callerString = 'registerBricks|' + callerParms;
 		// showBusy('Creating 	' + numBricks + ' bricks');
 		
-		xml_http_post('../www/main.html', callerString, registerHandler);
+		xml_http_post('../www/main.html', xmlString, registerHandler);
 	
 	}
 	

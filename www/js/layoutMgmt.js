@@ -51,10 +51,14 @@ function showBusy(msg) {
 	var msg = msg || '';
 	document.getElementById('busyMsg').innerHTML = msg;
 	if (document.getElementById('busy').style.visibility == 'visible') {
+
 		document.getElementById('busy').style.visibility = 'hidden';
 		document.getElementById('busyGraphic').className = 'spinner';
 		document.getElementById('busyButton').disabled = true;
 		document.getElementById('busyButton').style.visibility = 'hidden';
+		document.getElementById('busyLog').className = "";
+		document.getElementById('busyLog').innerHTML = "";
+		msgLog.length = 0									// reset the message log array
 	}
 	else {
 		document.getElementById('busy').style.visibility = 'visible';
@@ -79,6 +83,7 @@ function updateCheckbox(checkboxName, state) {
 	}
 		
 }
+
 
 
 function disableRadio(radioName) {
@@ -155,16 +160,19 @@ function shutDown() {
 	// Send a quit message to the python web server to shut down 
 	// the script
 	
-	xml_http_post('../www/main.html', 'quit', dummyHandler);
+	var xmlString = "<data><request-type>quit</request-type></data>";
+	
+	xml_http_post('../www/main.html', xmlString, dummyHandler);
 }
 
 function dummyHandler(req) {
-	resp = req.responseText;
+	var xmlDoc = req.responseXML;
 }
 
 function showMountHelp() {
 	window.location = ('../www/mounthelp.html');
-	shutDown();
+	
+	//shutDown();
 }
 
 function finish() {
@@ -179,3 +187,52 @@ function finish() {
 	document.getElementById('goodbye').className = 'reveal';
 	shutDown();
 }
+
+/* queryStatus polls the server to retrieve any messages, and displays them 
+ * in the busyLog element
+ */
+ 
+function queryMsgs() {
+	var xmlString = "<data><request-type>query-status</request-type></data>"
+	xml_http_post('../www/main.html', xmlString, displayMsgs);
+		
+}
+
+function displayMsgs(req) {
+	var xmlDoc = req.responseXML;
+	
+	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
+	
+	if ( state == 'OK' ) {			// OK or NOTOK passed back
+		
+		// extract the messages from the response
+		var msgs = xmlDoc.getElementsByTagName('message');
+		
+		if (msgs.length > 0) {
+		
+			// add the message to the msgLog array
+			for (var i=0; i<msgs.length; i++) {
+				msgLog.push(msgs[i].childNodes[0].nodeValue);
+			}
+			
+			// Build the log messages string for the busyLog element
+			var logString = "";
+			for (var i=(msgLog.length-1); i>=0; i--) {
+				logString += msgLog[i] + "<br>";
+			}
+			
+			document.getElementById('busyLog').innerHTML = logString;
+	
+
+		}			
+		// establish next poll for messages
+		setTimeout(queryMsgs,pollingInterval);
+	}
+		
+}
+
+function enableMsgLog() {
+	document.getElementById('busyLog').className = "show";	
+	queryMsgs();
+}
+

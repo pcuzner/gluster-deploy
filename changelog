@@ -1,6 +1,34 @@
 Change Log
 
-* XXX Nov xx 2013 Paul Cuzner <paul.cuzner@redhat.com>
+* Thu Nov 28 2013 Paul Cuzner 
+- version 0.3
+- updated text passing between server and web client to all XML for consistency/maintenance
+- added rounded theme to select boxes 
+- add error checking to ssh processes
+- once connected to by single client, webserver rejects requests from other IP's 
+- Added an ACCESS DENIED page
+- added a msgstack to use as a progress tracker for long running requests
+- make http server multithreaded allowing query state to poll when long running tasks are active 
+- update finddevs.py
+  - system information: kernel, ram, cpu count, gluster version 
+  - initial raidcard discovery added using lspci
+  - filesystem/lv capabilities : btrfs, and dm-thinp 
+- updated findDisks method to cater for the xml, and added additional atrributes to the gluster node class 
+- rework brick definition UI 
+  - tailor snapshot UI element visibility based on ALL nodes dmthinp support 
+  - when available snapshots can be enabled or not 
+  - when enabled, user picks the snap reserve amount (0..30) 
+  - foundation for btrfs support in place 
+- Update build-bricks logic and buildbrick.sh script
+  - pass whether snap is required, and if so adapt lvm commnds to use thinp syntax 
+- color scheme updates on UI elements (hover emphasis) 
+  
+  FIXES
+- simplified table creation, removing row spanning in diskDiscovery.js
+- diskDiscovery.js updated to add the rows to tbody (correcting html syntax)
+
+  
+* Fri Nov 01 2013 Paul Cuzner <paul.cuzner@redhat.com>
 - Added optparse module for command line arguments. Added -n to bypass accesskey checking
 - Added password check code to RequestHandler class, and updated js use xml and ajax request
 - Added globals module to share config across modules
@@ -10,7 +38,6 @@ Change Log
 - added initial error page
 - Added help page showing mount option syntax for smb,nfs and native client
 - css split to place theme type elements in the same file
-
 
 * Wed Oct 9 2013 Paul Cuzner <paul.cuzner@redhat.com>
 - Add shell option to issueCMD function, that fixed the ssh-keygen failures

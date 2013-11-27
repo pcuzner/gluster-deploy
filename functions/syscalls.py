@@ -26,7 +26,8 @@ class SSHsession:
 		self.responses=['Are you sure you want to continue connecting', 
 						'[pP]assword:', 
 						'@@@@@@@@@@@@',
-						pexpect.EOF]
+						pexpect.EOF,
+						pexpect.TIMEOUT]
 		pass
 		
 	def ssh(self, command):
@@ -34,7 +35,10 @@ class SSHsession:
 		return self.__exec("ssh -l %s %s %s" % (self.user,self.host,command))
 	
 	def sshScript(self,scriptName):
-		""" Execute a bash script on the remote machine """
+		""" Execute a bash script on the remote machine, returning a list
+			1st element is the return code
+			nth element is the text of the output """
+			
 		response =[]
 		
 		scriptPath=scriptName.split(" ")[0]
@@ -45,16 +49,21 @@ class SSHsession:
 			
 			output = self.__exec(command)
 			for line in output:
-				if line > '':
-					response.append(line.replace('\r',''))
+				if isinstance(line,basestring):
+					if line > '':
+						response.append(line.replace('\r',''))
+				else:
+					response.append(line)
 		else:
 			g.LOGGER.debug('%s script provided to SSHsession.sshScript can not be found', time.asctime())
-			response = ['ERROR-SCRIPT-NOT-FOUND']
+			response = [16,'ERROR-SCRIPT-NOT-FOUND']
 
 		return response
 
 	def sshPython(self,scriptName):
-		""" Execute a local python script on the remote machine """
+		""" Execute a local python script on the remote machine 
+			1st element is the return code
+			nth element is the text of the output """
 		response =[]
 		
 		if os.path.exists(scriptName):
@@ -63,8 +72,11 @@ class SSHsession:
 			
 			output = self.__exec(command)
 			for line in output:
-				if line > '':
-					response.append(line.replace('\r',''))
+				if isinstance(line,basestring):
+					if line > '':
+						response.append(line.replace('\r',''))
+				else:
+					response.append(line)
 		else:
 			g.LOGGER.debug('%s script provided to SSHsession.sshPython can not be found', time.asctime())
 			response = ['ERROR-SCRIPT-NOT-FOUND']
@@ -140,11 +152,14 @@ class SSHsession:
 			return ['ERROR-HOSTID-CHANGED']
 			
 		elif ptr == 3:
-			# connect timeout!
-			g.LOGGER.debug('%s Connection timeout in SSHsession.__exec %s@%s', time.asctime(), self.user, self.host)
+			# Child process exited
+			child.close()
+			g.LOGGER.debug('%s Child process to %s exited with %s', time.asctime(), self.host,str(child.exitstatus))
 			pass
 
-		return child.before.split('\n')
+		response = [child.exitstatus] + child.before.split('\n')
+		
+		return response
 
 
 def issueCMD(command, shellNeeded=False):
@@ -178,7 +193,7 @@ def generateKey(length=26, charsAvailable=string.letters + string.digits):
 	"""
 	
 	key = ''.join([random.choice(charsAvailable) for n in range(length)])
-	g.LOGGER.debug('%s Access key generated was %s', time.asctime(), key)
+	g.LOGGER.info('%s Access key generated was %s', time.asctime(), key)
 		
 	return key
 

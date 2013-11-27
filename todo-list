@@ -1,0 +1,28 @@
+  
+0.4 (planned)
+  - add --serverlist (-s) to bypass the scan to start with a predefined list of servers
+  - fix presentation of many nodes in keymgmt (separate header and data elements)
+  - fix presentation of disks in disk discovery for many disks (separate header and data elements)
+  - add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
+
+0.5 (planned) 
+  - update findDevs to return text OR xml, change calling code accordingly
+  - Add btrfs brick build code
+  - update buildBrick to account for raid card to set appropriate offsets on pvcreate and mkfs.xfs commands
+
+0.6 (planned)
+  - add tooltip code 
+  - add tooltips to help explain some ambiguous elements of the UI
+
+0.7 (planned)
+  - print option using javascript print of a config page - user can then print or save to pdf
+  - review object structure - introduce cluster->nodes->volume->brick schema
+  
+Items under consideration
+  - change the webserver to use a self signed cert for http access
+  - Review the ssh/pexpect code - can it be tidier?
+
+
+
+  
+  

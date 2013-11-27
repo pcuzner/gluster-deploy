@@ -49,27 +49,28 @@ def clusterMembers():
 	"""
 	return issueCMD('gluster pool list')[1:]
 	
-def createVolume(xmlString):
+def createVolume(xmlDoc):
 	"""	function to define a gluster volume given an xml volume definition """
 	
 	cmdQueue = []
 	bricks = []	
-	xmlRoot = ETree.fromstring(xmlString)
-	retCode = 0
+	#xmlRoot = ETree.fromstring(xmlString)
+
 	
 	
 	# Volume parameters
-	volName = xmlRoot.find('./volume').attrib['name']
-	volType = xmlRoot.find('./volume').attrib['type']
-	useCase = xmlRoot.find('./volume').attrib['usecase']
-	replicaParm = ' ' if ( xmlRoot.find('./volume').attrib['replica'] == 'none') else (' replica ' + xmlRoot.find('./volume').attrib['replica'])
+	volumeDefinition = xmlDoc.find('volume')
+	volName = volumeDefinition.attrib['name']
+	volType = volumeDefinition.attrib['type']
+	useCase = volumeDefinition.attrib['usecase']
+	replicaParm = ' ' if ( volumeDefinition.attrib['replica'] == 'none') else (' replica ' + volumeDefinition.attrib['replica'])
 	
 	# protocols
-	NFSstate  = 'nfs.disable off'  if ( xmlRoot.find('./volume/protocols').attrib['nfs'] == 'true' )  else 'nfs.disable on'
-	CIFSstate = 'user.cifs enable' if ( xmlRoot.find('./volume/protocols').attrib['cifs'] == 'true' ) else 'user.cifs disable'
+	NFSstate  = 'nfs.disable off'  if ( xmlDoc.find('./volume/protocols').attrib['nfs'] == 'true' )  else 'nfs.disable on'
+	CIFSstate = 'user.cifs enable' if ( xmlDoc.find('./volume/protocols').attrib['cifs'] == 'true' ) else 'user.cifs disable'
 	
 	# bricks
-	for child in xmlRoot.findall('./volume/bricklist/brick'):
+	for child in xmlDoc.findall('./volume/bricklist/brick'):
 		bricks.append(child.attrib['fullpath'])
 	numBricks = len(bricks)		# may want to check the number of bricks later...?
 				
@@ -89,7 +90,7 @@ def createVolume(xmlString):
 	if useCase.lower() == 'virtualisation':
 		
 		# look to see what type of virt target it is
-		target = xmlRoot.find('./volume/tuning').attrib['target']
+		target = xmlDoc.find('./volume/tuning').attrib['target']
 		if target == 'glance':
 			cmdQueue.append('gluster vol set ' + volName + ' storage.owner-gid 161')
 			cmdQueue.append('gluster vol set ' + volName + ' storage.owner-uid 161')
@@ -104,7 +105,7 @@ def createVolume(xmlString):
 		
 		if ('rhev' in target.lower()) or (target == 'cinder'):
 			
-			# Is the virt group is available to use
+			# Is the virt group available to use
 			if os.path.isfile('/var/lib/glusterd/groups/virt'):
 				cmdQueue.append('gluster vol set ' + volName + ' group virt')
 				pass
@@ -127,20 +128,30 @@ def createVolume(xmlString):
 	g.LOGGER.debug("%s Creating volume %s - %d steps", time.asctime(), volName, numCmds)
 	
 	# Process the command sequence	
+	retCode = 0
 	stepNum = 1
 	for cmd in cmdQueue:
+		
+		cmdType = ' '.join(cmd.split()[1:3]) + ' ...'
+		g.MSGSTACK.pushMsg("Step %d/%d starting (%s)" %(stepNum, numCmds,cmdType))
+		
 		cmdOutput = issueCMD(cmd)
 		
 		if cmdOutput[0] == 0:	# retcode is 1st element, so check it's 0
 			
 			# push this cmd to the queue for reporting in the UI
 			g.LOGGER.info("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
+			g.MSGSTACK.pushMsg("Step %d/%d completed" %(stepNum, numCmds))
 			g.LOGGER.debug("%s Command successful : %s", time.asctime(), cmd)
 			pass
 			# Log the cmd being run as successful
 		else:
 			g.LOGGER.info("%s vol create step failed", time.asctime())
+			
 			g.LOGGER.debug("%s command failure - %s", time.asctime(), cmd)
+			
+			g.MSGSTACK.pushMsg("Step %d/%d failed - sequence aborted" %(stepNum, numCmds))
+			
 			# problem executing the command, log the response and return
 			retCode = 8
 			break
@@ -149,7 +160,10 @@ def createVolume(xmlString):
 	
 	
 	return retCode
-	
+
+def healthCheck():
+	pass
+		
 
 def getPeers():
 	"""	Run peer status to get a list of peers on the current server """
@@ -183,49 +197,61 @@ class GlusterDisk:
 	def __init__(self,nodeName,deviceID, size,formatRequired=False):
 		self.nodeName = nodeName
 		self.deviceID = deviceID
-		self.sizeGB = size
+		self.sizeMB = size
 		self.formatRequired = formatRequired
-		self.formatComplete = False
+		self.formatComplete = False			# deprecated
+		self.formatStatus = 'pending'		# pending -> complete || failed
 		self.mountPoint = ""
-		self.snapReserved = 0
-		self.workload = ""
+		self.snapRequired = 'NO'
+		#self.snapReserve = 0
+		self.thinSize = 0
+		self.useCase = ""
 		self.vgName = ""
+		self.lvName = ""
 		self.localDisk = False
+		self.brickType = 'LVM'
 		
-	def formatBrick(self,userPassword,vgName,snapSpace,mountPoint,workload):
+	def formatBrick(self,userPassword,raidCard):
 		"""	Pass the node the format script for this brick """
 		
-		self.mountPoint = mountPoint
-		self.snapReserved = snapSpace
-		self.workload = workload
-		self.vgName = vgName
-		
-		g.LOGGER.debug('%s formatting %s as a brick on %s', time.asctime(), self.deviceID, self.nodeName )
+		g.LOGGER.info('%s formatting %s as a brick on %s', time.asctime(), self.deviceID, self.nodeName )
 
 		scriptPath = os.path.join(g.PGMROOT,'scripts/formatBrick.sh')
-		scriptParms = " -d %s -v %s -s %s -m %s -w %s"%(self.deviceID, vgName, snapSpace, mountPoint, workload)
-
-
+		scriptParms = ( " -D -d %s -c %s -b %s -v %s -s %s -l %s -m %s -u %s -n %s" % 
+						(self.deviceID, 
+						raidCard, 
+						self.brickType, 
+						self.vgName, 
+						self.snapRequired, 
+						str(self.thinSize), 
+						self.mountPoint, 
+						self.useCase,
+						self.lvName) )
+						
 		scriptName = scriptPath + scriptParms
+		
+		g.LOGGER.debug('%s Script invocation: %s', time.asctime(),scriptName)
+
+		g.MSGSTACK.pushMsg("%s format on %s starting" %(self.deviceID, self.nodeName))
 
 		if self.localDisk:
 			resp = issueCMD(scriptName)
 			rc=resp[0]
-			# Error checking?
-			# if all is well set the brick formatted boolean
-			self.formatComplete = True
+			self.formatStatus = 'complete' if (rc == 0) else 'failed'
+
 		else:
 			
 			ssh=SSHsession('root',self.nodeName,userPassword)
 			resp=ssh.sshScript(scriptName)
-			rc=resp[0]
-			# Error checking?
-			self.formatComplete = True
 			
+			rc=resp[0]
+			self.formatStatus = 'complete' if (rc == 0) else 'failed'
 		
-		g.LOGGER.debug('%s formatBrick complete on %s', time.asctime(), self.nodeName)
+		g.MSGSTACK.pushMsg("%s format on %s ended, RC=%d" %(self.deviceID, self.nodeName, rc))
 		
-		return 0			
+		g.LOGGER.debug('%s formatBrick complete on %s with retcode = %s', time.asctime(), self.nodeName, str(rc))
+		
+		return 			
 
 class GlusterNode:
 	def __init__(self, nodeName):
@@ -238,6 +264,14 @@ class GlusterNode:
 		self.diskScanned = False
 		self.brickCreated = False			# not needed?
 		self.diskList = {}
+		self.raidCard=''
+		self.kernelVersion = ''
+		self.dmthinp = False
+		self.btrfs = False
+		self.glusterVersion = ''
+		self.memGB = 0
+		self.cpuCount = 0
+		
 		
 	def pushKey(self):
 		""" push the local machines root account ssh key to this node """
@@ -276,7 +310,7 @@ class GlusterNode:
 		pass
 		
 	def findDisks(self):
-		"""	pass a scan script to the node to populate the nodes diskList """
+		"""	pass a scan script to the node, returning a list of unused disks in xml format """
 
 		g.LOGGER.debug('%s getDisks scanning %s', time.asctime(), self.nodeName)
 		
@@ -290,28 +324,58 @@ class GlusterNode:
 		if self.localNode:
 			diskOut =  issueCMD(scriptName)
 			rc = diskOut[0]
-			diskData = diskOut[1:]
-
 		else:
 			sshTarget = SSHsession(self.userName, self.nodeName, self.userPassword)
-			diskData = sshTarget.sshPython(scriptName)
-			
-			
+			diskOut = sshTarget.sshPython(scriptName)
+			rc = diskOut[0]
+		
 		self.diskScanned = True
 
-		if len(diskData) > 0:
-			for diskInfo in diskData:
+		if ( rc == 0 ):
+			
+			diskData = str(diskOut[1])
+			xmlDoc = ETree.fromstring(diskData)
+			freeDisks = xmlDoc.findall('disk')
+			sysInfo = xmlDoc.find('sysinfo')
+			
+			# Process the sysinfo data, and update the node's attributes
+			self.kernelVersion = sysInfo.attrib['kernel']
+			self.dmthinp = True if sysInfo.attrib['dmthinp'] == 'yes' else False
+			self.btrfs = True if sysInfo.attrib['btrfs'] == 'yes' else False
+			self.glusterVersion = sysInfo.attrib['glustervers']
+			self.memGB = int(sysInfo.attrib['memsize']) / 1024**2
+			self.cpuCount = int(sysInfo.attrib['cpucount'])
+			self.raidCard = sysInfo.attrib['raidcard']
+			
+			# Process the disk information
+			for disk in freeDisks:
+				deviceName = disk.attrib['device']
+				sizeMB = int(disk.attrib['sizeKB']) / 1024
 				
-				(deviceName,sizeStr) = diskInfo.split(" ")
-				size = int(sizeStr) / 1024**2						# convert to KB -> GB
-				thisDisk = GlusterDisk(self.nodeName, deviceName, size)
+				brick = GlusterDisk(self.nodeName, deviceName, sizeMB)
 				if self.localNode:
-					thisDisk.localDisk = True
-				self.diskList[deviceName] = thisDisk
+					brick.localDisk = True
+				self.diskList[deviceName] = brick
+				
+			#for diskInfo in diskData:
+				
+				#(deviceName,sizeStr) = diskInfo.split(" ")
+				#size = int(sizeStr) / 1024**2						# convert to KB -> GB
+				#thisDisk = GlusterDisk(self.nodeName, deviceName, size)
+				#if self.localNode:
+					#thisDisk.localDisk = True
+				#self.diskList[deviceName] = thisDisk
+		else:
+			# Scan failed logic here
+			pass
 		
 				
 		g.LOGGER.debug('%s getDisks found %d devices on %s', time.asctime(), len(self.diskList), self.nodeName)
 		
+class GlusterCluster:
+	""" Future - hold references to nodes in a cluster object """
+	def __init__(self):
+		pass
 		
 
 if __name__ == '__main__':

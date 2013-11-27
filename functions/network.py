@@ -104,6 +104,9 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 			
 			result = sock.connect_ex((IPaddr,targetPort))
 			if result == 0:
+				
+				
+				
 				g.LOGGER.debug('%s port %d found open on %s', time.asctime(),targetPort,IPaddr)
 				
 				# check if this IP is from this host - if so set suffix
@@ -115,6 +118,9 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 					hostName = IPaddr + suffix
 					
 				serviceList.append(hostName)
+				
+				# Add 'found host' message to the message stack
+				g.MSGSTACK.pushMsg('Found %s' %(hostName))
 				
 			sock.close()
 		except:

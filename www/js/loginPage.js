@@ -1,8 +1,13 @@
 
 
 function keyAction(req) {
-	response = req.responseText;
-	if (response == "OK") {
+	// xmlString = req.responseText;
+	
+	xmlDoc = req.responseXML;
+	
+	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
+	
+	if (state == "OK") {
 		document.getElementById('password').className = '';
 		fade('access');
 		disableDiv('access');
@@ -24,10 +29,11 @@ function keyAction(req) {
 function validateKey() {
 	var userKey = document.getElementById('password').value ;
 	
-	var xmlString = "<data><password>" + userKey + "</password></data>";
+	var xmlString = "<data><request-type>password</request-type><password>" + userKey + "</password></data>";
 	
-	callerString = 'passwordCheck|' + xmlString;
+	/*callerString = 'passwordCheck|' + xmlString; */
 			
-	xml_http_post('../www/main.html', callerString, keyAction);
+	/* xml_http_post('../www/main.html', callerString, keyAction); */
+	xml_http_post('../www/main.html', xmlString, keyAction);	
 		
 }

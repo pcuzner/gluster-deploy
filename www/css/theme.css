@@ -5,6 +5,75 @@ body {
 	font-size:14px;
 }
 
+select {
+	position:relative;
+	border: 1px solid #c0c0c0; 
+	background: #f8f8f8;
+	color: #505050;
+	border-radius:6px;
+}
+select:disabled {
+	border: 1px solid #c0c0c0;
+	background: #ededed
+}
+select:disabled:hover {
+	border: 1px solid #c0c0c0;
+	background: #ededed
+}
+select:hover {
+	color: #000000;
+	background: #ffffff;
+	border:1px solid #0000cc;
+}
+select:focus {
+	color: #000000;
+	background: #ffffff;
+	border:1px solid #0000cc;
+}
+
+input[type='text'] {
+	border:1px solid #c0c0c0;
+	font-family: monospace;
+	font-size: 14px;
+	background-color: #f8f8f8;
+	color: #505050;
+	font-weight:bold;
+	border-radius:6px;
+}
+input[type='text']:hover {
+	color: #000000;
+	background: #ffffff;
+	border:1px solid #0000cc;
+}
+input[type='text']:focus {
+	color: #000000;
+	background: #ffffff;
+	border:1px solid #0000cc;
+}
+
+input[type='text']:disabled {
+border-color:#c0c0c0;
+background-color:#ededed;
+color:#c8c8c8;
+
+}
+input[type='text']:disabled:hover {
+border-color:#c0c0c0;
+background-color:#ededed;
+color:#c8c8c8;
+}
+input[type='text'].error {
+	border-color:red;
+}
+/*
+select {
+		position:relative;
+		min-width:200px;
+		border:1px solid #c0c0c0;
+		border-radius:6px;
+}
+*/
+
 p {
 	text-align:justify;
 }
@@ -15,7 +84,7 @@ list-style-image:url("../images/bullet-tick.png") ;
 }
 
 button {
-	border-radius: 8px;
+	border-radius: 8px; 
 	background: #e2e2e2;
 	color:#404040;
 	font-size:14px;
@@ -32,6 +101,7 @@ button {
 button:disabled {
 	color: #cccccc;
 }
+
 button:disabled:hover {
 	color: #cccccc;
 	background: -moz-linear-gradient(top, #e2e2e2 0%, #dbdbdb 50%, #d1d1d1 51%, #fefefe 100%); /* FF3.6+ */
@@ -40,6 +110,8 @@ button:disabled:hover {
 	background: -o-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Opera 11.10+ */
 	background: -ms-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* IE10+ */
 	background: linear-gradient(to bottom, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* W3C */
+
+
 }
 
 button:hover {
@@ -51,6 +123,8 @@ button:hover {
 	background: -o-linear-gradient(top, #2F2727, #1a82f7); /* Opera 11.1+ */
 	color: white ;
 	/*cursor:pointer; */
+
+	
 }
 
 .hidden {

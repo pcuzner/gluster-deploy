@@ -1,5 +1,8 @@
 
 
+.error {
+	border: 1px solid red;
+	}
 
 .nextButton {
 	position: relative;
@@ -18,13 +21,17 @@
 	top:80px;
 }
 
-
+/*
+#network-select:disabled:hover {
+	border:1px solid #c0c0c0;
+}
 
 
 #network-select:hover {
 	border:1px solid #FF9900;
 	
 }
+*/
 
 .active {
 	text-align:left;
@@ -107,24 +114,73 @@
 	height: 50px;
 }
 
-input[type='text'] {
-	border-color:#FF9900;
-	font-family: monospace;
-	font-size: 14px;
-	background-color: #e5e5e5;
-	color: #505050;
-	font-weight:bold;
-}
-input[type='text']:disabled {
-border-color:#808080;
-background-color:#ededed;
-color:#c8c8c8;
+/*
+#snapDefinition {
+	position:relative;
+	visibility:hidden;
+	display:none;
 
 }
-input[type='text'].error {
-	border-color:red;
+#snapDefinition.show {
+	visibility:visible;
+	display:block;
+
+}		
+*/
+
+.hidden {
+visibility:hidden;
+display:none;
 }
 
+.show {
+visibility:visible;
+display:block;
+}
+
+#snapshotSwitch {
+	top:-4px;
+}
+#snapReserve {
+	position:relative;
+	visibility:hidden;
+		opacity:0;
+    top:-34px;
+    left:210px;
+	transition:opacity .75s;
+
+	
+}
+#snapReserve.show {
+	visibility:visible;
+		opacity:100;
+
+
+}
+#snapRequired {
+position:relative;
+height:30px;
+visibility:hidden;
+display:none;
+}
+#snapRequired.show {
+visibility:visible;
+display:block;
+}
+
+
+.brickInputField {
+position:absolute;
+left:170px;
+}
+
+
+#snapshotSpace {
+position:relative;
+top:5px;
+left:-10px;
+
+}
 
 li {
 margin-left: 15px;
@@ -342,24 +398,24 @@ left: 0px;
 
 
 #candidateNodes {
-	width: 150px;
+	width: 200px;
 	position:absolute;
 
 }
 
 #addNodes {
 	position:absolute;
-	left:190px;
+	left:230px; /* was 190px */
 	width:37px;
 }
 
 #createCluster {
 position:absolute;
-left:480px;
+left:520px; /* was 480 */
 }
 
 #selectedNodes {
-	width: 150px;
+	width: 200px;
 	position:absolute;
 	left:300px;
 
@@ -384,8 +440,8 @@ position:fixed;
 background-color: white;
 top:180px;
 left:390px;
-width:250px;
-height:250px;
+width:290px;
+height:300px;
 border:1px;
 border-color:#909090;
 border-radius:8px;
@@ -408,20 +464,46 @@ background: #ffffff url('../images/busy.gif') no-repeat center top;
 #busyGraphic.success {
 background: #ffffff url('../images/tick.png') no-repeat center top;
 }
-#busyGraphic.error {
+#busyGraphic.fail {
 background: #ffffff url('../images/warn.png') no-repeat center top;
 }
 
 #busyMsg {
 position:absolute;
 top:120px;
-width:250px;
+width:290px;
 text-align:center;
 }
 
+#busyLog {
+	position:relative;
+	top:40px;
+	margin:auto auto;
+	width:250px;
+	height:100px;
+	font-size:14px;
+	font-family:mono;
+	border:1px solid #e0e0e0;
+	border-radius:5px;
+	background:#ededed;
+	overflow-y:scroll;
+	padding:5px 5px 5px 5px;
+	visibility:hidden;
+
+}
+#busyLog.show {
+	visibility:visible;
+}
+
+#busyButton {
+position:absolute; 
+bottom:10px; 
+right:20px; 
+visibility:hidden; 
+}
 
 
-#page-cover {
+/* #page-cover {
     display: none;
     position: fixed;
     width: 100%;
@@ -431,7 +513,7 @@ text-align:center;
     top: 0;
     left: 0;
 }
-
+*/
 		/********************************/
 		/* Create Volume CSS attributes */
 		/********************************/

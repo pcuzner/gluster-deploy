@@ -24,6 +24,7 @@
 
 import subprocess
 import sys
+import os
 
 def issueCMD(command):
 	""" issueCMD takes a command to issue to the host and returns the response
@@ -36,9 +37,10 @@ def issueCMD(command):
 		(response, errors)=out.communicate()					# Get the output...response is a byte
 	except Exception:
 		response = 'command not found\n'
+	
 															# string that includes \n
 	
-	return response.split('\n')								# use split to return a list
+	return response.split('\n')							# use split to return a list
 
 def filterDisks(partList):
 	""" Take a list of devices from proc/partitions and retun only the disk devices """
@@ -97,26 +99,74 @@ def filterBTRFS(disks):
 	
 	return disks
 
+def getRaid():
+	""" Look for a raid card and if found, return the type """
+	
+	cmd = "lspci | grep -i raid"
+	pciOutput = issueCMD(cmd)
+
+	if len(pciOutput) == 0:
+		raidCard = "unknown"
+	else:							# lspci has returned something
+		pciInfo = pciOutput[0].lower()
+		if pciInfo == '':			# if no raid is present we just get null
+			raidCard = 'unknown'
+		else:
+			if 'smart' in pciInfo:
+				raidCard = 'smartarray'
+			elif 'lsi' in pciInfo:
+				raidCard = 'lsi'
+			elif 'adaptec' in pciInfo:
+				raidcard = 'adaptec'
+		
+	return raidCard
+
+def getSysInfo():
+	""" Extract system attributes to associate with this node """
+	
+	
+	kernel = '.'.join(os.uname()[2].split('.')[:2])
+	thinp = 'yes' if os.path.exists('/usr/sbin/thin_check') else 'no'
+	btrfs = 'yes' if os.path.exists('/usr/sbin/btrfs') else 'no'
+	glusterVers = os.listdir('/usr/lib64/glusterfs')[0]
+	
+	memSize = open('/proc/meminfo').readlines()[0].split()[1]
+	cpuCount = len([ p for p in open('/proc/cpuinfo').readlines() if p.startswith('processor')])
+	raidCard = getRaid()
+
+	
+	sysinfo = ( "<sysinfo kernel='" + kernel + "' dmthinp='" + thinp + "' btrfs='"
+				+ btrfs + "' glustervers='" + glusterVers + "' memsize='" + memSize
+				+ "' cpucount='" + str(cpuCount) + "' raidcard='" + raidCard + "' />" ) 
+	
+	
+	return sysinfo 
+	
 
 def main():
+	""" Invoke the filters to determine if there are any devices unused on the 
+		current host. Must be run as root """
+	
+	sysInfo = getSysInfo()
 	
 	# get list of partitions on this host
 	partList = issueCMD('cat /proc/partitions')[2:-1]			# take element 2 onwards
-
-
 
 	devices = filterDisks(partList)	# list
 	disks = filterPartitions(devices)	# dict
 	noLVM = filterLVM(disks)
 	unusedDisks = filterBTRFS(noLVM)
-
-	retString = ''
+	
+	xmlString = "<data>" + sysInfo
+	# change xmlstring to be <data><sysinfo><disk>..<disk></data>
 
 	for disk in unusedDisks:
-		sys.stdout.write(disk + " " + unusedDisks[disk] + "\n") 
-		#retString = retString + disk + " " + unusedDisks[disk] + ","
+		xmlString += "<disk device='" + disk + "' sizeKB='" + unusedDisks[disk] + "' />"
 
-	#retString = retString[:-1]	# remove the trailing ','
+	xmlString += "</data>"
+
+	print xmlString
+
 
 	# Using sys.stdout.write avoids the carriage return/newline info being passed back
 	#sys.stdout.write(retString)

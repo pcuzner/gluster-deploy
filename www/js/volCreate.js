@@ -255,11 +255,29 @@ function addOptions(optionName) {
 
 function createVolHandler(req) {
 	
-	resp = req.responseText;
+	var xmlDoc = req.responseXML;
+	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
 	
-	showBusy();
+	// Add next button
+	// add onclick definition
+	// change the spinner to a green tick
+	if ( state == 'OK' ) {
+		document.getElementById('busyGraphic').className = 'success';
+	}
+	else {
+		document.getElementById('busyGraphic').className = 'fail';
+	}
+																										
+	document.getElementById('busyButton').disabled = false;
+	document.getElementById('busyButton').style.visibility = 'visible';
+	document.getElementById('busyButton').onclick = function() { showFinish(state);};
+	
+}
 
-	if ( resp == 'success') {
+function showFinish(state) {
+	showBusy(); // turn off the showbusy message
+
+	if ( state == 'OK') {
 		// activate finish div	
 		slide('volCreate','finish');
 	}
@@ -268,7 +286,10 @@ function createVolHandler(req) {
 		slide('volCreate','error');
 		shutDown();
 	}
+
 }
+
+
 
 function createVolume() {
 	
@@ -281,7 +302,7 @@ function createVolume() {
 	// At this point the volume name is given, and the user has selected 
 	// bricks to use, so build the xml string to pass back to the webserver
 	// eg.
-	// <data>
+	// <data><request-type>vol-create</request-type>
 	//   <volume name='myvol' type='replicated' replica='2' usecase='virtualisation'>
 	//     <protocols cifs='no' nfs='no' />
 	//     <tuning target='glance' />
@@ -297,7 +318,7 @@ function createVolume() {
 	var nfs     = document.getElementById('nfsRequired').checked;
 	var cifs	= document.getElementById('cifsRequired').checked;
 	
-	var xmlString = "<data>"
+	var xmlString = "<data><request-type>vol-create</request-type>"
 					+ "<volume name='" + volName + "' type='" + volType + "' usecase='" + useCase + "'"
 					+ " replica='" + replica + "' >"
 					+ "<protocols nfs='" + nfs.toString() + "' cifs='" + cifs.toString() + "' />";
@@ -328,8 +349,11 @@ function createVolume() {
 	showBusy("Creating '" + volName + "'");
 	disableDiv('brickLayout');				// Need to disable separately, since it's a div within a div
 	document.getElementById('volCreateBtn').disabled = true;
+	document.getElementById('volNameInput').disabled = true;
 	
-	callerString = "volCreate|" + xmlString;
-	xml_http_post('../www/main.html', callerString, createVolHandler);
+	//callerString = "volCreate|" + xmlString;
+	xml_http_post('../www/main.html', xmlString, createVolHandler);
+	
+	enableMsgLog();
 	
 }

@@ -41,9 +41,11 @@ import xml.etree.ElementTree as ETree
 import logging
 import BaseHTTPServer
 import SimpleHTTPServer
+import SocketServer
 import time
 import os
 import sys
+import httplib
 
 
 # define a dict to hold gluster node objects, indexed by the node name
@@ -51,6 +53,34 @@ glusterNodes = {}
 
 
 class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+	
+	adminIP = ''
+	pollingEnabled = False
+	pollingEnabledTasks = ['build-bricks','vol-create', 'find-nodes']
+
+	def do_GET(self):
+		""" Override get method, checking the client IP to prevent more than
+			client IP connecting to the webserver at the same time
+		"""
+		thisIP = self.client_address[0]
+
+		if RequestHandler.adminIP == '':
+			RequestHandler.adminIP = thisIP
+			g.LOGGER.info("%s Admin access to the interface is locked to %s", time.asctime(), thisIP)
+
+		if thisIP != RequestHandler.adminIP:
+			self.path = "/www/disallowed.html"
+			g.LOGGER.info("%s Setup wizard access attempt from %s DENIED", time.asctime(), thisIP)
+
+		return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
+
+	def do_QUIT(self):
+		""" Internal quit handler to terminate additional request threads """
+		self.send_response(200)         # completed ok
+		self.end_headers()              # blank line end of http response
+		self.server.stop=True
+		 
+		 
 		 
 	def do_POST(self):
 		""" Handle a post request looking at it's contents to determine
@@ -61,17 +91,32 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		length = int(self.headers.getheader('content-length'))        
 		dataString = self.rfile.read(length)
 		
-		cmd = dataString.split('|')[0]
-		parms = dataString.split('|')[1:]
+		#cmd = dataString.split('|')[0]
+		#parms = dataString.split('|')[1:]
 		
-		if cmd == "passwordCheck":
+		try:
+			xmlRoot = ETree.fromstring(dataString)
+			requestType = xmlRoot.find('./request-type').text
+			
+		except:
+			print "XML parsing error - string received was " + dataString
+			self.server.stop = True
+			sys.exit(8)
+			return
+
+		if requestType in RequestHandler.pollingEnabledTasks:
+			RequestHandler.pollingEnabled = True
+		
+		if ( requestType == "password" ):
 			
 			if g.PASSWORDCHECK:
-				xmlString = parms[0]
+				#xmlString = parms[0]
 			
 				# Read the xml string, and extract the password the user has supplied
 				# <data><password>PASSWORD_STRING</password></data>		
-				xmlRoot = ETree.fromstring(xmlString)
+				
+				# xmlRoot = ETree.fromstring(xmlString)
+				
 				userKey = xmlRoot.find('password').text
 				
 				if userKey == g.ACCESSKEY:
@@ -85,35 +130,67 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				# PASSWORDCHECK turned off so just return OK
 				g.LOGGER.info('%s passwordCheck bypassed by -n parameter',time.asctime())
 				retString = 'OK'
+			
+			response = "<response><status-text>" + retString + "</status-text></response>"
 				
-			self.wfile.write(retString)	
+			self.wfile.write(response)	
 				
 			
-		elif (cmd == "subnetList"):
+		elif ( requestType == "subnet-list" ):
 
 			subnets = getSubnets()
-			subnetString = ' '.join(subnets)
+			if subnets:
+				response = "<response><status-text>OK</status-text>"
+				for subnet in subnets:
+					response += "<subnet>" + subnet + "</subnet>"
+				response += "</response>"
+				# subnetString = ' '.join(subnets)
+				allSubnets = ' '.join(subnets)
 			
-			g.LOGGER.debug("%s network.getSubnets found - %s", time.asctime(), subnetString)
+				g.LOGGER.debug("%s network.getSubnets found - %s", time.asctime(), allSubnets)
+			
+			else:
+				response = "<response><status-text>FAILED</status-text></response>"
 			
 			print "\t\tHost checked for active NIC's"				
-			self.wfile.write(subnetString)
+			self.wfile.write(response)
 			
-		elif (cmd == "findNodes"):
-			scanTarget= parms[0]
+		elif ( requestType == "find-nodes" ):
+			
+			scanTarget = xmlRoot.find('subnet').text
+			
+			
+			#scanTarget= parms[0]
 			
 			g.LOGGER.info('%s network.findService starting to scan %s', time.asctime(), scanTarget)
 			nodeList = findService(scanTarget,g.SVCPORT)
+			
+			if nodeList:
+				response = "<response><status-text>OK</status-text>"
+				for node in nodeList:
+					response += "<node>" + node + "</node>"
+				response += "</response>"
 					
-			g.LOGGER.info('%s network.findService scan complete', time.asctime())
-			g.LOGGER.debug("%s network.findService found %s services on %s", time.asctime(), str(len(nodeList)), scanTarget)
+				g.LOGGER.info('%s network.findService scan complete', time.asctime())
+				g.LOGGER.debug("%s network.findService found %s services on %s", time.asctime(), str(len(nodeList)), scanTarget)
 
-			print "\t\tSubnet scanned for glusterd ports - " + str(len(nodeList)) + " found"
-			self.wfile.write(" ".join(nodeList))
+			else:
+				response = "<response><status-text>FAILED</status-text></response>"
+
+			print "\t\tSubnet scanned for open glusterd ports - " + str(len(nodeList)) + " found"
 		
-		elif (cmd == "createCluster"):
+			self.wfile.write(response)
+			RequestHandler.pollingEnabled = False
+			
+		
+		elif (requestType == "create-cluster"):
 
-			nodeList = parms[0].split(" ")	
+			nodeElements = xmlRoot.findall('node')
+			nodeList = []
+			for node in nodeElements:
+				nodeList.append(node.text)
+
+			# nodeList = parms[0].split(" ")	
 			success = 0 
 			failed = 0
 			g.LOGGER.info('%s createCluster joining %s nodes to the cluster', time.asctime(), len(nodeList))
@@ -141,31 +218,32 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						failed +=1
 				
 			
+			respText = "OK" if failed == 0 else "FAILED"
+			response = ( "<response><status-text>" + respText + "</status-text><summary success='" + str(success)
+						+ "' failed='" + str(failed) + "' /></response>" )
 			
 			g.LOGGER.debug('%s createCluster results - success %d, failed %d',time.asctime(), success, failed)
 			
 			print "\t\tCluster created - added " + str(success) + " nodes to this node (" + str(failed) + " nodes failed)"
 
-			# return success and failed counts to the caller (webpage)			
-			retString = str(success) + " " + str(failed)
-			self.wfile.write(retString)
+			# return success and failed counts to the caller (UI)			
+			
+			#retString = str(success) + " " + str(failed)
+			self.wfile.write(response)
 			
 			g.LOGGER.info('%s gluster.createCluster complete', time.asctime())			
 		
-		elif (cmd == "queryCluster"):
-			pass
 		
-		elif (cmd == "pushKeys"):
-			
-			keyData = parms[0].split(" ")
-			#print keyData
+		elif ( requestType == "push-keys" ):
+
 			success = 0
 			failed = 0
-			
-			g.LOGGER.info('%s pushKeys distributing ssh keys to %d nodes', time.asctime(), len(keyData))
-
-			for n in keyData:
-				[nodeName, nodePassword] = n.split('*')
+						
+			nodes = xmlRoot.findall('node')
+			for node in nodes:
+				nodeName = node.attrib['server']
+				nodePassword = node.attrib['password']
+				
 				glusterNodes[nodeName].userPassword = nodePassword
 				glusterNodes[nodeName].pushKey()
 				if glusterNodes[nodeName].hasKey:
@@ -173,23 +251,42 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				else:
 					failed += 1
 
+
 			
-			retString = str(success) + " " + str(failed)
-			self.wfile.write(retString)
+			#keyData = parms[0].split(" ")
+			#print keyData
+
+			
+			g.LOGGER.info('%s pushKeys distributing ssh keys to %d nodes', time.asctime(), len(nodes))
+
+			#for n in keyData:
+			#	[nodeName, nodePassword] = n.split('*')
+			#	glusterNodes[nodeName].userPassword = nodePassword
+			#	glusterNodes[nodeName].pushKey()
+			#	if glusterNodes[nodeName].hasKey:
+			#		success += 1
+			#	else:
+			#		failed += 1
+
+			respText = "OK" if failed == 0 else "FAILED"
+			response = ( "<response><status-text>" + respText + "</status-text><summary success='" 
+						+ str(success) + "' failed='" + str(failed) + "' /></response>" )
+						
+			#retString = str(success) + " " + str(failed)
+			
+			self.wfile.write(response)
 			
 			g.LOGGER.info('%s pushKeys complete - success %d, failed %d', time.asctime(), success, failed)
 			print "\t\tSSH keys distributed"
 			
-		elif (cmd == "queryKeys"):
-			pass
 			
 			
-		elif (cmd == "findDisks"):
+		elif ( requestType == "find-disks" ):		
 			# receive the same list as sent to the keys
 			# it only makes sense to try to get disk info from the successful
 			# nodes where the ssh key copy worked
 			
-			retString = '<cluster>'
+			retString = '<data>'
 			diskCount = 0
 			
 			g.LOGGER.info('%s findDisks invoked', time.asctime())
@@ -206,11 +303,12 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					retString = retString + "<node><nodename name='" + node + "'/><disks>"
 					for deviceID in glusterNodes[node].diskList:
 						diskObj = glusterNodes[node].diskList[deviceID]
-						retString = retString + "<device id='" + deviceID + "' size='" + str(diskObj.sizeGB) + "' />"
+						sizeGB = diskObj.sizeMB / 1024
+						retString = retString + "<device id='" + deviceID + "' size='" + str(sizeGB) + "' />"
 						diskCount += 1
 					retString = retString + "</disks></node>"
 
-			retString = retString + "</cluster>"
+			retString = retString + "</data>"
 
 			self.wfile.write(retString)
 			
@@ -218,40 +316,68 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			print "\t\tNodes scanned for available (free) disks (" + str(diskCount) + " found)"
 			
 			
-		elif (cmd == "queryDisks"):
-			pass
-		
 			
-		elif (cmd == "registerBricks"):
-			diskXML = parms[0]
-			
-			xmlRoot = ETree.fromstring(diskXML)
-			for device in xmlRoot:
+		elif ( requestType == "register-bricks" ):
+
+	
+
+			devices = xmlRoot.findall('device')
+			for device in devices:
 				targetHost = device.attrib['host']
 				targetDevice = device.attrib['device']
 				
 				disk = glusterNodes[targetHost].diskList[targetDevice]
 				disk.formatRequired=True 
 			
-			# brickState = TaskProgress()
-			# return an update complete message back to the caller
-			self.wfile.write('OK')
-			pass
+			response = "<response><status-text>OK</status-text><features "
+
+			# Determine whether snapshots are available, by looking at the capabilities
+			# of every node in the cluster. They must all tally for these features to be 
+			# used.
+			
+			# FUTURE: Add these capabilities as attributes of a gluster cluster object?
+			lvmSnapshot = "YES"
+			btrfsSupport = "YES"
+			
+			# cylcle through all nodes. They must ALL match to have snapshot or btrfs 
+			# features enabled
+			for node in sorted(glusterNodes.iterkeys()):   
+				thisHost = glusterNodes[node]
+				if thisHost.dmthinp == False:
+					lvmSnapshot = "NO"
+				if thisHost.btrfs == False:	# or thisHost.kernelVersion < required level
+					btrfsSupport = "NO"
+			
+			response += "snapshot='" + lvmSnapshot + "' btrfs='" + btrfsSupport + "' /></response>"
+			self.wfile.write(response)
 		
 
-		elif (cmd == "buildBricks"):
-			parmsXML = parms[0]
+		elif ( requestType == "build-bricks" ):		
+			
+			success = 0 
+			failed = 0
 			
 			# process the parameter XML file to set variables up for the script			
-			xmlRoot = ETree.fromstring(parmsXML)
+			parms = xmlRoot.find('brickparms')
 			
-			useCase = xmlRoot.find('./parms').attrib['usecase']
-			snapReserve = xmlRoot.find('./parms').attrib['snapreserve']
-			vgName = xmlRoot.find('./parms').attrib['volgroup']
-			mountPoint = xmlRoot.find('./parms').attrib['mountpoint']
+			useCase = parms.attrib['usecase']
+			brickType = parms.attrib['brickprovider']			# LVM or BTRFS
+			snapRequired = parms.attrib['snaprequired']			# YES or NO
 
-			brickList = []	# Maintain a list of bricks that were formatted
+			lvName = parms.attrib['lvname'] if ( brickType == 'LVM' ) else ""
+			vgName = parms.attrib['volgroup'] if (brickType == 'LVM') else ""
 			
+			if snapRequired == 'YES':
+				snapReserve = int(parms.attrib['snapreserve'])
+			else:
+				snapReserve = 0
+			
+			mountPoint = parms.attrib['mountpoint']
+
+			# Maintain a list of bricks that were formatted to pass back to the
+			# UI for brick selection when creating the volume
+			brickList = []	
+						
 			for node in sorted(glusterNodes.iterkeys()):
 				pass
 				thisHost = glusterNodes[node]
@@ -266,66 +392,110 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						
 						if thisDisk.formatRequired:
 							g.LOGGER.debug('%s format requested for node %s, disk %s',time.asctime(), node, thisDisk.deviceID)
+							thisDisk.vgName = vgName
+							thisDisk.mountPoint = mountPoint
+							thisDisk.brickType = brickType
+							thisDisk.snapReserve = snapReserve
+							thisDisk.useCase = useCase
+							thisDisk.lvName = lvName
+							thisDisk.snapRequired = snapRequired
+							if ( thisDisk.snapRequired == 'YES' ):
+								pct = 100 - snapReserve
+								thisDisk.thinSize = int((thisDisk.sizeMB / 100) * pct)
 							
-							# issue command, get rc
+							# issue command, and check status of the disk
+							thisDisk.formatBrick(thisHost.userPassword,thisHost.raidCard)
+							if thisDisk.formatStatus == 'complete':
+								brickList.append(thisDisk)
+								success += 1
+							else:
+								failed += 1
 
-							thisDisk.formatBrick(thisHost.userPassword,vgName,snapReserve,mountPoint,useCase)
-							brickList.append(thisDisk)
 
-							#if state == 0:
-								# set message success
-							#	pass
-							#else:
-								# set message failed
-							#	pass
 			
 			# Future: check the brickList to only allow bricks of the same size through to vol create
 			
 			# Now the bricks have been formatted, we process the list
 			# to assemble an xml string ready for the UI to load into an
 			# array for use in the volCreate step				
-			xmlDoc =  "<data>"
-			xmlDoc += "<summary success='0' failed='0' />"
+			respText = 'OK' if (failed == 0 ) else 'FAILED'
+			response = ( "<response><status-text>" + respText + "</status-text>"
+						+ "<summary success='" + str(success) + "' failed='" + str(failed) + "' />" )
 			
 			for brick in brickList:
 				# e.g. <brick fsname='/gluster/brick' size='10' servername='rhs1-1' />"
-				xmlDoc += "<brick fsname='" + brick.mountPoint + "' size='" + str(brick.sizeGB) + "' servername='" + brick.nodeName + "' />"
-			xmlDoc += "</data>"
+
+				sizeGB = ( brick.sizeMB / 1024 ) if brick.thinSize == 0 else ( brick.thinSize / 1024 )
+
+				response += "<brick fsname='" + brick.mountPoint + "' size='" + str(sizeGB) + "' servername='" + brick.nodeName + "' />"
+			response += "</response>"
 
 			# Send to UI
-			self.wfile.write(xmlDoc)
+			self.wfile.write(response)
 			
-			print "\t\tBricks formatted"
+			print "\t\tBricks formatted : " + str(success) + " successful, " + str(failed) + " failed"
 
+			RequestHandler.pollingEnabled = False
 		
-		elif (cmd == "queryBuild"):
-			pass		
+	
 
-		elif (cmd == "volCreate"):
+		elif ( requestType == "vol-create" ):
+			
 			g.LOGGER.info('%s Initiating vol create process', time.asctime())
-			rc = createVolume(parms[0])
+			
+			rc = createVolume(xmlRoot)
 
 			if rc == 0:
 				# Create volume was successful
 				g.LOGGER.info('%s Volume creation was successful', time.asctime())
-				msg = 'success'
+				msg = 'OK'
 				pass
 			else:
 				# Problem creating the volume
 				g.LOGGER.info('%s Volume creation failed rc=%d', time.asctime(), rc)
-				msg = 'failed'
+				msg = 'FAILED'
 				pass
+			
+			response = "<response><status-text>" + msg + "</status-text></response>"
 				
-			self.wfile.write(msg)	
+			self.wfile.write(response)	
 			
-			print "\t\tVolume create result: " + msg		
+			print "\t\tVolume create result: " + msg	
 			
+			RequestHandler.pollingEnabled = False	
+
+
+		elif (requestType == "query-status"):
+
+			msgs = g.MSGSTACK.popMsgs()
+			xmlMsgs = ""
+			for msg in msgs:
+				xmlMsgs += "<message>" + msg + "</message>"
 			
-		elif (cmd == "quit"):
+			respText = "OK" if ( ( RequestHandler.pollingEnabled ) or ( len(msgs) > 0 ) ) else "NOTOK"
+			response = ( "<response><status-text>" + respText + "</status-text>"
+						+ xmlMsgs + "</response>")
+			
+			self.wfile.write(response)
+			
+			self.request.close()
+			
+						
+		elif ( requestType == "quit"):
+			print "\t\tQuit received from the UI, shutting down\n"
 			# Update the httpd servers state, so the run forever loop can be exited
 			self.server.stop = True
-			
-			print "\t\tQuit received from the UI, shutting down\n"
+			self.dummyRequest()		# Send a dummy request to force thread termination
+
+		
+	def dummyRequest(self):
+		""" Forces a dummy request to ensure thread termination """
+		conn = httplib.HTTPConnection('localhost:8080')
+		conn.request('QUIT','/')
+		self.server.stop=True
+		conn.getresponse()
+						
+
 			
 
 	def log_message(self, format, *args):
@@ -336,8 +506,10 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			g.LOGGER.debug("%s %s %s", time.asctime(), self.address_string(), args)
 		return
 
-class StoppableHTTPServer (BaseHTTPServer.HTTPServer):
-	""" Standard HTTPServer extended with a Stop capability """
+class StoppableHTTPServer ( SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
+	""" Standard HTTPServer extended with a multi-threading and a 'Stop' capability - SocketServer.ThreadingMixIn,"""
+	
+	daemon_threads = True 	# Ensure ctrl-c kills all spawned threads
 	
 	def serve_forever(self):
 		""" Overridden method to insert the stop process """
@@ -345,6 +517,8 @@ class StoppableHTTPServer (BaseHTTPServer.HTTPServer):
 		
 		while not self.stop:
 			self.handle_request()
+						
+
 
 
 def sshKeyOK():
@@ -408,7 +582,7 @@ def main():
 		# httpd = serverClass(("",HTTPPORT), RequestHandler)
 		httpd = StoppableHTTPServer(("",g.HTTPPORT), RequestHandler)
 		
-		g.LOGGER.info('%s http server started on using port %s', time.asctime(), g.HTTPPORT)
+		g.LOGGER.info('%s http server started, listening on port %s', time.asctime(), g.HTTPPORT)
 		
 		try:
 			# Run the httpd service
@@ -418,10 +592,12 @@ def main():
 		except KeyboardInterrupt:
 			print '\ngluster-deploy web server stopped by user hitting - CTRL-C\n'
 			
-			
+
 		httpd.server_close()
+
 		
 		g.LOGGER.info('%s http server stopped', time.asctime())	
+		
 
 	else:
 		print '\n\n-->Problem generating an ssh key, program aborted\n\n'

@@ -24,6 +24,7 @@
 import logging
 import os
 import sys
+from utils import MsgStack
 
 def init():
 	""" Initialise global variables """
@@ -35,6 +36,8 @@ def init():
 	global HTTPPORT
 	global NICPREFIX
 	global PGMROOT
+	global MSGSTACK
+	global BTRFSKERNEL
 	
 	LOGFILE = 'gluster-deploy.log'
 	LOGLEVEL = logging.getLevelName('DEBUG')		# DEBUG | INFO | ERROR
@@ -50,6 +53,10 @@ def init():
 	SVCPORT = 24007
 	HTTPPORT = 8080
 	
+	MSGSTACK = MsgStack()
+	
+	BTRFSKERNEL = 3.6
+		
 	PGMROOT = os.path.split(os.path.abspath(os.path.realpath(sys.argv[0])))[0]
 	# glusterNodes
 	

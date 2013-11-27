@@ -58,18 +58,20 @@ function togglePassword(passwordType) {
 
 function keyHandler(req) {
 	
-	var respData = req.responseText.split(' ');
+	xmlDoc = req.responseXML;
+	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
+	var success = xmlDoc.getElementsByTagName("summary")[0].getAttribute("success");
+	var failed = xmlDoc.getElementsByTagName("summary")[0].getAttribute("failed");
 
-	var failed = parseInt(respData[1]);
+	
+	//var respData = req.responseText.split(' ');
+
+	//var failed = parseInt(respData[1]);
 
 	document.getElementById('busyMsg').innerHTML = "Key Distribution Complete<br>" +
-													"Successful: " + respData[0] + " Failures: " + respData[1];
-	if (failed > 0) {
-		// change the spinner to a warning sign
-		document.getElementById('busyGraphic').className = 'error';
+													"Successful: " + success + " Failures: " + failed;
 
-	}
-	else {
+	if ( state == 'OK' ) {
 		document.getElementById('busyGraphic').className = 'success';
 		// change the spinner to a green tick
 																										
@@ -81,8 +83,11 @@ function keyHandler(req) {
 		// create the glusternode objects from the successful nodes
 
 	}
+	else {
+		// change the spinner to a warning sign
+		document.getElementById('busyGraphic').className = 'fail';
 
-	
+	}
 }
 
 function pushKeys() {
@@ -100,7 +105,9 @@ function pushKeys() {
 		disableRadio('passwordMethod');
 		
 		
-		var keyData = '';
+		//var keyData = '';
+		
+		var xmlString = "<data><request-type>push-keys</request-type>";
 		
 		if (passwordType == 'generic') {
 			thisPassword = document.getElementById('genericPassword').value;
@@ -116,18 +123,20 @@ function pushKeys() {
 				boxName = nodeName + "-pswd";
 				nodePassword = document.getElementById(boxName).value;
 			}
-			keyData = keyData + " " + nodeName + "*" + nodePassword; 
+			
+			xmlString = xmlString + "<node server='" + nodeName + "' password='" + nodePassword + "' />";
+			//keyData = keyData + " " + nodeName + "*" + nodePassword; 
 		}
 	
+		xmlString = xmlString + "</data>";
 		
-		
-		callerString = 'pushKeys|' + keyData.trim() ;
+		//callerString = 'pushKeys|' + keyData.trim() ;
 	
 		// pass back to python to execute peer probe
-		xml_http_post('../www/main.html', callerString, keyHandler);		
+		xml_http_post('../www/main.html', xmlString, keyHandler);		
 	}
 	else {
-		alert('keys are duff');
+		alert('You must supply a valid password for the node(s)');
 	}
 	
 }

@@ -19,8 +19,6 @@ function showDisks(req) {
 	document.getElementById('diskArea').className = 'show';
 
 	var xmlDoc = req.responseXML;
-	var t = req.responseText;
-	alert(t);
 	
 	// populate the table with the data received
 	var diskTable = document.getElementById('diskTable').getElementsByTagName('tbody')[0];

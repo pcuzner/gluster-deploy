@@ -22,7 +22,8 @@
 Items under consideration
   - change the webserver to use a self signed cert for http access
   - Review the ssh/pexpect code - can it be tidier?
-
+  - add a disk wipe capability in the event bricks are reused (i.e. lv already exists - perhaps the 
+    disk selection should also include defined disks, that are empty?)
 
 
   

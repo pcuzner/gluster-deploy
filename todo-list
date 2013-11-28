@@ -1,5 +1,6 @@
   
 0.4 (planned)
+  - fix - tidy up issueCMD code to return tuple, simplifying calling code
   - fix - disk list presented should be sorted, node, then device ID
   - add --serverlist (-s) to bypass the scan to start with a predefined list of servers
   - fix presentation of many nodes in keymgmt (separate header and data elements)

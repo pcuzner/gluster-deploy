@@ -536,7 +536,9 @@ def sshKeyOK():
 		
 		# Run ssh-keygen, in shell mode to generate the key i.e. use the 'True' parameter
 		genOut = issueCMD("ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa",True)
-		for line in genOut:
+		rc = genOut[0]
+		output = genOut[1:]
+		for line in output:
 			if 'Your public key has been saved' in line:
 				g.LOGGER.info('%s SSH key has been generated successfully', time.asctime())
 				keyOK = True

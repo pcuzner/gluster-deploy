@@ -112,6 +112,9 @@
 	margin-left: 14%;
 	width: 380px;
 	height: 50px;
+	color: #484848;
+	font-size: 15px;
+	text-shadow: 0px 1px 0px rgba(255,255,255,.5); /* 50% white from bottom */
 }
 
 /*
@@ -528,8 +531,6 @@ visibility:hidden;
 .useBrick {
 	position:absolute;
 	left:214px;
-	/* top:-328px; */
-	color:#404040;
 	width:37px;
 
 }
@@ -542,7 +543,6 @@ visibility:hidden;
 }
 .createBtn {
 	height:25px;
-	color:#404040;
 	font-size:12px;
 	font-weight:bold;
 	width:80px;

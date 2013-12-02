@@ -1,3 +1,4 @@
+
 /* ************************************************************* */
 /* volCreate.js Handles the logic involved in defining a volume  */
 /* ************************************************************* */
@@ -348,9 +349,11 @@ function createVolume() {
 	
 	showBusy("Creating '" + volName + "'");
 	disableDiv('brickLayout');				// Need to disable separately, since it's a div within a div
-	document.getElementById('volCreateBtn').disabled = true;
-	document.getElementById('volNameInput').disabled = true;
+	disableDiv('volCreate');
 	
+	//document.getElementById('volCreateBtn').disabled = true;
+	//document.getElementById('volNameInput').disabled = true;
+		
 	//callerString = "volCreate|" + xmlString;
 	xml_http_post('../www/main.html', xmlString, createVolHandler);
 	

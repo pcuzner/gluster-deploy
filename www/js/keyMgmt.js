@@ -100,7 +100,7 @@ function pushKeys() {
 		
 		showBusy('Distributing SSH keys');
 		document.getElementById('pushKeys').disabled = true;
-		
+		document.getElementById('genericPassword').disabled = true;
 		// Disable the radio Buttons
 		disableRadio('passwordMethod');
 		
@@ -127,6 +127,8 @@ function pushKeys() {
 			xmlString = xmlString + "<node server='" + nodeName + "' password='" + nodePassword + "' />";
 			//keyData = keyData + " " + nodeName + "*" + nodePassword; 
 		}
+	
+	
 	
 		xmlString = xmlString + "</data>";
 		

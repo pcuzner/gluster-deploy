@@ -46,6 +46,7 @@ import time
 import os
 import sys
 import httplib
+import threading
 
 
 # define a dict to hold gluster node objects, indexed by the node name
@@ -81,13 +82,13 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		self.server.stop=True
 		 
 		 
-		 
 	def do_POST(self):
 		""" Handle a post request looking at it's contents to determine
 			the action to take.
 		"""
+		self.daemon=True		
 		
-		
+
 		length = int(self.headers.getheader('content-length'))        
 		dataString = self.rfile.read(length)
 		
@@ -514,7 +515,7 @@ class StoppableHTTPServer ( SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServ
 	def serve_forever(self):
 		""" Overridden method to insert the stop process """
 		self.stop = False
-		
+		self.daemon=True	
 		while not self.stop:
 			self.handle_request()
 						
@@ -593,9 +594,15 @@ def main():
 			# User has hit CTRL-C, so catch it to stop an error being thrown
 		except KeyboardInterrupt:
 			print '\ngluster-deploy web server stopped by user hitting - CTRL-C\n'
-			
+
+		# Wait for threads to quiesce
+		print "\t\tWaiting for active threads(" + str(threading.active_count()) + ") to quiesce"
+		while threading.active_count() > 1:
+			time.sleep(0.1)
 
 		httpd.server_close()
+			
+
 
 		
 		g.LOGGER.info('%s http server stopped', time.asctime())	
@@ -605,6 +612,7 @@ def main():
 		print '\n\n-->Problem generating an ssh key, program aborted\n\n'
 		
 	print '\ngluster-deploy stopped.'
+	sys.exit()
 		
 
 if __name__ == '__main__':

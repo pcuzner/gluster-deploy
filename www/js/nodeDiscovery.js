@@ -184,9 +184,8 @@ function clusterHandler(req) {
 function createCluster() {
 
 	// disable the candidate and selected boxes
-	document.getElementById('addNodes').disabled = true;
-	document.getElementById('createCluster').disabled = true;
-	document.getElementById('candidateNodes').disabled = true;
+	disableDiv('nodes');
+	
 	selected = document.getElementById('selectedNodes');
 
 	

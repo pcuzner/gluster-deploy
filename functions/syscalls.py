@@ -96,6 +96,11 @@ class SSHsession:
 		if 'Permission' in cmdOut[1]:
 			g.LOGGER.debug('%s ssh key not added due to bad password for node %s', time.asctime(), self.host)
 			rc = 8
+
+		# Error host-id changed - previous key for this host no longer matches
+		elif 'ERROR-HOSTID-CHANGED' in cmdOut[1]:
+			rc = 8
+			g.LOGGER.debug('%s ssh key in local known_hosts mismatch with target node (%s)', time.asctime(),self.host)
 			
 		# /usr/bin/ssh-copy-id: WARNING: All keys were skipped because they already exist
 		elif 'keys were skipped' in cmdOut[2]:
@@ -149,7 +154,7 @@ class SSHsession:
 		elif ptr == 2:
 			# key change detected - man in the middle error mesage
 			g.LOGGER.debug('%s ssh login with %s to %s failed - Conflict in known_hosts file', time.asctime(), self.user, self.host)
-			return ['ERROR-HOSTID-CHANGED']
+			return [12,'ERROR-HOSTID-CHANGED']
 			
 		elif ptr == 3:
 			# Child process exited

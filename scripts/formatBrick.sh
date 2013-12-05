@@ -9,6 +9,7 @@
 # ?  .. lvm command returned a non-zero value, execution aborted
 #
 # Change History
+# ../12/2013 thinp fix needed due to bz998347. pool size now calculated by caller
 # ../11/2013 Updated to support dm-thinp snapshots
 # ../10/2013 Created
 #
@@ -50,14 +51,14 @@ function create_vg {
 	# check if vg already exists - if not create it
 	# if so extend the vg with this device
 	local checkvg=$(vgs $vgName)
-	
-	if [ $checkvg -eq 0 ] ; then 
-		action="vgextend"
-		vgextend $vgName /dev/$devID
-		rc=$?
-	else
+	echo ">>>$checkvg<<<"
+	if [ -z $checkvg  ] ; then 
 		action="vgcreate"
 		vgcreate $vgName /dev/$devID
+		rc=$?
+	else
+		action="vgextend"
+		vgextend $vgName /dev/$devID
 		rc=$?
 	fi	
 	
@@ -72,7 +73,6 @@ function create_vg {
 
 function create_lv {
 	
-	#local lv=$1
 	local devID=$1
 	local lvSize=$2
 
@@ -82,18 +82,18 @@ function create_lv {
 		local lvType='THICK'
 	fi
 
-	logger "formatBrick.sh creating '$lvType' lv $lv in VG $volGroup using /dev/$devID"
+	logger "formatBrick.sh creating '$lvType' lv $lvName in VG $volGroup using /dev/$devID"
 	[ $dryrun -eq 1 ] && return 4
 
 	if [ $snapRequired == "YES" ]; then 
 		# need to allocate the thinpool then the thindev
 		local poolName=$vgName"pool"
-		local poolSize=$(pvdisplay /dev/$devID | awk '/Total PE/ { print $3;}')
-		let poolSize=$((poolSize - 3))
-		lvcreate -l $poolSize -T $vgName/$poolName
+		echo "lvcreate -l $poolSize -T $vgName/$poolName"
+		lvcreate -L "$poolSize"m -T $vgName/$poolName
 		rc=$?
 		if [ $rc -eq 0 ]; then 
 			# Allocate the thindev
+			echo "lvcreate -V "$lvSize"m -T $vgName/$poolName -n $lvName"
 			lvcreate -V $lvSize -T $vgName/$poolName -n $lvName
 			rc=$?
 		fi
@@ -113,24 +113,6 @@ function create_lv {
 	return $rc
 
 }
-
-# function get_next_lv {
-#	local lvTarget=$1
-#
-#	local lastLV=$(lvs | grep $lvTarget | tail -n 1 | awk '{print $1}')
-#	if [ -z $lastLV ]; then 
-#		# lastLV is empty, so there are no previous volumes of this name
-#		local newSuffix='00'
-#	else
-#		# A volume of this name pre-exists, so lets look at it to create new suffix
-#		local seq=$(echo $lastlv | awk ' {print substr($0,length($0)-1,2)}')
-#		let seq=seq+1
-#		local newSuffix=$(printf "%02d" $seq)
-#	fi
-#
-#
-#	return $newSuffix
-#}
 
 
 function create_filesystem {
@@ -244,7 +226,8 @@ function dump_parms {
 	logger "devID : $devID"
 	logger "brickType : $brickType"
 	logger "snapReqd : $snapRequired"
-	logger "lvsize: $lsSize"
+	logger "lvsize: $lvSize"
+	logger "poolSize: $poolSize"
 	logger "lvName : $lvName"
 	logger "vgName : $vgName"
 	logger "mount : $mountPoint"
@@ -259,15 +242,16 @@ function dump_parms {
 function main {
 	
 	local rc=0
+	local debug=false
 	dryrun=0
 	
-	while getopts "tDu:c:s:l:b:v:m:n:d:" OPT; do
+	while getopts "tDu:c:s:l:p:b:v:m:n:d:" OPT; do
 		case "$OPT" in
 			t)
 				dryrun=1
 				;;
 			D)
-				dump_parms
+				debug=true 
 				;;
 			d)
 				devID=$OPTARG
@@ -284,6 +268,9 @@ function main {
 			l)	
 				lvSize=$OPTARG
 				;;
+			p)	
+				poolSize=$OPTARG
+				;;			
 			n)	
 				lvName=$OPTARG
 				;;				
@@ -317,7 +304,10 @@ function main {
 		esac
 	done
 	
-
+	if [ $debug ]; then 
+		dump_parms
+	fi
+		
 	
 	logger "formatBrick.sh processing started"
 	

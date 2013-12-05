@@ -205,6 +205,7 @@ class GlusterDisk:
 		self.snapRequired = 'NO'
 		#self.snapReserve = 0
 		self.thinSize = 0
+		self.poolSize = 0
 		self.useCase = ""
 		self.vgName = ""
 		self.lvName = ""
@@ -217,13 +218,14 @@ class GlusterDisk:
 		g.LOGGER.info('%s formatting %s as a brick on %s', time.asctime(), self.deviceID, self.nodeName )
 
 		scriptPath = os.path.join(g.PGMROOT,'scripts/formatBrick.sh')
-		scriptParms = ( " -D -d %s -c %s -b %s -v %s -s %s -l %s -m %s -u %s -n %s" % 
+		scriptParms = ( " -D -d %s -c %s -b %s -v %s -s %s -l %s -p %s -m %s -u %s -n %s " % 
 						(self.deviceID, 
 						raidCard, 
 						self.brickType, 
 						self.vgName, 
 						self.snapRequired, 
 						str(self.thinSize), 
+						str(self.poolSize),
 						self.mountPoint, 
 						self.useCase,
 						self.lvName) )

@@ -402,7 +402,12 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 							thisDisk.snapRequired = snapRequired
 							if ( thisDisk.snapRequired == 'YES' ):
 								pct = 100 - snapReserve
-								thisDisk.thinSize = int((thisDisk.sizeMB / 100) * pct)
+								
+								# BZ998347 prevents a thinpool being defined with 100%PVS, so
+								# this 99.9% of available space is a workaround until this bug 
+								# is solved. 
+								thisDisk.poolSize = int(((thisDisk.sizeMB - 4) * 0.999))		# 99.9% of HDD
+								thisDisk.thinSize = int((thisDisk.poolSize / 100) * pct)
 							
 							# issue command, and check status of the disk
 							thisDisk.formatBrick(thisHost.userPassword,thisHost.raidCard)

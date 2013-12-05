@@ -62,7 +62,7 @@ function fstabUpdate {
 	  echo -e "- updating /etc/fstab on $node (backup in fstab_saved)"
 	  # ssh $n sed -n -i "/$s/\!p" /root/testfile
 	  ssh $node sed -n -i '/'$uuid'/!p' /etc/fstab 
-	  ssh $node 'rm -fr $brickPath'
+	  ssh $node rm -fr "$brickPath"
 	done 
 
 }

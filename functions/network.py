@@ -104,16 +104,22 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 			
 			result = sock.connect_ex((IPaddr,targetPort))
 			if result == 0:
-				
-				
-				
+								
 				g.LOGGER.debug('%s port %d found open on %s', time.asctime(),targetPort,IPaddr)
 				
 				# check if this IP is from this host - if so set suffix
 				suffix = '*' if IPaddr in hostsIP else ''
 
 				try:
-					hostName = socket.gethostbyaddr(IPaddr)[0] + suffix
+					hostName = socket.gethostbyaddr(IPaddr)[0]
+					
+					# If the name returned is FQDN, just take the server name
+					# component
+					if '.' in hostName:
+						hostName = hostName.split('.')[0]
+						
+					hostName += suffix
+					
 				except:
 					hostName = IPaddr + suffix
 					

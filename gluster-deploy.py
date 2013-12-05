@@ -483,7 +483,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 						
 		elif ( requestType == "quit"):
-			print "\t\tQuit received from the UI, shutting down\n"
+			print "\t\tQuit received from the UI, shutting down"
 			# Update the httpd servers state, so the run forever loop can be exited
 			self.server.stop = True
 			self.dummyRequest()		# Send a dummy request to force thread termination

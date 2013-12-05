@@ -85,21 +85,26 @@
 }
 
 
-
 #access {
-	background-color: #cccccc;
+	background-color: #cccccc; /* Fall back if the radial gradient fails */
 	display: block;
 	/*width: 98%;*/
 	width: 475px;
-	height: 100px;
+	height: 120px;
 	left:250px; 
     box-shadow: 5px 5px 5px #888888;
     border-radius: 10px;
+    border: 0px solid white;
     position: relative;
     z-index:99;
     top: 100px;
     opacity: 100;
     transition: opacity .75s;
+    	background-image: radial-gradient(center center, circle cover, #ededed, #cccccc);
+	background-image: -o-radial-gradient(center center, circle cover, #ededed, #cccccc);
+	background-image: -ms-radial-gradient(center center, circle cover, #ededed, #cccccc);
+	background-image: -moz-radial-gradient(center center, circle cover, #ededed, #cccccc);
+	background-image: -webkit-radial-gradient(center center, circle cover, #ededed, #cccccc);
 }
 
 #access.fade {
@@ -108,13 +113,14 @@
 
 #inputData {
 	display: inline-block;
-	margin-top: 30px;
-	margin-left: 14%;
+	margin-top: 40px;
+	margin-left: 13%;
 	width: 380px;
 	height: 50px;
 	color: #484848;
 	font-size: 15px;
 	text-shadow: 0px 1px 0px rgba(255,255,255,.5); /* 50% white from bottom */
+	
 }
 
 /*

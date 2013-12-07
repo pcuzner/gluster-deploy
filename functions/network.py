@@ -37,13 +37,18 @@ import globalvars as g
 
 #VALIDPREFIX = ('eth', 'bond', 'em','virbr0','ovirtmgmt','rhevm')
 
-def atod(a): # ascii_to_decimal
+def atod(a): 
+	""" ascii_to_decimal """
+	
     return struct.unpack("!L",socket.inet_aton(a))[0]
 
-def dtoa(d): # decimal_to_ascii
+def dtoa(d): 
+	"""  decimal_to_ascii """
     return socket.inet_ntoa(struct.pack("!L", d))
 
 def ntoDotted(mask):
+	""" number to dotted notation """
+	
     bits = 0xffffffff ^ (1 << 32 - mask) - 1
     return socket.inet_ntoa(struct.pack('>I', bits))
 
@@ -66,8 +71,9 @@ def listIPRange(subnet):
 	return IPList
 
 def calcSubnet(subnet):
-	""" receive an ip address / mask and return the start of the 
-		subnet based on the mask """
+	""" 
+	receive an ip address / mask and return the start of the subnet based on the mask 
+	"""
 		
 	IP, mask = subnet.split('/')
 
@@ -79,10 +85,10 @@ def calcSubnet(subnet):
 		
 
 def findService(subnet, targetPort=24007,scanTimeout=0.05):
-	""" Function that accepts a subnet as input in the form x.x.x.x/mask
-		and then scans that subnet for a given target port.
-		For every ip with that port open, attempt to resolve the IP - if
-		not just use the IP.
+	""" 
+	Accept a subnet as input in the form x.x.x.x/mask, then scan all IP's
+	on that subnet for a given open port. For every open port detected
+	attempt to resolve the IP to a name for return to the caller
 	""" 
 	
 	excludedSuffixes = ('.0','.254','.255')
@@ -155,6 +161,7 @@ def getSubnets():
 
 def getHostIP():
 	"""	Get a list of IPs the host has defined """
+
 	hostIP = []
 
 	ipInfo = issueCMD("ip addr show")

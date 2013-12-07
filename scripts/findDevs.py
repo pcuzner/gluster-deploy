@@ -26,10 +26,10 @@ import subprocess
 import sys
 import os
 
+DEBUG=False
+
 def issueCMD(command):
-	""" issueCMD takes a command to issue to the host and returns the response
-		as a list
-	"""
+	""" issueCMD takes a command to issue to the host and returns the response as a list """
 
 	cmdWords = command.split()
 	try:
@@ -38,24 +38,29 @@ def issueCMD(command):
 	except Exception:
 		response = 'command not found\n'
 	
-															# string that includes \n
-	
-	return response.split('\n')							# use split to return a list
+	return (out.returncode, response.split('\n'))							# use split to return a list
 
 def filterDisks(partList):
-	""" Take a list of devices from proc/partitions and retun only the disk devices """
+	""" Take a list of devices from proc/partitions and return only the disk devices """
 
 	validDevs = ('sd', 'vd', 'hd')
 	
 	for partDetail in reversed(partList):
 		(major, minor, blocks, device) = partDetail.split()
 		if not device.startswith(validDevs):
+			if DEBUG:
+				print "filterDisks removing " + partDetail
+			
 			partList.remove(partDetail)
 	
 	return partList
 
 def filterPartitions(partitions):
-	
+	""" 
+	Look at the parition list (devices), and build a dict of unique device
+	names that don't have paritions i.e. sda, but not sda1 or sda2 
+	"""
+		
 	disks = {}
 	
 	for partDetail in partitions:
@@ -65,7 +70,12 @@ def filterPartitions(partitions):
 			num = filter(str.isdigit,device)
 			disk = device.replace(num,'')
 			if disks.has_key(disk):
+				
+				if DEBUG:
+					print "filterPartitions dropping " + disk
+					
 				del disks[disk]
+				
 			continue
 			
 		disks[device] = blocks	
@@ -74,20 +84,38 @@ def filterPartitions(partitions):
 	return disks
 	
 def filterLVM(disks):
-	pvsOut = issueCMD('pvs --noheading')
+	""" 
+	Receive a list of potenial disks and compare them with existing disks (pv's)
+	used by the LVM, filtering out any disk known to the LVM 
+	"""
+		
+	(rc, pvsOut) = issueCMD('pvs --noheading')
+	
 	for pvData in pvsOut:
 		if pvData:
 		
 			fullDevName = pvData.split()[0]
 			diskName = fullDevName.replace('/dev/','')
 			if diskName in disks:
+				
+				if DEBUG:
+					print "filterLVM dropping " + diskName
+					
 				del disks[diskName]
+				
 	return disks
 
 def filterBTRFS(disks):
+	""" 
+	Receive potential disks to use for gluster, and attempt to query btrfs to see
+	if they are btrfs devices. If so, filter them out and return remaining devices
+	to the caller 
+	"""
+	
 	toDelete =[]
 	for disk in disks:
-		btrfsOut = issueCMD('btrfs filesystem show /dev/' + disk)
+		
+		(rc, btrfsOut) = issueCMD('btrfs filesystem show /dev/' + disk)
 		
 		if 'command not found' in btrfsOut[0]:
 			continue
@@ -95,6 +123,8 @@ def filterBTRFS(disks):
 			toDelete.append(disk)
 			
 	for btrfsDisk in toDelete:
+		if DEBUG:
+			print "filterBTRFS dropping " + btrfsDisk
 		del disks[btrfsDisk]
 	
 	return disks
@@ -103,7 +133,7 @@ def getRaid():
 	""" Look for a raid card and if found, return the type """
 	
 	cmd = "lspci | grep -i raid"
-	pciOutput = issueCMD(cmd)
+	(rc, pciOutput) = issueCMD(cmd)
 
 	if len(pciOutput) == 0:
 		raidCard = "unknown"
@@ -144,21 +174,24 @@ def getSysInfo():
 	
 
 def main():
-	""" Invoke the filters to determine if there are any devices unused on the 
-		current host. Must be run as root """
+	""" 
+	Invoke the filters to determine if there are any devices unused on the 
+	current host. 
+	
+	NB. MUST be run as root 
+	"""
 	
 	sysInfo = getSysInfo()
 	
 	# get list of partitions on this host
-	partList = issueCMD('cat /proc/partitions')[2:-1]			# take element 2 onwards
+	(rc, partList) = issueCMD('cat /proc/partitions')		# take element 2 onwards
 
-	devices = filterDisks(partList)	# list
-	disks = filterPartitions(devices)	# dict
+	devices = filterDisks(partList[2:-1])	# 1st two lines are headers, so ignore
+	disks = filterPartitions(devices)		# dict
 	noLVM = filterLVM(disks)
 	unusedDisks = filterBTRFS(noLVM)
 	
 	xmlString = "<data>" + sysInfo
-	# change xmlstring to be <data><sysinfo><disk>..<disk></data>
 
 	for disk in unusedDisks:
 		xmlString += "<disk device='" + disk + "' sizeKB='" + unusedDisks[disk] + "' />"
@@ -167,12 +200,11 @@ def main():
 
 	print xmlString
 
-
-	# Using sys.stdout.write avoids the carriage return/newline info being passed back
-	#sys.stdout.write(retString)
-
 	return 
 
 if __name__ == '__main__':
+	if len(sys.argv) > 1:
+		if sys.argv[1].lower() == 'debug':
+			DEBUG = True
 	main()
 

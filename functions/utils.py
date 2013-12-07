@@ -25,8 +25,9 @@
 import threading
 
 class MsgStack:
-	""" Message stack used by the async processes to record step completion
-		enabling the web UI to query current progress
+	""" 
+	Class used to hold progress messages, enabling the current state to be queried
+	and used by the UI
 	"""
 	
 	def __init__(self):
@@ -34,9 +35,8 @@ class MsgStack:
 		self.lock = threading.Lock()
 
 	def popMsgs(self):
-		""" Funtion to pop the current entries from the list and return them
-			to the caller
-		"""
+		""" Funtion to pop the current entries from the list and return them """
+
 		msgList = []
 		
 		self.lock.acquire()
@@ -61,8 +61,7 @@ class MsgStack:
 		
 
 def kernelCompare(thisKernel, kernelTarget):	
-	""" Receive two kernels versions, and return True/False if the given kernel is 
-		>= the target kernel """ 
+	""" Receive current and target kernels, return true if the current is > target """
 		
 	result = False
 	

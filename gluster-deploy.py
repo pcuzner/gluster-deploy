@@ -60,8 +60,9 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	pollingEnabledTasks = ['build-bricks','vol-create', 'find-nodes']
 
 	def do_GET(self):
-		""" Override get method, checking the client IP to prevent more than
-			client IP connecting to the webserver at the same time
+		""" 
+		Override get method, checking the client IP to prevent more than
+		client IP connecting to the webserver at the same time
 		"""
 		thisIP = self.client_address[0]
 
@@ -77,15 +78,17 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 	def do_QUIT(self):
 		""" Internal quit handler to terminate additional request threads """
+		
 		self.send_response(200)         # completed ok
 		self.end_headers()              # blank line end of http response
 		self.server.stop=True
 		 
 		 
 	def do_POST(self):
-		""" Handle a post request looking at it's contents to determine
-			the action to take.
+		""" 
+		Handle a post request looking at it's contents to determine the action to take
 		"""
+		
 		self.daemon=True		
 		
 
@@ -505,8 +508,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 
 	def log_message(self, format, *args):
-		""" Override std log_message method to record http messages 
-			only when our loglevel is debug """
+		""" Override std log_message method to record http messages only for debug mode """
 			
 		if g.LOGLEVEL == 10:				# 10 = DEBUG, 20=INFO, 30=WARN
 			g.LOGGER.debug("%s %s %s", time.asctime(), self.address_string(), args)
@@ -528,11 +530,8 @@ class StoppableHTTPServer ( SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServ
 
 
 def sshKeyOK():
-	"""	
-		Ensure local ssh key is in place, if not create it ready to be 
-		distributed to the other nodes
-	"""
-	
+	"""	Ensure local ssh key is in place, if not create it """
+
 	keyOK = False	
 	
 	if os.path.exists('/root/.ssh/id_rsa.pub'):
@@ -554,7 +553,7 @@ def sshKeyOK():
 
 
 def main():
-	""" main control routine """
+	""" main control logic """
 	
 	
 	#g.LOGGER.basicConfig(filename=LOGFILE, 

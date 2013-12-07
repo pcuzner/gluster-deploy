@@ -35,9 +35,11 @@ class SSHsession:
 		return self.__exec("ssh -l %s %s %s" % (self.user,self.host,command))
 	
 	def sshScript(self,scriptName):
-		""" Execute a bash script on the remote machine, returning a list
-			1st element is the return code
-			nth element is the text of the output """
+		""" 
+		Execute a bash script on the remote machine, returning a list
+		1st element is the return code
+		nth element is the text of the output 
+		"""
 			
 		response =[]
 		
@@ -61,9 +63,11 @@ class SSHsession:
 		return response
 
 	def sshPython(self,scriptName):
-		""" Execute a local python script on the remote machine 
-			1st element is the return code
-			nth element is the text of the output """
+		""" 
+		Execute a local python script on the remote machine 
+		- 1st element is the return code
+		- nth element is the text of the output 
+		"""
 		response =[]
 		
 		if os.path.exists(scriptName):
@@ -127,8 +131,8 @@ class SSHsession:
 	
 	def __exec(self,command):
 		""" 
-			Execute the given command string and handle the ssh interaction 
-			The returned output is a list in unicode format
+		Execute the given command string and handle the ssh interaction 
+		The returned output is a list in unicode format
 		"""
 		
 		child = pexpect.spawn(command, timeout=30)	# 30 sec timeout
@@ -168,9 +172,7 @@ class SSHsession:
 
 
 def issueCMD(command, shellNeeded=False):
-	""" issueCMD takes a command to issue to the host and returns the response
-		as a list
-	"""
+	""" issueCMD takes a command to issue to the host and returns the response as a list """
 
 	if shellNeeded:
 		args =command
@@ -193,8 +195,9 @@ def issueCMD(command, shellNeeded=False):
 
 def generateKey(length=26, charsAvailable=string.letters + string.digits):
 
-	""" generateKey builds a 'length' character string of random characters
-		suitable for one off passwords etc.
+	""" 
+	generateKey builds a 'length' character string of random characters
+	suitable for one off passwords etc.
 	"""
 	
 	key = ''.join([random.choice(charsAvailable) for n in range(length)])

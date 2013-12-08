@@ -1,6 +1,6 @@
 
 /* ************************************************************* */
-/* volCreate.js Handles the logic involved in defining a volume  */
+/* volCreate.js handles the logic involved in defining a volume  */
 /* ************************************************************* */
 
 function delBrickRow(element) {
@@ -222,6 +222,7 @@ function addOptions(optionName) {
 		case "Replicated":
 			toggleElement("replicaCountInput");
 			document.getElementById("replicaCount").setAttribute("style","position:relative;  left:85px;height:20px;opacity:100;transition:opacity .75s;");				
+			
 			// maxSelect = 2;
 			document.getElementById("brickPool").selectedIndex = -1;
 			
@@ -231,9 +232,11 @@ function addOptions(optionName) {
 			updateSummary("volType");
 
 			break;
+			
 		case "Distributed":
 			document.getElementById("replicaCount").setAttribute("style","position:relative;  left:85px;height:20px;opacity:0; transition:opacity .75s;");
 			toggleElement("replicaCountInput");
+			
 			//maxSelect=999;
 			document.getElementById("brickPool").selectedIndex = -1;				
 			
@@ -243,14 +246,18 @@ function addOptions(optionName) {
 			updateSummary("volType");				
 
 			break;
+			
 		case "Virtualisation":
 			document.getElementById("virtInput").setAttribute("style","position:relative;  left:40px;height:20px;opacity:100;transition:opacity .75s;");
 			toggleElement("virtUser");
 			break;
+			
 		case "Streaming":
 		case "Generic":
+		
 			document.getElementById("virtInput").setAttribute("style","position:relative;  left:40px;height:20px;opacity:0;transition:opacity .75s;");
 			toggleElement("virtUser");
+			
 	}
 }
 

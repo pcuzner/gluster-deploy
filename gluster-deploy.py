@@ -30,7 +30,6 @@
 from functions.network import getSubnets,findService, getHostIP
 from functions.syscalls import issueCMD, generateKey, getMultiplier
 from functions.gluster import GlusterNode, createVolume
-# from functions.utils import TaskProgress		... FUTURE
 
 import functions.globalvars as g					# Import globals shared across the modules
 
@@ -221,10 +220,17 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					else:
 						failed +=1
 				
-			
+			# Build XML response string
 			respText = "OK" if failed == 0 else "FAILED"
 			response = ( "<response><status-text>" + respText + "</status-text><summary success='" + str(success)
-						+ "' failed='" + str(failed) + "' /></response>" )
+						+ "' failed='" + str(failed) + "' />")
+			
+			# Add the nodes successfully added to the response	(sorted for display purposes)		
+			for node in sorted(glusterNodes):
+				if not glusterNodes[node].localNode:
+					response += "<node name='" + glusterNodes[node].nodeName + "' />"
+			
+			response += "</response>" 
 			
 			g.LOGGER.debug('%s createCluster results - success %d, failed %d',time.asctime(), success, failed)
 			
@@ -235,7 +241,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			#retString = str(success) + " " + str(failed)
 			self.wfile.write(response)
 			
-			g.LOGGER.info('%s gluster.createCluster complete', time.asctime())			
+			g.LOGGER.info('%s gluster.createCluster complete - %d successful, %d failed', time.asctime(), success, failed)			
 		
 		
 		elif ( requestType == "push-keys" ):
@@ -606,7 +612,7 @@ if __name__ == '__main__':
 
 	usageInfo = "usage: %prog [options]"
 	
-	parser = OptionParser(usage=usageInfo,version="%prog 0.2")
+	parser = OptionParser(usage=usageInfo,version="%prog 0.3")
 	parser.add_option("-n","--no-password",dest="skipPassword",action="store_true",default=False,help="Skip access key checking (debug only)")
 	(options, args) = parser.parse_args()
 	

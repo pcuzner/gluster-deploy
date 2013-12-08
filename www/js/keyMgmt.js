@@ -5,14 +5,10 @@ function startKeyMgmt() {
 	
 	// populate the div with the nodes
 	
-	// alert('these are the nodes to act upon' + glusterNodes.join());
-	
 	keysTable = document.getElementById("keysTable");
 	
 	for (var n=0; n<glusterNodes.length; n++) {
 		thisNode = glusterNodes[n];
-		
-		// TODO - tr css class has a highlight, so could use it here when building the table
 		
 		var newRow = keysTable.insertRow(-1);
 		var col1 = newRow.insertCell(0);
@@ -50,6 +46,7 @@ function togglePassword(passwordType) {
 	}
 	else {
 		document.getElementById('genericPassword').style.visibility = 'hidden';
+		
 		// show the password boxes
 		boxesHidden(false);
 	}
@@ -63,24 +60,16 @@ function keyHandler(req) {
 	var success = xmlDoc.getElementsByTagName("summary")[0].getAttribute("success");
 	var failed = xmlDoc.getElementsByTagName("summary")[0].getAttribute("failed");
 
-	
-	//var respData = req.responseText.split(' ');
-
-	//var failed = parseInt(respData[1]);
-
 	document.getElementById('busyMsg').innerHTML = "Key Distribution Complete<br>" +
 													"Successful: " + success + " Failures: " + failed;
 
 	if ( state == 'OK' ) {
-		document.getElementById('busyGraphic').className = 'success';
+		
 		// change the spinner to a green tick
-																										
+		document.getElementById('busyGraphic').className = 'success';																								
 		document.getElementById('busyButton').disabled = false;
 		document.getElementById('busyButton').style.visibility = 'visible';
 		document.getElementById('busyButton').onclick = function() { startDiskDiscovery();};
-		//document.getElementById('selectedNodes').disabled = true;
-		
-		// create the glusternode objects from the successful nodes
 
 	}
 	else {
@@ -101,11 +90,10 @@ function pushKeys() {
 		showBusy('Distributing SSH keys');
 		document.getElementById('pushKeys').disabled = true;
 		document.getElementById('genericPassword').disabled = true;
+		
 		// Disable the radio Buttons
 		disableRadio('passwordMethod');
-		
-		
-		//var keyData = '';
+
 		
 		var xmlString = "<data><request-type>push-keys</request-type>";
 		
@@ -125,14 +113,12 @@ function pushKeys() {
 			}
 			
 			xmlString = xmlString + "<node server='" + nodeName + "' password='" + nodePassword + "' />";
-			//keyData = keyData + " " + nodeName + "*" + nodePassword; 
 		}
 	
 	
 	
 		xmlString = xmlString + "</data>";
-		
-		//callerString = 'pushKeys|' + keyData.trim() ;
+
 	
 		// pass back to python to execute peer probe
 		xml_http_post('../www/main.html', xmlString, keyHandler);		

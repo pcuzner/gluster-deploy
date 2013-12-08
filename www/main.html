@@ -129,20 +129,22 @@
 		  </span><br>
 		<input type="radio" name="passwordMethod" value="unique" onclick="togglePassword('unique');">Each node has a unique password&nbsp;<br>
 		<br>
-		<div id="keysArea">
+		<button id="pushKeys" type="button" onclick="pushKeys()"><i class="icon-keys"></i>Distribute</button>
+		<table id="keysHeading" cellspacing='0'>
+			<thead>
+				<tr>
+					<th>Server Name</th>
+					<th>Password</th>
+				</tr>
+			</thead>
+		</table>		
+		<div id="keysArea">	
 			<table id="keysTable" cellspacing='0'>
-				<thead>
-				
-					<tr>
-						<th>Server Name</th>
-						<th>Password</th>
-					</tr>
-				</thead>
 				<tbody>
 				</tbody>
 			</table>
 		</div>
-		<button id="pushKeys" type="button" onclick="pushKeys()"><i class="icon-keys"></i>Distribute</button>
+
 		
 	</div>
 	

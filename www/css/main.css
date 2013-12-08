@@ -21,17 +21,7 @@
 	top:80px;
 }
 
-/*
-#network-select:disabled:hover {
-	border:1px solid #c0c0c0;
-}
 
-
-#network-select:hover {
-	border:1px solid #FF9900;
-	
-}
-*/
 
 .active {
 	text-align:left;
@@ -46,8 +36,7 @@
 	background-color:#505050;
 	border-radius:5px;
 	font-style: normal;
-	/*text-shadow: 0px 2px 3px #555;*/
-	/*margin-left:10px;*/
+
 	margin-bottom:20px;
 }
 
@@ -63,8 +52,6 @@
 	font-weight: bold;
 	font-style: normal;
 	color:#505050;
-	/*font-variant: normal;*/
-	/*text-shadow: 0px 2px 3px #555;*/
 	margin-bottom:20px;
 
 }
@@ -78,8 +65,7 @@
 	font-weight: bold;
 	font-style: normal;
 	color:#1a82f7;
-	/*font-variant: normal;*/
-	/*text-shadow: 0px 2px 3px #555;*/
+
 	margin-bottom:20px;
 
 }
@@ -123,19 +109,6 @@
 	
 }
 
-/*
-#snapDefinition {
-	position:relative;
-	visibility:hidden;
-	display:none;
-
-}
-#snapDefinition.show {
-	visibility:visible;
-	display:block;
-
-}		
-*/
 
 .hidden {
 visibility:hidden;
@@ -246,6 +219,9 @@ left:0px;
 left: 0px;
 }
 
+/* ****************************************************************** */
+/* key Management 'page'                                              */
+/* ****************************************************************** */
 #keys {
 	position: absolute;
 	left: 650px;
@@ -260,28 +236,56 @@ left: 0px;
 	background-color:#ededed;
 }
 #keys.slide {
-left: 0px;
+	left: 0px;
 }
+
 #keysArea {
-position: absolute;
-left:90px;
-top: 250px;
-width:400px;
-height:350px;
-
-}
-#keysTable th:first-child {
-width:200px;
-}
-#keysTable th:last-child {
-width:150px;
+	position: absolute;
+	left:90px;
+	top: 250px;
+	width:400px;
+	height:350px;
+	overflow-y:auto;
 }
 
+#keysHeading {
+	position:absolute;
+	top:200px;
+	left:90px;
+	width:367px;
+}
 
+#keysHeading th:first-child {
+	text-align: left;
+	width:160px;
+}
+
+#keysHeading th:last-child {
+	text-align: center;
+	width:200px;
+}
+
+	
+#keysTable {
+	position: relative;
+	top:-18px;
+	width:367px;
+}	
+
+#keysTable td:first-child {
+	width:160px;
+}
+#keysTable td:last-child {
+	width:200px;
+}
+
+/* ****************************************************************** */
+/* disk management page elements                                      */
+/* ****************************************************************** */
 #disks {
 	position: absolute;
 	left: 650px;
-		overflow:hidden;
+	overflow:hidden;
 	top:0px;
 	width:650px;
 	height:600px;
@@ -512,17 +516,6 @@ visibility:hidden;
 }
 
 
-/* #page-cover {
-    display: none;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background-color: #000;
-    z-index: 999;
-    top: 0;
-    left: 0;
-}
-*/
 		/********************************/
 		/* Create Volume CSS attributes */
 		/********************************/

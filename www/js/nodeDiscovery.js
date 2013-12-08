@@ -3,10 +3,6 @@ function startNodesPage() {
 	// drop the access/password layer right back out of the way
 	document.getElementById('access').style.zIndex=-99;			
 
-	// Drop the access DIV from the DOM.
-	//accessPrompt = document.getElementById('access');
-	//accessPrompt.parentNode.removeChild(accessPrompt);
-	
 	var xmlString = "<data><request-type>subnet-list</request-type></data>";
 
 	// Make a call back to the host, and set up response handler
@@ -60,27 +56,24 @@ function nodeSelect(req) {
 	if ( state == "OK" ) {
 		var nodes = xmlDoc.getElementsByTagName('node');	// Get all node elements from XML
 	
-		//document.getElementById('network-scan-btn').disabled = false;
 		document.getElementById('nodeSelect').className = 'show';
-		
-		//var nodes = req.responseText;
-		//nodeList = nodes.split(" ");
-		
+
 		candidate = document.getElementById('candidateNodes') ;
 		selected = document.getElementById('selectedNodes') ;
 		if (nodes.length > 0) {
 			for (var n=0; n<nodes.length; n++) {
 	
 				var nodeName = nodes[n].childNodes[0].nodeValue;
+				
 				// if the node name has a '*' suffix place it in the selected box, 
-	
 				if (nodeName.indexOf('*') != -1) {
 					
 					// add node to the selected box
 					selected[selected.length] = new Option(nodeName);
-					//selected.options[selected.length].disabled = true;
+	
 				}
 				else {
+
 					//this host is not the host we're running on so add to candidate box
 					candidate[candidate.length] = new Option(nodeName);
 				}
@@ -102,7 +95,6 @@ function scanSubnet() {
 	
 	var xmlString = "<data><request-type>find-nodes</request-type><subnet>" + targetSubnet +"</subnet></data>";
 	
-	// callerString = "findNodes|" + targetSubnet;
 	xml_http_post('../www/main.html', xmlString, nodeSelect);
 	
 	enableMsgLog();
@@ -151,8 +143,12 @@ function clusterHandler(req) {
 
 	if ( state == "OK" ) {
 		
-		// var respData = req.responseText.split(' ');
-		// var failed = parseInt(respData[1]);
+		// Add the nodes passed back as successful, to an array (used by keyMgmt.js)
+		var nodes = xmlDoc.getElementsByTagName('node');
+		for (var i=0; i< nodes.length; i++) {
+			var thisNode = nodes[i].getAttribute('name');
+			glusterNodes.push(thisNode);
+		}
 	
 		document.getElementById('busyMsg').innerHTML = "Cluster created<br>" +
 														"Successful: " + success + " Failures: " + failed;
@@ -175,10 +171,6 @@ function clusterHandler(req) {
 	}
 		
 
-	//document.getElementById('keysNext').style.visibility = 'visible';
-	//document.getElementById('keysNext').disabled = false;
-
-
 }
 
 function createCluster() {
@@ -190,34 +182,22 @@ function createCluster() {
 
 	
 	var nodesString = "";
-	var nodeCount = 0;
 	
 	var xmlString = "<data><request-type>create-cluster</request-type>";
 	
 	for (var n = 0 ; n < selected.options.length; n++) {
 		thisNode = selected.options[n].value; 
 		
-		xmlString = xmlString + "<node>" + thisNode + "</node>";		
-		// nodesString = nodesString + thisNode + " ";
-
-		if (thisNode.indexOf('*') == -1) {
-			nodeCount +=1;
-			glusterNodes.push(thisNode)
-		}
-		
-		//if (thisNode.indexOf("*") == -1) {
-		//	nodesString = nodesString + thisNode + " ";
-		//	glusterNodes.push(thisNode)
-		//	nodeCount +=1;
-		//}
+		xmlString = xmlString + "<node>" + thisNode + "</node>";
+				
 	}
-
-	showBusy('Adding ' + nodeCount + ' nodes') ;	
+	
+	// Just use the number of items in the select box - local node to 
+	// describe the number of nodes to peer probe.
+	showBusy('Adding ' + ( selected.options.length - 1) + ' nodes') ;	
 	
 	xmlString = xmlString + "</data>";
 	
-	//callerString = 'createCluster|' + nodesString.trim() ;
-
 	// pass back to python to execute peer probe
 	xml_http_post('../www/main.html', xmlString, clusterHandler);
 

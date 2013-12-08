@@ -47,7 +47,7 @@ def clusterMembers():
 	"""	return a list of the members in a cluster using the output of
 		pool list
 	"""
-	return issueCMD('gluster pool list')[1:]
+	return issueCMD('gluster pool list')
 	
 def createVolume(xmlDoc):
 	"""	function to define a gluster volume given an xml volume definition """
@@ -135,16 +135,17 @@ def createVolume(xmlDoc):
 		cmdType = ' '.join(cmd.split()[1:3]) + ' ...'
 		g.MSGSTACK.pushMsg("Step %d/%d starting (%s)" %(stepNum, numCmds,cmdType))
 		
-		cmdOutput = issueCMD(cmd)
+		(rc, cmdOutput) = issueCMD(cmd)
 		
-		if cmdOutput[0] == 0:	# retcode is 1st element, so check it's 0
-			
+		if rc == 0:	# retcode is 1st element, so check it's 0
+						
 			# push this cmd to the queue for reporting in the UI
-			g.LOGGER.info("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
 			g.MSGSTACK.pushMsg("Step %d/%d completed" %(stepNum, numCmds))
-			g.LOGGER.debug("%s Command successful : %s", time.asctime(), cmd)
-			pass
+			
 			# Log the cmd being run as successful
+			g.LOGGER.info("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
+			g.LOGGER.debug("%s Command successful : %s", time.asctime(), cmd)
+			
 		else:
 			g.LOGGER.info("%s vol create step failed", time.asctime())
 			
@@ -155,6 +156,7 @@ def createVolume(xmlDoc):
 			# problem executing the command, log the response and return
 			retCode = 8
 			break
+			
 		stepNum +=1
 
 	
@@ -170,28 +172,6 @@ def getPeers():
 	pass
 	return
 	
-#def peerProbe(clusterState):
-	#"""	Receive an object containing a list of nodes to form a cluster """
-
-	## create a copy of the nodes to work from 
-	#nodes = list(clusterState.targetList)
-	
-	#for thisNode in nodes:
-
-		#clusterState.targetList.remove(thisNode)
-		
-		#probeOutput = issueCMD("gluster peer probe " + thisNode)
-		
-		#if probeOutput[0] > 0:		# Check RC
-			## update the clusterState properties
-			#g.LOGGER.debug("%s peer probe for %s failed", time.asctime(), thisNode)
-			#clusterState.failureList.append(thisNode)
-		#else:
-			## update the clusterState properties
-			#g.LOGGER.debug("%s peer probe for %s succeeded", time.asctime(), thisNode)
-			#clusterState.successList.append(thisNode)
-
-	#return 
 
 class GlusterDisk:
 	def __init__(self,nodeName,deviceID, size,formatRequired=False):
@@ -203,7 +183,6 @@ class GlusterDisk:
 		self.formatStatus = 'pending'		# pending -> complete || failed
 		self.mountPoint = ""
 		self.snapRequired = 'NO'
-		#self.snapReserve = 0
 		self.thinSize = 0
 		self.poolSize = 0
 		self.useCase = ""
@@ -237,16 +216,14 @@ class GlusterDisk:
 		g.MSGSTACK.pushMsg("%s format on %s starting" %(self.deviceID, self.nodeName))
 
 		if self.localDisk:
-			resp = issueCMD(scriptName)
-			rc=resp[0]
+			(rc, resp) = issueCMD(scriptName)
 			self.formatStatus = 'complete' if (rc == 0) else 'failed'
 
 		else:
 			
 			ssh=SSHsession('root',self.nodeName,userPassword)
-			resp=ssh.sshScript(scriptName)
+			(rc, resp) = ssh.sshScript(scriptName)
 			
-			rc=resp[0]
 			self.formatStatus = 'complete' if (rc == 0) else 'failed'
 		
 		g.MSGSTACK.pushMsg("%s format on %s ended, RC=%d" %(self.deviceID, self.nodeName, rc))
@@ -297,9 +274,10 @@ class GlusterNode:
 		
 	def joinCluster(self):
 		"""	run peer probe against this node """
-		probeOutput = issueCMD("gluster peer probe " + self.nodeName)
 		
-		if probeOutput[0] > 0:
+		(rc, probeOutput) = issueCMD("gluster peer probe " + self.nodeName)
+		
+		if rc > 0:
 			# update the clusterState properties
 			g.LOGGER.debug("%s peer probe for %s failed", time.asctime(), self.nodeName)
 			#clusterState.failureList.append(thisNode)
@@ -320,22 +298,18 @@ class GlusterNode:
 		
 		g.LOGGER.debug('%s getDisks using script from %s', time.asctime(), scriptName)
 
-		#sshPython runs the script, returning a list containing ',' separated values of disk <spc> size
-		
 		# check if this is the local node, if so, use issueCMD not ssh
 		if self.localNode:
-			diskOut =  issueCMD(scriptName)
-			rc = diskOut[0]
+			(rc, diskOut) =  issueCMD(scriptName)
 		else:
 			sshTarget = SSHsession(self.userName, self.nodeName, self.userPassword)
-			diskOut = sshTarget.sshPython(scriptName)
-			rc = diskOut[0]
+			(rc, diskOut) = sshTarget.sshPython(scriptName)
 		
 		self.diskScanned = True
 
 		if ( rc == 0 ):
 			
-			diskData = str(diskOut[1])
+			diskData = str(diskOut[0])
 			xmlDoc = ETree.fromstring(diskData)
 			freeDisks = xmlDoc.findall('disk')
 			sysInfo = xmlDoc.find('sysinfo')
@@ -359,16 +333,9 @@ class GlusterNode:
 					brick.localDisk = True
 				self.diskList[deviceName] = brick
 				
-			#for diskInfo in diskData:
-				
-				#(deviceName,sizeStr) = diskInfo.split(" ")
-				#size = int(sizeStr) / 1024**2						# convert to KB -> GB
-				#thisDisk = GlusterDisk(self.nodeName, deviceName, size)
-				#if self.localNode:
-					#thisDisk.localDisk = True
-				#self.diskList[deviceName] = thisDisk
+
 		else:
-			# Scan failed logic here
+			# Insert Scan failed logic here!
 			pass
 		
 				

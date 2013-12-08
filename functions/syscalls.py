@@ -54,9 +54,7 @@ class SSHsession:
 	
 	def sshScript(self,scriptName):
 		""" 
-		Execute a bash script on the remote machine, returning a list
-		1st element is the return code
-		nth element is the text of the output 
+		Execute a bash script on the remote machine, returning a tuple of retcode and list
 		"""
 			
 		response =[]
@@ -67,43 +65,47 @@ class SSHsession:
 			# The -- is critical to stop bash from claiming any parameter string passed to the script
 			command = """/bin/bash -c "/usr/bin/ssh  %s@%s 'bash -s' -- < %s" """ % (self.user, self.host, scriptName)
 			
-			output = self.__exec(command)
+			(rc, output) = self.__exec(command)
 			for line in output:
 				if isinstance(line,basestring):
 					if line > '':
 						response.append(line.replace('\r',''))
 				else:
 					response.append(line)
+					
 		else:
 			g.LOGGER.debug('%s script provided to SSHsession.sshScript can not be found', time.asctime())
-			response = [16,'ERROR-SCRIPT-NOT-FOUND']
+			rc = 16
+			response = ['ERROR-SCRIPT-NOT-FOUND']
 
-		return response
+		return (rc, response)
 
 	def sshPython(self,scriptName):
 		""" 
-		Execute a local python script on the remote machine 
-		- 1st element is the return code
-		- nth element is the text of the output 
+		Execute a local python script on the remote machine, returns a tuple of rc and output text
 		"""
+		
 		response =[]
 		
 		if os.path.exists(scriptName):
 		
 			command = """/bin/bash -c "/usr/bin/ssh  %s@%s 'python' < %s" """ % (self.user, self.host, scriptName)
 			
-			output = self.__exec(command)
+			(rc, output) = self.__exec(command)
+			
 			for line in output:
 				if isinstance(line,basestring):
 					if line > '':
 						response.append(line.replace('\r',''))
 				else:
 					response.append(line)
+					
 		else:
 			g.LOGGER.debug('%s script provided to SSHsession.sshPython can not be found', time.asctime())
+			rc = 16
 			response = ['ERROR-SCRIPT-NOT-FOUND']
 
-		return response
+		return (rc, response)
 		
 	
 	def sshCopyID(self):
@@ -111,23 +113,29 @@ class SSHsession:
 		
 		keyFile = os.path.expanduser('~') + '/.ssh/id_rsa.pub'
 		cmd = 'ssh-copy-id -i ' + keyFile + ' ' + self.user + '@' + self.host
+		
 		rc = 0
-		cmdOut = self.__exec(cmd)
+		(cc, cmdOut) = self.__exec(cmd)
 		
 		# check for permission denied response - i.e. bad password
-		if 'Permission' in cmdOut[1]:
+		if 'Permission' in cmdOut[0]:
 			g.LOGGER.debug('%s ssh key not added due to bad password for node %s', time.asctime(), self.host)
 			rc = 8
 
 		# Error host-id changed - previous key for this host no longer matches
-		elif 'ERROR-HOSTID-CHANGED' in cmdOut[1]:
+		elif 'ERROR-HOSTID-CHANGED' in cmdOut[0]:
 			rc = 8
 			g.LOGGER.debug('%s ssh key in local known_hosts mismatch with target node (%s)', time.asctime(),self.host)
 			
 		# /usr/bin/ssh-copy-id: WARNING: All keys were skipped because they already exist
-		elif 'keys were skipped' in cmdOut[2]:
+		elif 'keys were skipped' in cmdOut[1]:
 			g.LOGGER.debug('%s ssh key already exists in %s authorized_keys file', time.asctime(), self.host)
 			rc = 1
+		
+		# check for a rc > 0 ie. an unknown error 
+		elif cc > 0:
+			g.LOGGER.debug('%s ssh copy failed, unknown error - rc = %d', time.asctime(), cc)
+			rc = 12
 			
 		else:
 			g.LOGGER.debug('%s ssh key added to %s', time.asctime(), self.host)
@@ -183,10 +191,8 @@ class SSHsession:
 			child.close()
 			g.LOGGER.debug('%s Child process to %s exited with %s', time.asctime(), self.host,str(child.exitstatus))
 			pass
-
-		response = [child.exitstatus] + child.before.split('\n')
-		
-		return response
+	
+		return (child.exitstatus, child.before.split('\n'))
 
 
 def issueCMD(command, shellNeeded=False):
@@ -199,15 +205,36 @@ def issueCMD(command, shellNeeded=False):
 
 	try:
 		child = subprocess.Popen(args,shell=shellNeeded,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		(response, errors)=child.communicate()	 # Get output...response is a byte string that includes \n
+		
+		# Get output...response is a byte string that includes \n		
+		(response, errors)=child.communicate()
+		rc = child.returncode	 
+
 	except Exception:
 		response = 'command failed\n' 
+		rc=12
 
 	cmdText = response.split('\n')[:-1]
 	
-	retList = [child.returncode] + cmdText				# Merge the lists together - [0] = RC	
+	return (rc, cmdText)                 
 
-	return retList                 # use split to return a list, skipping the last null entry
+
+def getMultiplier(diskMB):
+	""" 
+	Receive a disk size in MB, returning the multiplier size to allow for meta data 
+	overhead from a thin device. HACK until BZ 998347 resolved.
+	"""
+	
+	multiplier = 0.999
+	
+	if diskMB > 1024000:
+		multiplier = 0.9999
+	elif diskMB >102400:
+		multiplier = 0.999
+	else:
+		multiplier = 0.998
+		
+	return multiplier
 
 
 

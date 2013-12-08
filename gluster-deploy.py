@@ -28,7 +28,7 @@
 
 
 from functions.network import getSubnets,findService, getHostIP
-from functions.syscalls import issueCMD, generateKey
+from functions.syscalls import issueCMD, generateKey, getMultiplier
 from functions.gluster import GlusterNode, createVolume
 # from functions.utils import TaskProgress		... FUTURE
 
@@ -407,9 +407,10 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 								pct = 100 - snapReserve
 								
 								# BZ998347 prevents a thinpool being defined with 100%PVS, so
-								# this 99.9% of available space is a workaround until this bug 
-								# is solved. 
-								thisDisk.poolSize = int(((thisDisk.sizeMB - 4) * 0.999))		# 99.9% of HDD
+								# getMuliplier used to look at the device size and decide on a
+								# semi-sensible % to use for the thinpool lv.
+								pctMultiplier = getMultiplier(thisDisk.sizeMB)
+								thisDisk.poolSize = int(((thisDisk.sizeMB - 4) * pctMultiplier))		# 99.9% of HDD
 								thisDisk.thinSize = int((thisDisk.poolSize / 100) * pct)
 							
 							# issue command, and check status of the disk
@@ -540,10 +541,9 @@ def sshKeyOK():
 	else:
 		
 		# Run ssh-keygen, in shell mode to generate the key i.e. use the 'True' parameter
-		genOut = issueCMD("ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa",True)
-		rc = genOut[0]
-		output = genOut[1:]
-		for line in output:
+		(rc, genOut) = issueCMD("ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa",True)
+
+		for line in genOut:
 			if 'Your public key has been saved' in line:
 				g.LOGGER.info('%s SSH key has been generated successfully', time.asctime())
 				keyOK = True
@@ -556,12 +556,6 @@ def main():
 	""" main control logic """
 	
 	
-	#g.LOGGER.basicConfig(filename=LOGFILE, 
-	#					level=LOGLEVEL, 
-	#					filemode='w')
-	
-	#accessKey = generateKey()
-
 	hostIPs = getHostIP()
 	
 	print "\ngluster-deploy starting"
@@ -580,13 +574,6 @@ def main():
 		
 		print "\n\tSetup Progress"
 				
-		#updateKeyFile(ACCESSKEY)							# Hack - password should be an xml call
-		
-	
-		# Create a basic httpd class
-		#serverClass = BaseHTTPServer.HTTPServer
-		
-		# httpd = serverClass(("",HTTPPORT), RequestHandler)
 		httpd = StoppableHTTPServer(("",g.HTTPPORT), RequestHandler)
 		
 		g.LOGGER.info('%s http server started, listening on port %s', time.asctime(), g.HTTPPORT)
@@ -605,12 +592,8 @@ def main():
 			time.sleep(0.1)
 
 		httpd.server_close()
-			
-
-
 		
 		g.LOGGER.info('%s http server stopped', time.asctime())	
-		
 
 	else:
 		print '\n\n-->Problem generating an ssh key, program aborted\n\n'

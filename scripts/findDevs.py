@@ -35,10 +35,12 @@ def issueCMD(command):
 	try:
 		out = subprocess.Popen(cmdWords,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		(response, errors)=out.communicate()					# Get the output...response is a byte
+		rc = out.returncode
 	except Exception:
 		response = 'command not found\n'
+		rc=12
 	
-	return (out.returncode, response.split('\n'))							# use split to return a list
+	return (rc, response.split('\n'))							# use split to return a list
 
 def filterDisks(partList):
 	""" Take a list of devices from proc/partitions and return only the disk devices """

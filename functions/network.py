@@ -40,17 +40,17 @@ import globalvars as g
 def atod(a): 
 	""" ascii_to_decimal """
 	
-    return struct.unpack("!L",socket.inet_aton(a))[0]
+	return struct.unpack("!L",socket.inet_aton(a))[0]
 
 def dtoa(d): 
 	"""  decimal_to_ascii """
-    return socket.inet_ntoa(struct.pack("!L", d))
+	return socket.inet_ntoa(struct.pack("!L", d))
 
 def ntoDotted(mask):
 	""" number to dotted notation """
 	
-    bits = 0xffffffff ^ (1 << 32 - mask) - 1
-    return socket.inet_ntoa(struct.pack('>I', bits))
+	bits = 0xffffffff ^ (1 << 32 - mask) - 1
+	return socket.inet_ntoa(struct.pack('>I', bits))
 
 def listIPRange(subnet):
 	""" receive x.x.x.x/nn subnet, and return all IP's on that subnet """
@@ -147,14 +147,14 @@ def getSubnets():
 	
 	subnetList = []
 	#validPrefix = ['eth', 'bond', 'em','virbr']
-	ipInfo = issueCMD("ip addr show")
+	(rc, ipInfo) = issueCMD("ip addr show")
 	
-	for dataLine in ipInfo[1:]:
+	for dataLine in ipInfo:
 		if 'inet ' in dataLine:
 			interface = dataLine.split()[-1]
 			if interface.startswith(g.NICPREFIX):
-				IPinfo = dataLine.split()[1]
-				thisSubnet = calcSubnet(IPinfo)
+				IPdata = dataLine.split()[1]
+				thisSubnet = calcSubnet(IPdata)
 				subnetList.append(thisSubnet)
 	
 	return subnetList
@@ -164,9 +164,9 @@ def getHostIP():
 
 	hostIP = []
 
-	ipInfo = issueCMD("ip addr show")
+	(rc, ipInfo) = issueCMD("ip addr show")
 	
-	for dataLine in ipInfo[1:]:
+	for dataLine in ipInfo:
 		if 'inet ' in dataLine:
 			interface = dataLine.split()[-1]
 			if interface.startswith(g.NICPREFIX):

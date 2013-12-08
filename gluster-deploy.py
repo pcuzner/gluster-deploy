@@ -261,32 +261,17 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				else:
 					failed += 1
 
-
-			
-			#keyData = parms[0].split(" ")
-			#print keyData
-
 			
 			g.LOGGER.info('%s pushKeys distributing ssh keys to %d nodes', time.asctime(), len(nodes))
-
-			#for n in keyData:
-			#	[nodeName, nodePassword] = n.split('*')
-			#	glusterNodes[nodeName].userPassword = nodePassword
-			#	glusterNodes[nodeName].pushKey()
-			#	if glusterNodes[nodeName].hasKey:
-			#		success += 1
-			#	else:
-			#		failed += 1
 
 			respText = "OK" if failed == 0 else "FAILED"
 			response = ( "<response><status-text>" + respText + "</status-text><summary success='" 
 						+ str(success) + "' failed='" + str(failed) + "' /></response>" )
 						
-			#retString = str(success) + " " + str(failed)
-			
 			self.wfile.write(response)
 			
 			g.LOGGER.info('%s pushKeys complete - success %d, failed %d', time.asctime(), success, failed)
+			
 			print "\t\tSSH keys distributed"
 			
 			
@@ -311,7 +296,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					#print glusterNodes[node].diskList
 				
 					retString = retString + "<node><nodename name='" + node + "'/><disks>"
-					for deviceID in glusterNodes[node].diskList:
+					for deviceID in sorted(glusterNodes[node].diskList):
 						diskObj = glusterNodes[node].diskList[deviceID]
 						sizeGB = diskObj.sizeMB / 1024
 						retString = retString + "<device id='" + deviceID + "' size='" + str(sizeGB) + "' />"

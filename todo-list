@@ -24,6 +24,7 @@
 
   
 Items under consideration
+  - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 
   - add an exit button to terminate the UI before the wizard is complete
   - change the webserver to use a self signed cert for http access
   - Review the ssh/pexpect code - can it be tidier?

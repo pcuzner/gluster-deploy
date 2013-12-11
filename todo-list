@@ -1,9 +1,9 @@
   
-0.4 (planned)
-  - fix - tidy up issueCMD code to return tuple, simplifying calling code - DONE, commit f0239185
-  - fix - disk list presented should be sorted, node, then device ID
+0.4 (pending)
+  - fix - tidy up issueCMD code to return tuple, simplifying calling code - DONE (f0239185)
+  - fix - disk list presented should be sorted by node, then device ID - DONE (33e6e30c)
   - add --serverlist (-s) to bypass the scan to start with a predefined list of servers
-  - fix presentation of many nodes in keymgmt (separate header and data elements) - DONE, commit dea42349
+  - fix presentation of many nodes in keymgmt (separate header and data elements) - DONE (dea42349)
   - fix presentation of disks in disk discovery for many disks (separate header and data elements)
   - add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
 
@@ -24,6 +24,7 @@
 
   
 Items under consideration
+  - add an exit button to terminate the UI before the wizard is complete
   - change the webserver to use a self signed cert for http access
   - Review the ssh/pexpect code - can it be tidier?
   - add a disk wipe capability in the event bricks are reused (i.e. lv already exists - perhaps the 

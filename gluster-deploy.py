@@ -113,12 +113,6 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		if ( requestType == "password" ):
 			
 			if g.PASSWORDCHECK:
-				#xmlString = parms[0]
-			
-				# Read the xml string, and extract the password the user has supplied
-				# <data><password>PASSWORD_STRING</password></data>		
-				
-				# xmlRoot = ETree.fromstring(xmlString)
 				
 				userKey = xmlRoot.find('password').text
 				
@@ -147,7 +141,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				for subnet in subnets:
 					response += "<subnet>" + subnet + "</subnet>"
 				response += "</response>"
-				# subnetString = ' '.join(subnets)
+
 				allSubnets = ' '.join(subnets)
 			
 				g.LOGGER.debug("%s network.getSubnets found - %s", time.asctime(), allSubnets)
@@ -161,9 +155,6 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		elif ( requestType == "find-nodes" ):
 			
 			scanTarget = xmlRoot.find('subnet').text
-			
-			
-			#scanTarget= parms[0]
 			
 			g.LOGGER.info('%s network.findService starting to scan %s', time.asctime(), scanTarget)
 			nodeList = findService(scanTarget,g.SVCPORT)
@@ -193,7 +184,6 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			for node in nodeElements:
 				nodeList.append(node.text)
 
-			# nodeList = parms[0].split(" ")	
 			success = 0 
 			failed = 0
 			g.LOGGER.info('%s createCluster joining %s nodes to the cluster', time.asctime(), len(nodeList))
@@ -237,8 +227,6 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			print "\t\tCluster created - added " + str(success) + " nodes to this node (" + str(failed) + " nodes failed)"
 
 			# return success and failed counts to the caller (UI)			
-			
-			#retString = str(success) + " " + str(failed)
 			self.wfile.write(response)
 			
 			g.LOGGER.info('%s gluster.createCluster complete - %d successful, %d failed', time.asctime(), success, failed)			

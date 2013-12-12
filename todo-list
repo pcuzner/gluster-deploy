@@ -26,6 +26,8 @@
 Items under consideration
   - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 
   - add an exit button to terminate the UI before the wizard is complete
+  - change the code to permit forward and back navigation within the steps
+  - add the capability to update /etc/hosts on nodes (when DNS is not available/resolving)
   - change the webserver to use a self signed cert for http access
   - Review the ssh/pexpect code - can it be tidier?
   - add a disk wipe capability in the event bricks are reused (i.e. lv already exists - perhaps the 

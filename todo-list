@@ -1,6 +1,7 @@
   
 0.4 (pending)
   - fix - tidy up issueCMD code to return tuple, simplifying calling code - DONE (f0239185)
+  - add hadoop workload type based on parameters in the hadoop/glusterfs-cluster-install project on the forge
   - fix - disk list presented should be sorted by node, then device ID - DONE (33e6e30c)
   - add --serverlist (-s) to bypass the scan to start with a predefined list of servers
   - fix presentation of many nodes in keymgmt (separate header and data elements) - DONE (dea42349)

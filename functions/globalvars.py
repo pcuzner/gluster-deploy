@@ -38,6 +38,7 @@ def init():
 	global PGMROOT
 	global MSGSTACK
 	global BTRFSKERNEL
+	global SERVERLIST
 	
 	LOGFILE = 'gluster-deploy.log'
 	LOGLEVEL = logging.getLevelName('DEBUG')		# DEBUG | INFO | ERROR
@@ -48,18 +49,27 @@ def init():
 	
 	LOGGER = logging.getLogger()
 	
+	# NIC types that would be presented to the admin for subnet
+	# selection
 	NICPREFIX = ('eth', 'bond', 'em','virbr0','ovirtmgmt','rhevm')
 	
+	# TCP port for glusterd
 	SVCPORT = 24007
+	
+	# Default port for the web UI
 	HTTPPORT = 8080
 	
+	# create a msgstack object used to track task progress
 	MSGSTACK = MsgStack()
 	
+	# Minimum kernel version required to support btrfs filesystem bricks
 	BTRFSKERNEL = 3.6
 		
 	PGMROOT = os.path.split(os.path.abspath(os.path.realpath(sys.argv[0])))[0]
 	# glusterNodes
 	
+	# List of servers specified through a config file
+	SERVERLIST = []
 	
 	pass
 

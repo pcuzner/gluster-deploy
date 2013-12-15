@@ -585,8 +585,11 @@ if __name__ == '__main__':
 
 	usageInfo = "usage: %prog [options]"
 	
-	parser = OptionParser(usage=usageInfo,version="%prog 0.3")
+	parser = OptionParser(usage=usageInfo,version="%prog 0.4a")
 	parser.add_option("-n","--no-password",dest="skipPassword",action="store_true",default=False,help="Skip access key checking (debug only)")
+	parser.add_option("-p","--port",dest="port",default=8080,type="int", help="Port to run UI on (> 1024)")
+	parser.add_option("-f","--config-file",dest="cfgFile",default="/root/deploy.cfg",type="string",help="Config file providing server list bypassing subnet scan")
+	
 	(options, args) = parser.parse_args()
 	
 	g.init()		# Initialise the global variables
@@ -595,6 +598,14 @@ if __name__ == '__main__':
 	
 	g.ACCESSKEY = generateKey()
 	
+	if options.port:
+		if options.port > 1024:
+			g.HTTPPORT = options.port
+	
+	if options.cfgFile:
+		# Configuration file supplied so call the parser to build a server
+		# list of nodes to scan for the create cluster step
+		pass
 	
 	main()
 

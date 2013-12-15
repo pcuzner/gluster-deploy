@@ -30,11 +30,7 @@ import globalvars as g
 import logging
 import time
 import os
-#import sys
 
-# PGMROOT = os.path.split(os.path.abspath(os.path.realpath(sys.argv[0])))[0]
-
-# glusterLog = logging.getLogger()
 
 def parseOutput(outXML, elementType):
 	"""	Receive the output of a command in xml format, and search for 
@@ -87,7 +83,14 @@ def createVolume(xmlDoc):
 	cmdQueue.append('gluster vol set ' + volName + ' ' + NFSstate)
 	cmdQueue.append('gluster vol set ' + volName + ' ' + CIFSstate)
 	
-	if useCase.lower() == 'virtualisation':
+	if useCase.lower() == 'hadoop':
+		# Added based on work done by Jeff Vance @ Red Hat
+		cmdQueue.append('gluster vol set ' + volName + ' quick-read off')
+		cmdQueue.append('gluster vol set ' + volName + ' cluster.eager-lock on')
+		cmdQueue.append('gluster vol set ' + volName + ' performance.stat-prefetch off')
+		pass
+		
+	elif useCase.lower() == 'virtualisation':
 		
 		# look to see what type of virt target it is
 		target = xmlDoc.find('./volume/tuning').attrib['target']

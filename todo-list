@@ -3,7 +3,8 @@
   - fix - tidy up issueCMD code to return tuple, simplifying calling code - DONE (f0239185)
   - add hadoop workload type based on parameters in the hadoop/glusterfs-cluster-install project on the forge
   - fix - disk list presented should be sorted by node, then device ID - DONE (33e6e30c)
-  - add --serverlist (-s) to bypass the scan to start with a predefined list of servers
+  - add --config-file (-f) to bypass the scan to start with a predefined list of servers
+  - add --port(-p) to allow the admin to specifiy the web port for the UI - DONE (XXXXX)
   - fix presentation of many nodes in keymgmt (separate header and data elements) - DONE (dea42349)
   - fix presentation of disks in disk discovery for many disks (separate header and data elements)
   - add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 

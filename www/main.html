@@ -105,11 +105,18 @@
 	<button id="overviewNext" type="button" disabled onclick='startNodesPage()' class="nextButton">Next</button>
 	</div>
 	
-	<div id="nodes"><h2>Node Discovery</h2><p>Subnet to scan&nbsp;
-	  <select id="network-select">
-	  </select>
-	  <button id="network-scan-btn" type="button" disabled onclick="scanSubnet()"><i class="icon-search"></i>Scan</button>
-	  </p>
+	<div id="nodes"><h2>Node Discovery</h2>
+		<div id="nodesProvided">
+		  <p>The nodes shown below are provided by the configuration file supplied when gluster-deploy was invoked.</p>
+		</div>
+		<div id="nodeScanning">
+			<p>Subnet to scan&nbsp;
+			<select id="network-select">
+			</select>
+			<button id="network-scan-btn" type="button" disabled onclick="scanSubnet()"><i class="icon-search"></i>Scan</button>
+			</p>
+		</div>
+
 	  <div id="nodeSelect">
 		<select id="candidateNodes" onchange="enableButton('addNodes')" multiple size=28>
 		</select>

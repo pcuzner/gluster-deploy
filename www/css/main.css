@@ -215,9 +215,35 @@ left:0px;
 	opacity: 100;
 	background-color:#ededed;
 }
+
 #nodes.slide {
 left: 0px;
 }
+
+#nodeScanning {
+position:relative;
+visibility: visible;
+top: -55px;
+width:580px;
+height:60px;
+
+}
+#nodeScanning.hidden {
+visibility:hidden;
+}
+
+#nodesProvided {
+position:relative;
+visibility:hidden;
+width:580px;
+height:40px;
+
+transition: opacity .75s;
+}
+#nodesProvided.show {
+visibility: visible;
+}	
+
 
 /* ****************************************************************** */
 /* key Management 'page'                                              */
@@ -400,6 +426,9 @@ left: 0px;
 
 
 #nodeSelect {
+    position:absolute;
+    top:100px;
+    width:600px;
 	opacity:0;
 	z-index:3;
 	transition: opacity .75s;

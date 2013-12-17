@@ -23,6 +23,13 @@
 #  
 
 import threading
+import os
+import ConfigParser						# renamed to configparser in python3!
+import socket
+
+import network							# local module
+
+
 
 class MsgStack:
 	""" 
@@ -59,6 +66,12 @@ class MsgStack:
 		""" Return a count of the size of the message stack """
 		return len(self.messages)
 		
+	def reset(self):
+		""" drop existing messages on the list """
+		self.lock.acquire()
+		del self.messages[:]
+		self.lock.release()
+		return
 
 def kernelCompare(thisKernel, kernelTarget):	
 	""" Receive current and target kernels, return true if the current is > target """
@@ -68,12 +81,44 @@ def kernelCompare(thisKernel, kernelTarget):
 	(k1version, k1release) = thisKernel.split('.')
 	(k2version, k2release) = kernelTarget.split('.')
 	
-	if k1version == k2version:
+	if k1version >= k2version:
 		if int(k2release) >= int(k1release):
 			result = True
 			
 	return result
 
+
+def buildServerList(configFileName, hostIPs):
+	""" 
+	Receive a user specfiied configuration file, process it to return a list of
+	servers that will be looked at for active glusterd processes - to bypass the 
+	subnet scan
+	"""
+	
+	config = ConfigParser.ConfigParser()
+	config.read(configFileName)
+	
+	try:
+		nodeNames = config.get("nodes","nodenames").split()
+	except:
+		print "\t\t-> Error processing the config file, subnet scanning will be used"
+		nodeNames = []		
+	
+	if nodeNames:
+		for node in nodeNames:
+			
+			# process each node to make sure it's a valid IP or name
+			# if not drop from the serverList
+			if not network.hostOK(node):
+				print "\t\t-> dropping " + node + " (name doesn't resolve, or IP is invalid)"
+				nodeNames.remove(node)
+			else:
+				pass
+				
+			pass
+		
+	# return a sorted list	
+	return sorted(nodeNames)
 
 if __name__ == '__main__':
 	pass

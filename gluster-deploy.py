@@ -30,6 +30,7 @@
 from functions.network import getSubnets,findService, getHostIP
 from functions.syscalls import issueCMD, generateKey, getMultiplier
 from functions.gluster import GlusterNode, createVolume
+from functions.utils import buildServerList
 
 import functions.globalvars as g					# Import globals shared across the modules
 
@@ -94,9 +95,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		length = int(self.headers.getheader('content-length'))        
 		dataString = self.rfile.read(length)
 		
-		#cmd = dataString.split('|')[0]
-		#parms = dataString.split('|')[1:]
-		
+
 		try:
 			xmlRoot = ETree.fromstring(dataString)
 			requestType = xmlRoot.find('./request-type').text
@@ -108,6 +107,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			return
 
 		if requestType in RequestHandler.pollingEnabledTasks:
+			g.LOGGER.debug("%s Message polling from the client is enabled for %s", time.asctime(),requestType)
 			RequestHandler.pollingEnabled = True
 		
 		if ( requestType == "password" ):
@@ -129,34 +129,62 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				retString = 'OK'
 			
 			response = "<response><status-text>" + retString + "</status-text></response>"
-				
+			
 			self.wfile.write(response)	
 				
 			
 		elif ( requestType == "subnet-list" ):
 
-			subnets = getSubnets()
-			if subnets:
-				response = "<response><status-text>OK</status-text>"
-				for subnet in subnets:
-					response += "<subnet>" + subnet + "</subnet>"
-				response += "</response>"
+			response = "<response><status-text>"
 
-				allSubnets = ' '.join(subnets)
-			
-				g.LOGGER.debug("%s network.getSubnets found - %s", time.asctime(), allSubnets)
-			
+			# If there are servers in the SERVERLIST, we pass back the server IP/names not
+			# subnets to allow subnet selection and scan to be bypassed
+			if g.SERVERLIST:
+				g.LOGGER.info("%s Bypassing subnet scan, using nodes from configuration file", time.asctime())
+				response += "OK</status-text><request-type>servers</request-type>"
+				
+				#for node in g.SERVERLIST:
+				#	response += "<node>" + node +"</node>"
+				
+				response += "</response>"
+				
+				print "\t\tHost list from the configuration file passed to the UI (bypassing subnet scanning)"
+				
 			else:
-				response = "<response><status-text>FAILED</status-text></response>"
-			
-			print "\t\tHost checked for active NIC's"				
+				# server list has not been provided, so let look at the hosts IP config and 
+				# get a list of subnets for the admin to choose from for the subnet scan
+
+				subnets = getSubnets()
+				
+				if subnets:
+					response = "<response><status-text>OK</status-text><request-type>scan</request-type>"
+					for subnet in subnets:
+						response += "<subnet>" + subnet + "</subnet>"
+					response += "</response>"
+	
+					allSubnets = ' '.join(subnets)
+				
+					g.LOGGER.debug("%s network.getSubnets found - %s", time.asctime(), allSubnets)
+					
+					print "\t\tHost checked for active NIC's"				
+				
+				else:
+					response = "<response><status-text>FAILED</status-text></response>"
+				
 			self.wfile.write(response)
 			
 		elif ( requestType == "find-nodes" ):
 			
-			scanTarget = xmlRoot.find('subnet').text
+			scanType = xmlRoot.find('scan-type').text
 			
-			g.LOGGER.info('%s network.findService starting to scan %s', time.asctime(), scanTarget)
+			if scanType == 'subnet':
+				scanTarget = xmlRoot.find('subnet').text
+				g.LOGGER.info('%s network.findService starting to scan %s', time.asctime(), scanTarget)
+			elif scanType == 'serverlist':
+				scanTarget = " ".join(g.SERVERLIST)
+				g.LOGGER.info('%s network.findService processing server list', time.asctime())
+			
+	
 			nodeList = findService(scanTarget,g.SVCPORT)
 			
 			if nodeList:
@@ -166,15 +194,22 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				response += "</response>"
 					
 				g.LOGGER.info('%s network.findService scan complete', time.asctime())
-				g.LOGGER.debug("%s network.findService found %s services on %s", time.asctime(), str(len(nodeList)), scanTarget)
+				g.LOGGER.debug("%s network.findService found %s services", time.asctime(), str(len(nodeList)))
 
 			else:
 				response = "<response><status-text>FAILED</status-text></response>"
 
-			print "\t\tSubnet scanned for open glusterd ports - " + str(len(nodeList)) + " found"
-		
+			print "\t\tNodes scanned for open glusterd ports - " + str(len(nodeList)) + " found"
+			
+			# Using the list of servers for the nodes completes really quickly, and they never get displayed
+			# but stack in the message stack, appearing on the next tasks msg log. To prevent this, we drop
+			# the msg stack.
+			if scanType == 'serverlist':
+				g.MSGSTACK.reset()
+			
 			self.wfile.write(response)
-			RequestHandler.pollingEnabled = False
+			
+			RequestHandler.pollingEnabled = False	
 			
 		
 		elif (requestType == "create-cluster"):
@@ -412,7 +447,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						+ "<summary success='" + str(success) + "' failed='" + str(failed) + "' />" )
 			
 			for brick in brickList:
-				# e.g. <brick fsname='/gluster/brick' size='10' servername='rhs1-1' />"
+				# e.g. <brick fsname='/gluster/brick' size='10' servername='rhs1-1' />
 
 				sizeGB = ( brick.sizeMB / 1024 ) if brick.thinSize == 0 else ( brick.thinSize / 1024 )
 
@@ -455,15 +490,21 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
 		elif (requestType == "query-status"):
-
+			
+			g.LOGGER.debug("%s query-status received from the web client", time.asctime())
+			
 			msgs = g.MSGSTACK.popMsgs()
+			
 			xmlMsgs = ""
 			for msg in msgs:
 				xmlMsgs += "<message>" + msg + "</message>"
 			
+			
 			respText = "OK" if ( ( RequestHandler.pollingEnabled ) or ( len(msgs) > 0 ) ) else "NOTOK"
 			response = ( "<response><status-text>" + respText + "</status-text>"
 						+ xmlMsgs + "</response>")
+			
+			g.LOGGER.debug("%s query-status returned %s", time.asctime(), response)
 			
 			self.wfile.write(response)
 			
@@ -472,6 +513,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						
 		elif ( requestType == "quit"):
 			print "\t\tQuit received from the UI, shutting down"
+			
 			# Update the httpd servers state, so the run forever loop can be exited
 			self.server.stop = True
 			self.dummyRequest()		# Send a dummy request to force thread termination
@@ -534,10 +576,29 @@ def sshKeyOK():
 def main():
 	""" main control logic """
 	
-	
+
 	hostIPs = getHostIP()
+	g.LOGGER.info("%s Host has %s IP's to bind the web server to", time.asctime(), len(hostIPs))
 	
 	print "\ngluster-deploy starting"
+	print "\n\tConfiguration file"
+	
+	if configFile:
+		
+		# user invoked with -f and has supplied a file that exists, so process it
+		print "\t\tProcessing config file(" + options.cfgFile + ")"
+		candidateSvrs = buildServerList(configFile, hostIPs)
+		numServers = len(candidateSvrs)
+		if numServers > 0:
+			print "\t\t-> Configuration file provided " + str(numServers) + " potentially usable nodes"
+			g.SERVERLIST = list(candidateSvrs)
+		else:
+			print "\t\t-> No suitable nodes detected, UI will offer subnet selection/scan"	
+			
+	else:
+		# no config file was specified at run time (default behaviour)
+		print "\t\t-> Not supplied, UI will perform subnet selection/scan"
+	
 	
 	# Program relies on ssh key distrubution and passwordless ssh login across
 	# nodes, so if we can't get an sshkey generated...GAME OVER...
@@ -561,7 +622,7 @@ def main():
 			# Run the httpd service
 			httpd.serve_forever()
 			
-			# User has hit CTRL-C, so catch it to stop an error being thrown
+		# User has hit CTRL-C, so catch it to stop an error being thrown
 		except KeyboardInterrupt:
 			print '\ngluster-deploy web server stopped by user hitting - CTRL-C\n'
 
@@ -578,17 +639,20 @@ def main():
 		print '\n\n-->Problem generating an ssh key, program aborted\n\n'
 		
 	print '\ngluster-deploy stopped.'
-	sys.exit()
+	
+	exit()
 		
 
 if __name__ == '__main__':
 
+	configFile = ""
+	
 	usageInfo = "usage: %prog [options]"
 	
 	parser = OptionParser(usage=usageInfo,version="%prog 0.4a")
 	parser.add_option("-n","--no-password",dest="skipPassword",action="store_true",default=False,help="Skip access key checking (debug only)")
 	parser.add_option("-p","--port",dest="port",default=8080,type="int", help="Port to run UI on (> 1024)")
-	parser.add_option("-f","--config-file",dest="cfgFile",default="/root/deploy.cfg",type="string",help="Config file providing server list bypassing subnet scan")
+	parser.add_option("-f","--config-file",dest="cfgFile",type="string",help="Config file providing server list bypassing subnet scan")
 	
 	(options, args) = parser.parse_args()
 	
@@ -601,11 +665,18 @@ if __name__ == '__main__':
 	if options.port:
 		if options.port > 1024:
 			g.HTTPPORT = options.port
+
 	
 	if options.cfgFile:
+
 		# Configuration file supplied so call the parser to build a server
 		# list of nodes to scan for the create cluster step
-		pass
-	
+		if os.path.isfile(options.cfgFile):
+			configFile = options.cfgFile
+		else:	
+			print "\n\tConfig file provided (" + options.cfgFile + "), but does not exist."
+			print "\nRun aborted."
+			sys.exit(16)
+
 	main()
 

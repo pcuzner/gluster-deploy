@@ -29,8 +29,6 @@ import shlex
 
 import globalvars as g 
 
-# glusterLog = logging.getLogger()
-
 class SSHsession:
 	"""	SSH session class """
 	

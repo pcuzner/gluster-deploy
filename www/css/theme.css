@@ -31,7 +31,7 @@ select:not([disabled]):hover {
 
 select:focus {
 	color: #505050;
-	color: rgba(80,80,80,0);
+	color: rgba(80,80,80,255);
 	text-shadow: 0 0 0 #505050;
 	background: #ffffff;
 	box-shadow: 0 1px 0 #2392F3 inset, 0 -1px 0 #2392F3 inset, 1px 0 0 #2392F3 inset, -1px 0 0 #2392F3 inset, 0 0 4px rgba(35,146,243,0.5);
@@ -135,6 +135,7 @@ visibility:hidden;
 h1 {
 	position:relative;
 	left: 260px;
+	width:500px;
 	/*text-align:center;*/
 	font-family: "arial";
 	font-style: normal;

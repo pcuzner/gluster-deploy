@@ -15,28 +15,44 @@ function subnetSetup(req) {
 	
 	xmlDoc = req.responseXML;
 	
-	// request returns a string containing subnets separated by spaces
-	// split this into an array and update the pulldown
-	// subnetString =req.responseText;
-	// subnet = subnetString.split(" "); 
-	
 	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
+	var requestType = xmlDoc.getElementsByTagName("request-type")[0].childNodes[0].nodeValue;
 	
 	if ( state == 'OK' ) {
-		subnets = xmlDoc.getElementsByTagName('subnet');		// array of subnet elements
-		dropdown = document.getElementById("network-select");
 		
-		// If we have subnets to select, populate the pulldown and enable the 
-		// button
-		if (subnets.length > 0) {
-			
-			for (var n=0; n<subnets.length; n++) {
+		switch(requestType) {
+			case "scan" :
+		
+				subnets = xmlDoc.getElementsByTagName('subnet');		// array of subnet elements
+				dropdown = document.getElementById("network-select");	// DOM element on the page
 				
-				dropdown[dropdown.length] = new Option(subnets[n].childNodes[0].nodeValue);
-			}
+				// If we have subnets to select, populate the pulldown and enable the 
+				// button
+				if (subnets.length > 0) {
+					
+					for (var n=0; n<subnets.length; n++) {
+						dropdown[dropdown.length] = new Option(subnets[n].childNodes[0].nodeValue);
+					}
+					
+					document.getElementById('network-scan-btn').disabled = false;
+				}
+				
+				break;
+				
+			case "servers":
 			
-			document.getElementById('network-scan-btn').disabled = false;
-		}
+					// turn of the subnet select elements
+					disableDiv("nodeScanning");
+					document.getElementById("nodeScanning").className = 'hidden';
+					document.getElementById("nodesProvided").className = "show";
+					
+					// turn on the text to describe the servers are provided by config file override
+					// turn on the candidate and select nodes div
+					document.getElementById('nodeSelect').className = 'show';
+					scanSubnet('serverlist');
+
+					break;
+		}		
 	}
 	else {
 		// insert error handler here!
@@ -85,19 +101,45 @@ function nodeSelect(req) {
 	}
 }
 
-function scanSubnet() {
-	// grab the current value from the pulldown list
-	// ajax call 'findNodes'
-	targetSubnet = document.getElementById('network-select').value;
-	document.getElementById('network-select').disabled=true;
-	document.getElementById('network-scan-btn').disabled = true;
-	showBusy('Scanning ' + targetSubnet);
+function scanSubnet(scanType) {
 	
-	var xmlString = "<data><request-type>find-nodes</request-type><subnet>" + targetSubnet +"</subnet></data>";
+	scanType = typeof scanType !== "undefined" ? scanType : "subnet" ;
 	
+	switch(scanType) {
+		case "subnet":
+		
+			// grab the current value from the pulldown list
+			targetSubnet = document.getElementById('network-select').value;
+			disableDiv("nodeScanning");
+			
+			showBusy('Scanning ' + targetSubnet);
+			
+			var xmlString = "<data><request-type>find-nodes</request-type><scan-type>subnet</scan-type><subnet>" + targetSubnet +"</subnet></data>";
+			
+
+			
+			break;
+			
+		case "serverlist":
+		
+			showBusy('Checking servers provided');
+			var xmlString = "<data><request-type>find-nodes</request-type><scan-type>serverlist</scan-type></data>";
+			
+			break;
+			
+	}
+	
+	// Make call back to webserver, and set up the nodeSelect as the handler for the response		
 	xml_http_post('../www/main.html', xmlString, nodeSelect);
+		
+	// Invoking a scan is a long running task, so enable the MsgLog to get progress
+	// updates
+	if ( scanType == 'subnet' ) {
+		enableMsgLog();
+	}
+		
+
 	
-	enableMsgLog();
 
 }
 

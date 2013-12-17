@@ -33,10 +33,6 @@ import time
 
 import globalvars as g
 
-# glusterLog = logging.getLogger()
-
-#VALIDPREFIX = ('eth', 'bond', 'em','virbr0','ovirtmgmt','rhevm')
-
 def atod(a): 
 	""" ascii_to_decimal """
 	
@@ -82,6 +78,15 @@ def calcSubnet(subnet):
 	dmask = atod(dotted)
 	
 	return dtoa(dIP & dmask) + "/" + str(mask)
+
+def hostOK(hostName):
+	""" Attempt to resolve a given hostname to validate it """
+	
+	try:
+		socket.gethostbyname(hostName)
+		return True
+	except socket.error:
+		return False
 		
 
 def findService(subnet, targetPort=24007,scanTimeout=0.05):
@@ -93,10 +98,13 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 	
 	excludedSuffixes = ('.0','.254','.255')
 	
-	mask = subnet.split('/')[-1]
-
-	IPRange = listIPRange(subnet)	
-	
+	if " " not in subnet:
+		IPRange = listIPRange(subnet)	
+		serverList = True
+	else:
+		IPRange = subnet.split()
+		serverList = False
+		
 	hostsIP = getHostIP()
 	
 	serviceList = []
@@ -113,6 +121,11 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 								
 				g.LOGGER.debug('%s port %d found open on %s', time.asctime(),targetPort,IPaddr)
 				
+				# if the ipaddr is a name, convert to IP address since it's the IP that gets used
+				# against the host's IP list to determine which is the local node 
+				if IPaddr[0].isalpha():
+					IPaddr = socket.gethostbyname(IPaddr)
+				
 				# check if this IP is from this host - if so set suffix
 				suffix = '*' if IPaddr in hostsIP else ''
 
@@ -120,7 +133,7 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 					hostName = socket.gethostbyaddr(IPaddr)[0]
 					
 					# If the name returned is FQDN, just take the server name
-					# component
+					# component to keep the UI tidy
 					if '.' in hostName:
 						hostName = hostName.split('.')[0]
 						
@@ -133,8 +146,16 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 				
 				# Add 'found host' message to the message stack
 				g.MSGSTACK.pushMsg('Found %s' %(hostName))
-				
+			
+			else:
+				# if the probe to the glusterd port failed, and the target was a 
+				# node supplied in the config file, report the error in the log
+				if serverList:
+					g.LOGGER.info("%s network.findService couldn't connect to glusterd on %s, dropping from the server list", time.asctime(), IPAddr)
+					
+					
 			sock.close()
+			
 		except:
 			pass
 	
@@ -146,7 +167,7 @@ def getSubnets():
 	"""getSubnets returns a list of the IPv4 subnets available of the host"""
 	
 	subnetList = []
-	#validPrefix = ['eth', 'bond', 'em','virbr']
+
 	(rc, ipInfo) = issueCMD("ip addr show")
 	
 	for dataLine in ipInfo:
@@ -172,9 +193,6 @@ def getHostIP():
 			if interface.startswith(g.NICPREFIX):
 				dataLine = dataLine.replace('/',' ')
 				hostIP.append(dataLine.split()[1])
-
-	g.LOGGER.debug("%s Host has %s IP's to bind the web server to", time.asctime(), len(hostIP))
-
 
 	return hostIP
 

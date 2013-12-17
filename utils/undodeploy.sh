@@ -93,7 +93,7 @@ function localUpdates {
 
 function dropVolume {
 	echo "Stopping volume $volName..."
-	gluster vol stop $volName force
+	echo "y" | gluster vol stop $volName force
 	
 	echo "Deleting the volume"
 	# This will cause a prompt to the user

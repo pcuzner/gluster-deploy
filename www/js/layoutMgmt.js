@@ -35,6 +35,7 @@ function slide(oldDiv, newDiv) {
 	document.getElementById(newDiv).className = 'slide';
 	
 	if ( newDiv != 'error' ) {
+		
 		// Update the menu area
 		var oldTask = 'm-' + oldDiv
 		var newTask = 'm-' + newDiv
@@ -72,9 +73,8 @@ function enableButton(buttonName) {
 }
 
 function updateCheckbox(checkboxName, state) {
-	
-	
 	// function that just toggles the checked state of all checkboxes in a given group
+	
 	var checkboxes = document.getElementsByName(checkboxName);
 	var numCheckboxes = checkboxes.length;
 	
@@ -96,6 +96,7 @@ function disableRadio(radioName) {
 
 function toggleElement(elementName) {
 	// Simply toggle the disabled true or false of a given element
+	
 	currentState = document.getElementById(elementName).disabled; 
 	document.getElementById(elementName).disabled = !currentState; 
 }
@@ -132,6 +133,7 @@ function emptyTable(tableName) {
 
 function countSelected(elementName) {
 	// Return the number of selected items in a given list/selectbox
+	
 	var options = document.getElementById(elementName).options;
 	var count = 0;
 	for ( var i = 0; i< options.length; i++) {
@@ -147,6 +149,7 @@ function countSelected(elementName) {
 
 function removeSelected(selectBox) {
 	// remove any selected item in the given "select box"
+	
 	thisBox = document.getElementById(selectBox)
 	
 	for (var i = thisBox.options.length-1; i>=0; i--) {
@@ -176,7 +179,7 @@ function showMountHelp() {
 }
 
 function finish() {
-	//document.getElementById('quitButton').disabled = true;
+
 	parent = document.getElementById('finish');
 	child = document.getElementById('quitButton');
 	parent.removeChild(child);
@@ -188,17 +191,24 @@ function finish() {
 	shutDown();
 }
 
-/* queryStatus polls the server to retrieve any messages, and displays them 
- * in the busyLog element
- */
  
 function queryMsgs() {
+	
+	// queryStatus polls the server to retrieve any messages, and displays them 
+	// in the busyLog element
+	
 	var xmlString = "<data><request-type>query-status</request-type></data>"
 	xml_http_post('../www/main.html', xmlString, displayMsgs);
 		
 }
 
 function displayMsgs(req) {
+	
+	// displayMsgs receives the response from the webserver. If the 'state' value
+	// is OK, then a further timeout interval is set to repeat the request to update
+	// the busyBox. Any other state value will not set a timeout, so the queries
+	// back to the web server stop.
+	
 	var xmlDoc = req.responseXML;
 	
 	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;

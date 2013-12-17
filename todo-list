@@ -1,16 +1,16 @@
   
 0.4 (pending)
   - fix - tidy up issueCMD code to return tuple, simplifying calling code - DONE (f0239185)
-  - add hadoop workload type based on parameters in the hadoop/glusterfs-cluster-install project on the forge
+  - add hadoop workload type based on parameters in the hadoop/glusterfs-cluster-install project on the forge - DONE (a75e60af1)
   - fix - disk list presented should be sorted by node, then device ID - DONE (33e6e30c)
-  - add --config-file (-f) to bypass the scan to start with a predefined list of servers
-  - add --port(-p) to allow the admin to specifiy the web port for the UI - DONE (XXXXX)
+  - add --config-file (-f) to bypass the scan to start with a predefined list of servers DONE (a75e60af1)
+  - add --port(-p) to allow the admin to specifiy the web port for the UI - DONE (a75e60af1)
   - fix presentation of many nodes in keymgmt (separate header and data elements) - DONE (dea42349)
   - fix presentation of disks in disk discovery for many disks (separate header and data elements)
-  - add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
 
 0.5 (planned) 
   - print option using javascript print of a config page - user can then print or save to pdf
+  - add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
   - update findDevs to return text OR xml, change calling code accordingly
   - Add btrfs brick build code
 

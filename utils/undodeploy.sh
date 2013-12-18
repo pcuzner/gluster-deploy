@@ -166,10 +166,22 @@ function main {
 	fi
 
 	brickList=$(gluster vol status $volName | tr ":" " " | awk '/Brick/ {print $3;}')
-	#brickList='/gluster/brick1 /gluster/brick1 /gluster/brick1'
+	
+	if [ -z "$brickList" ] ; then
+			echo "-> Volume '$volName' does not exit. undodeploy.sh run aborted"
+			exit 12
+	fi
+	
+	
+	
+	
+	# All bricks will be named the same for this volume, so use set to split the 
+	# brickList string up into $1,$2 ... and then just use the first definition ($1)
+	# e.g. 	brickList='/gluster/brick1 /gluster/brick1 /gluster/brick1'
+	#      	becomes
+	#		brickPath='/gluster/brick1'	
 	set -- $brickList
 	brickPath=$1
-	#brickPath='/gluster/brick1'
 
 	lvName=$(grep $brickPath /proc/mounts | awk '{ print $1;}')
 	vgName=$(lvs $lvName --noheadings | awk '{print $2;}')

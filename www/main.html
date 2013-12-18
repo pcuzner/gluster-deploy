@@ -54,9 +54,10 @@
 </head>
 
 <body>
-<h1>Gluster Configuration and Setup</h1>
+	
+<h1 >Gluster Configuration and Setup</h1>
 
-<div id="steps" >
+<div id="steps" class="invisible" >
 		<ul style="list-style:none; padding:0px;">
 			<li id="m-overview" class="pending">Overview</li>
 			<li id="m-nodes" class="pending">Node Discovery</li>
@@ -68,12 +69,11 @@
 		</ul>
 </div>
 
-
-<div id="access">
+<div id="access" class="loginprompt">
 	<span id="inputData">
 		<b>Enter Key</b> 
 		<input type="text" id="password" size="26" maxlength="26" autofocus>
-		<button id="checkKey" type="button" onclick="validateKey()">Next</button>
+		<button id="checkKey" type="button" onclick="validateKey()">Start</button>
 	</span>
 </div>
 
@@ -87,7 +87,6 @@
 
 <div id="container" >
 	
-	<div id="logo" ></div> 
 	<div id="overview"><h2>Overview</h2>
 	<p>
 	Once the glusterfs packages are installed, you need to configure the gluster environment

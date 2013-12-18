@@ -1,20 +1,49 @@
-  
-0.4 (pending)
+
+Development Log
+ 
+0.1 (Complete - 07 Oct 2013)
+  - detect gluster nodes
+  - create cluster
+  - distribute ssh keys
+  - detect candidate (unused) disks
+  - format disks as bricks, and mount them
+
+0.2 (Complete - 01 Nov 2013)
+  - added optparse module for command line arguments. Added -n to bypass accesskey checking
+  - client <-> server exchanges now all xml based
+  - added globals module to share config across modules
+  - added ability to create a volume (dist or repl only) after bricks are defined
+  - some minor UI fixes
+  - added "error" and mount help pages
+  - theme related elements split of to a separate file (theme.css)
+
+0.3 (Complete - 28 Nov 2013)
+  - UI theme tweaks to make active and available elements more visible
+  - webserver now multi-threaded
+  - security - once started in a client, access to the tool from other clients is blocked
+  - added a progress 'window' for long running tasks e.g. brick formatting and vol create for example
+  - Enabling a snapshot enabled config is now based on a toggle switch (ALL underlying nodes must dm-thinp support for this to be shown)
+  - by enabling snapshot you now get dm-thinp based logical volumes (old LV type used when snapshot is set to off)
+  - foundation for btrfs bricks added(in prep for gluster 3.5 - nb. kernel version >3.6 and btrfstools need to be present on all nodes)
+ 
+0.4 (active)
   - fix - tidy up issueCMD code to return tuple, simplifying calling code - DONE (f0239185)
   - add hadoop workload type based on parameters in the hadoop/glusterfs-cluster-install project on the forge - DONE (a75e60af1)
   - fix - disk list presented should be sorted by node, then device ID - DONE (33e6e30c)
   - add --config-file (-f) to bypass the scan to start with a predefined list of servers DONE (a75e60af1)
   - add --port(-p) to allow the admin to specifiy the web port for the UI - DONE (a75e60af1)
   - fix presentation of many nodes in keymgmt (separate header and data elements) - DONE (dea42349)
-  - fix presentation of disks in disk discovery for many disks (separate header and data elements)
+  - tidy login page (hide 'breadcrumb' bar, merge logo into login element) - DONE
 
 0.5 (planned) 
-  - print option using javascript print of a config page - user can then print or save to pdf
+  - fix presentation of disks in disk discovery for many disks (separate header and data elements)
   - add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
   - update findDevs to return text OR xml, change calling code accordingly
   - Add btrfs brick build code
 
 0.6 (planned)
+  - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 
+  - print option using javascript print of a config page - user can then print or save to pdf
   - review object structure - introduce cluster->nodes->volume->brick schema
   - update volCreate page to allow user to build >1 volume during the run
 
@@ -26,7 +55,6 @@
 
   
 Items under consideration
-  - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 
   - add an exit button to terminate the UI before the wizard is complete
   - change the code to permit forward and back navigation within the steps
   - add the capability to update /etc/hosts on nodes (when DNS is not available/resolving)

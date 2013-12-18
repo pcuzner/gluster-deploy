@@ -21,8 +21,6 @@
 	top:80px;
 }
 
-
-
 .active {
 	text-align:left;
 	text-indent:10px;
@@ -46,7 +44,6 @@
 	text-align:left;
 	text-indent:10px;
 	line-height:30px;
-	/*height:30px;*/
 	font-family: "arial";
 	font-size:16px;
 	font-weight: bold;
@@ -72,41 +69,39 @@
 
 
 #access {
-	background-color: #cccccc; /* Fall back if the radial gradient fails */
-	display: block;
-	/*width: 98%;*/
-	width: 475px;
-	height: 120px;
-	left:250px; 
-    box-shadow: 5px 5px 5px #888888;
-    border-radius: 10px;
-    border: 0px solid white;
     position: relative;
-    z-index:99;
-    top: 100px;
-    opacity: 100;
-    transition: opacity .75s;
-    	background-image: radial-gradient(center center, circle cover, #ededed, #cccccc);
-	background-image: -o-radial-gradient(center center, circle cover, #ededed, #cccccc);
-	background-image: -ms-radial-gradient(center center, circle cover, #ededed, #cccccc);
-	background-image: -moz-radial-gradient(center center, circle cover, #ededed, #cccccc);
-	background-image: -webkit-radial-gradient(center center, circle cover, #ededed, #cccccc);
-}
+	top: 100px;
+	margin: auto auto;
+	width:540px; /* same size as the loginDiv width */
 
-#access.fade {
+    z-index:99;
+
+
+    }
+
+.fade {
 	opacity:0;
 }
 
+
 #inputData {
 	display: inline-block;
-	margin-top: 40px;
-	margin-left: 13%;
+	margin-top: 50px;
+	margin-left: 30%;
 	width: 380px;
 	height: 50px;
 	color: #484848;
 	font-size: 15px;
 	text-shadow: 0px 1px 0px rgba(255,255,255,.5); /* 50% white from bottom */
 	
+}
+
+/* elements that are present, to preserve positioning */
+.invisible {
+	opacity:0;
+}
+.visible {
+	opacity:1;
 }
 
 
@@ -126,7 +121,7 @@ display:block;
 #snapReserve {
 	position:relative;
 	visibility:hidden;
-		opacity:0;
+	opacity:0;
     top:-34px;
     left:210px;
 	transition:opacity .75s;
@@ -135,7 +130,7 @@ display:block;
 }
 #snapReserve.show {
 	visibility:visible;
-		opacity:100;
+	opacity:1;
 
 
 }
@@ -194,7 +189,7 @@ margin-left: 15px;
 	z-index:2;
 	text-align:justify;
 	transition: left .7s linear;
-	opacity: 100;
+	opacity: 1;
 	background-color:#ededed;
 	
 }
@@ -212,36 +207,36 @@ left:0px;
 	z-index:3;
 	text-align:justify;
 	transition: left .7s linear;
-	opacity: 100;
+	opacity: 1;
 	background-color:#ededed;
 }
 
 #nodes.slide {
-left: 0px;
+	left: 0px;
 }
 
 #nodeScanning {
-position:relative;
-visibility: visible;
-top: -55px;
-width:580px;
-height:60px;
+	position:relative;
+	visibility: visible;
+	top: -55px;
+	width:580px;
+	height:60px;
 
 }
 #nodeScanning.hidden {
-visibility:hidden;
+	visibility:hidden;
 }
 
 #nodesProvided {
-position:relative;
-visibility:hidden;
-width:580px;
-height:40px;
+	position:relative;
+	visibility:hidden;
+	width:580px;
+	height:40px;
 
 transition: opacity .75s;
 }
 #nodesProvided.show {
-visibility: visible;
+	visibility: visible;
 }	
 
 
@@ -251,14 +246,14 @@ visibility: visible;
 #keys {
 	position: absolute;
 	left: 650px;
-		overflow:hidden;
+	overflow:hidden;
 	top:0px;
 	width:650px;
 	height:600px;
 	z-index:4;
 	text-align:justify;
 	transition: left .7s linear;
-	opacity: 100;
+	opacity: 1;
 	background-color:#ededed;
 }
 #keys.slide {
@@ -318,14 +313,14 @@ visibility: visible;
 	z-index:5;
 	text-align:justify;
 	transition: left .7s linear;
-	opacity: 100;
+	opacity: 1;
 	background-color:#ededed;
 }
 #disks.slide {
 left: 0px;
 }
 #diskTable th:first-child {
-width:200px;
+	width:200px;
 }
 #snapshotValue {
 	position:relative;
@@ -342,36 +337,36 @@ width:200px;
 }
 
 #diskArea {
-position: absolute;
-left:90px;
-top: 160px;
-width:400px;
-height:350px;
-z-index: 5;
-transition: opacity .75s; 
-opacity: 0;
+	position: absolute;
+	left:90px;
+	top: 160px;
+	width:400px;
+	height:350px;
+	z-index: 5;
+	transition: opacity .75s; 
+	opacity: 0;
 
 }
 
 #diskArea.show {
-opacity: 100;
+	opacity: 1;
 }
 
 #bricks {
 	position: absolute;
 	left: 650px;
-		overflow:hidden;
+	overflow:hidden;
 	top:0px;
 	width:650px;
 	height:600px;
 	z-index:6;
 	text-align:justify;
 	transition: left .7s linear;
-	opacity: 100;
+	opacity: 1;
 	background-color:#ededed;
 }
 #bricks.slide {
-left: 0px;
+	left: 0px;
 }
 #volCreate {
 	position: absolute;
@@ -383,11 +378,11 @@ left: 0px;
 	z-index:7;
 	text-align:justify;
 	transition: left .7s linear;
-	opacity: 100;
+	opacity: 1;
 	background-color:#ededed;
 }
 #volCreate.slide {
-left: 0px;
+	left: 0px;
 }
 #finish {
 	position: absolute;
@@ -399,11 +394,11 @@ left: 0px;
 	z-index:50;
 	text-align:justify;
 	transition: left .7s linear;
-	opacity: 100;
+	opacity: 1;
 	background-color:#ededed;
 }
 #finish.slide {
-left: 0px;
+	left: 0px;
 }
 
 #error {
@@ -416,12 +411,12 @@ left: 0px;
 	z-index:98;
 	text-align:justify;
 	transition: left .7s linear;
-	opacity: 100;
+	opacity: 1;
 	background-color:#ededed;
 }
 
 #error.slide {
-left: 0px;
+	left: 0px;
 }
 
 
@@ -434,7 +429,7 @@ left: 0px;
 	transition: opacity .75s;
 }
 #nodeSelect.show {
-	opacity:100;
+	opacity:1;
 
 }
 
@@ -447,13 +442,13 @@ left: 0px;
 
 #addNodes {
 	position:absolute;
-	left:230px; /* was 190px */
+	left:230px; 
 	width:37px;
 }
 
 #createCluster {
-position:absolute;
-left:520px; /* was 480 */
+	position:absolute;
+	left:520px; 
 }
 
 #selectedNodes {
@@ -464,57 +459,55 @@ left:520px; /* was 480 */
 }
 
 #steps {
-position:absolute;
-top:90px;
-left:20px;
-border:1px solid #d8d8d8;
-border-radius:8px;
-z-index:-1;
-width:185px;
-height:370px;
-opacity: 100;
-background-color: #f8f8f8;
+	position:absolute;
+	top:90px;
+	left:20px;
+	border:1px solid #d8d8d8;
+	border-radius:8px;
+	z-index:-1;
+	width:185px;
+	height:370px;
+	background-color: #f8f8f8;
 
 }
 
 #busy {
-position:fixed;
-background-color: white;
-top:180px;
-left:390px;
-width:290px;
-height:300px;
-border:1px;
-border-color:#909090;
-border-radius:8px;
-    box-shadow: 5px 5px 5px #888888;
-z-index:100;
-visibility:hidden;
+	position:fixed;
+	background-color: white;
+	top:180px;
+	left:390px;
+	width:290px;
+	height:300px;
+	border:1px;
+	border-color:#909090;
+	border-radius:8px;
+	    box-shadow: 5px 5px 5px #888888;
+	z-index:100;
+	visibility:hidden;
 }
 
 #busyGraphic {
-position:relative;
-height:100px; 
-width:100px;
-    
+	position:relative;
+	height:100px; 
+	width:100px;
     margin: auto auto;
     top:10px;
 }
 #busyGraphic.spinner {
-background: #ffffff url('../images/busy.gif') no-repeat center top;
+	background: #ffffff url('../images/busy.gif') no-repeat center top;
 }
 #busyGraphic.success {
-background: #ffffff url('../images/tick.png') no-repeat center top;
+	background: #ffffff url('../images/tick.png') no-repeat center top;
 }
 #busyGraphic.fail {
-background: #ffffff url('../images/warn.png') no-repeat center top;
+	background: #ffffff url('../images/warn.png') no-repeat center top;
 }
 
 #busyMsg {
-position:absolute;
-top:120px;
-width:290px;
-text-align:center;
+	position:absolute;
+	top:120px;
+	width:290px;
+	text-align:center;
 }
 
 #busyLog {
@@ -538,10 +531,10 @@ text-align:center;
 }
 
 #busyButton {
-position:absolute; 
-bottom:10px; 
-right:20px; 
-visibility:hidden; 
+	position:absolute; 
+	bottom:10px; 
+	right:20px; 
+	visibility:hidden; 
 }
 
 
@@ -620,7 +613,7 @@ visibility:hidden;
 	height:60px;
 }
 #configSummary th {
-padding:5px 10px 5px 10px; 
+	padding:5px 10px 5px 10px; 
 }
 
 #goodbye {
@@ -631,6 +624,6 @@ padding:5px 10px 5px 10px;
 }
 	
 #goodbye.reveal {
-	opacity:100;
+	opacity:1;
 }
 	

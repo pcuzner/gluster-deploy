@@ -1,14 +1,82 @@
 /* Generic CSS that provides the high level look and feel to the UI */
 
+/************************************/
+/* Standard page element formatting */
+/************************************/
 body {
 	background-color: #ededed;
 	font-size:14px;
+	width:950px;
 }
 
 p {
 	text-align:justify;
 }
+h1 {
+	position:relative;
+	/*left: 260px;
+	width:500px;*/
+	text-align: center;
+	font-family: "arial";
+	font-style: normal;
+	/*font-variant: normal; */
+		color: #484848;
+	/*font-size: 16px;*/
+	text-shadow: 0px 1px 0px rgba(255,255,255,.5); /* 50% white from bottom */
+	/*text-shadow:0px 2px 3px #555;*/
+}
+h2 {
+	text-align:left;
+	font-family: "arial";
+	font-style: normal;
+	color:white;
+	position:relative;
+	top:-10px;
+	/*font-variant: normal; */
+	text-shadow:0px 2px 3px #555;
+}
 
+/* Specify a default font to ensure cross browser consistency */
+* {
+	font-family: "arial";
+	font-style: normal;
+	font-variant: normal;
+}
+
+/******************************************************/
+/* loginprompt uses the before pseudo class to enable */
+/* the div to be two colours - supporting a product   */
+/* logo, and the input for the access key             */
+/******************************************************/
+.loginprompt  {
+	background-image: radial-gradient(center center, circle cover, #ededed, #cccccc);
+	background-image: -o-radial-gradient(center center, circle cover, #ededed, #cccccc);
+	background-image: -moz-radial-gradient(center center, circle cover, #ededed, #cccccc);
+	background-image: -webkit-radial-gradient(center center, circle cover, #ededed, #cccccc);
+	width:540px;
+	height:130px;
+	border-radius:8px 8px 8px 8px;
+    box-shadow: 5px 5px 5px #888888;
+	opacity: 1;
+	transition: opacity .75s;
+
+}
+
+.loginprompt:before {
+	content: "";
+	position: absolute;
+	z-index: -1;
+	top: 0;
+	right:400px;
+	bottom: 0;
+	left: 0;
+	background: #a0a0a0; 
+	background-image: url('../images/logo.png');
+	background-repeat: no-repeat;
+	background-position: center;
+	border-radius:8px 0 0px 8px;
+
+}
 
 select {
 	position:relative;
@@ -24,6 +92,7 @@ select:disabled {
 	border: 1px solid #c0c0c0;
 	background: #ededed;
 	}
+	
 select:not([disabled]):hover {
 	box-shadow: 0 1px 0 #2392F3 inset, 0 -1px 0 #2392F3 inset, 1px 0 0 #2392F3 inset, -1px 0 0 #2392F3 inset, 0 0 4px rgba(35,146,243,0.5);
 	background: #ffffff;
@@ -50,42 +119,34 @@ input[type='text'] {
 		outline-style:none;
 }
 input[type='text']:not(.error):not([disabled]):hover {
-
-		color: #505050;
-
+	color: #505050;
 	background: #ffffff;
 	box-shadow: 0 1px 0 #2392F3 inset, 0 -1px 0 #2392F3 inset, 1px 0 0 #2392F3 inset, -1px 0 0 #2392F3 inset,  0 0 4px rgba(35,146,243,0.5); 
 }
 
 
 input[type='text']:not(.error):not([hover]):focus {
-
-		color: #505050;
-
+	color: #505050;
 	background: #ffffff;
 	box-shadow: 0 1px 0 #2392F3 inset, 0 -1px 0 #2392F3 inset, 1px 0 0 #2392F3 inset, -1px 0 0 #2392F3 inset, 0 0 4px rgba(35,146,243,0.5); 
 
 }
 
 input[type='text']:disabled {
-border-color:#c0c0c0;
-background-color:#ededed;
-color:#c8c8c8;
-
+	border-color:#c0c0c0;
+	background-color:#ededed;
+	color:#c8c8c8;
 }
 
 
 input[type='text'].error {
-	/*border-color:red;*/
-	/*border : 0px solid red;*/
-		color: #505050;
-
+	color: #505050;
 	box-shadow: 0 1px 0 red inset, 0 -1px 0 red inset, 1px 0 0 red inset, -1px 0 0 red inset, 0 0 4px rgba(255,0,0,0.5);
 }
 
 
 .tick {
-list-style-image:url("../images/bullet-tick.png") ;
+	list-style-image:url("../images/bullet-tick.png") ;
 }
 
 button {
@@ -102,14 +163,14 @@ button {
 	background: -ms-linear-gradient(top, #1a82f7, #2F2727); /* IE10 */
 	background: -o-linear-gradient(top, #1a82f7, #2F2727); /* Opera 11.1+ */
 	color: white ;
-		outline-style:none;
+	outline-style:none;
 }  
 
 button::-moz-focus-inner { border: 0; }
 
 button:disabled {
 	color: #909090;
-		background: -moz-linear-gradient(top, #e2e2e2 0%, #dbdbdb 50%, #d1d1d1 51%, #fefefe 100%); /* FF3.6+ */
+	background: -moz-linear-gradient(top, #e2e2e2 0%, #dbdbdb 50%, #d1d1d1 51%, #fefefe 100%); /* FF3.6+ */
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e2e2e2), color-stop(50%,#dbdbdb), color-stop(51%,#d1d1d1), color-stop(100%,#fefefe)); /* Chrome,Safari4+ */
 	background: -webkit-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Chrome10+,Safari5.1+ */
 	background: -o-linear-gradient(top, #e2e2e2 0%,#dbdbdb 50%,#d1d1d1 51%,#fefefe 100%); /* Opera 11.10+ */
@@ -132,33 +193,7 @@ button:not([disabled]):hover {
 visibility:hidden;
 }
 
-h1 {
-	position:relative;
-	left: 260px;
-	width:500px;
-	/*text-align:center;*/
-	font-family: "arial";
-	font-style: normal;
-	/*font-variant: normal; */
-	text-shadow:0px 2px 3px #555;
-}
-h2 {
-	text-align:left;
-	font-family: "arial";
-	font-style: normal;
-	color:white;
-	position:relative;
-	top:-10px;
-	/*font-variant: normal; */
-	text-shadow:0px 2px 3px #555;
-}
 
-/* Specify a default font to ensure cross browser consistency */
-* {
-	font-family: "arial";
-	font-style: normal;
-	font-variant: normal;
-}
 
 #logo {
 	position: absolute;
@@ -280,7 +315,6 @@ table tr:hover td {
   width: 1em;
   margin-right: .4em;
   text-align: left;
-  /* opacity: .8; */
  
   /* For safety - reset parent styles, that can break glyph codes*/
   font-variant: normal;

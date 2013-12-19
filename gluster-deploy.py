@@ -46,7 +46,7 @@ import time
 import os
 import sys
 import httplib
-import threading
+from threading import * 
 
 
 # define a dict to hold gluster node objects, indexed by the node name
@@ -627,9 +627,12 @@ def main():
 			print '\ngluster-deploy web server stopped by user hitting - CTRL-C\n'
 
 		# Wait for threads to quiesce
-		print "\t\tWaiting for active threads(" + str(threading.active_count()) + ") to quiesce"
-		while threading.active_count() > 1:
-			time.sleep(0.1)
+		print "\t\tWaiting for active threads(" + str(active_count()) + ") to quiesce"
+		for thread in enumerate():
+			try:
+				thread._Thread__stop()
+			except:
+				print "Thread " + str(thread.getName()) + " could not be terminated, use CTRL-C to exit"
 
 		httpd.server_close()
 		

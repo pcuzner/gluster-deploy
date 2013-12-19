@@ -1,5 +1,6 @@
 
 Development Log
+---------------
  
 0.1 (Complete - 07 Oct 2013)
   - detect gluster nodes
@@ -26,7 +27,7 @@ Development Log
   - by enabling snapshot you now get dm-thinp based logical volumes (old LV type used when snapshot is set to off)
   - foundation for btrfs bricks added(in prep for gluster 3.5 - nb. kernel version >3.6 and btrfstools need to be present on all nodes)
  
-0.4 (active)
+0.4 (complete 19 Dec 2013)
   - fix - tidy up issueCMD code to return tuple, simplifying calling code - DONE (f0239185)
   - add hadoop workload type based on parameters in the hadoop/glusterfs-cluster-install project on the forge - DONE (a75e60af1)
   - fix - disk list presented should be sorted by node, then device ID - DONE (33e6e30c)

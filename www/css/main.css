@@ -208,6 +208,12 @@ margin-left: 15px;
     visibility: visible;
 }
 
+.ctr_button {
+	position:relative;
+	display:block;
+	width:100%;
+	text-align:center;
+}
 
 /************************************/
 /* definitions for the content divs */
@@ -277,8 +283,7 @@ left:0px;
 	visibility:hidden;
 	width:580px;
 	height:40px;
-
-transition: opacity .75s;
+	transition: opacity .75s;
 }
 #nodesProvided.show {
 	visibility: visible;

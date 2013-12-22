@@ -199,9 +199,14 @@ function create_brick {
 		devPath="/dev/$vgName/$lvName"
 
 	elif [ $brickType == "BTRFS" ]; then
-		# Insert btrfs function calls in here
 		
+		# btrfs configuration steps
 		devPath="/dev/$devID"
+		# mkfs.btrfs for the device
+		# create a root mount for the filesystem
+		# create a subvolume on the root
+		# mount the subvolume - this will be the brick filesystem
+		
 		:
 	else
 		logger "formatBrick.sh was passed an unknown brick type - run aborted"

@@ -41,6 +41,8 @@ Development Log
   - add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
   - update findDevs to return text OR xml, change calling code accordingly
   - Add btrfs brick build code
+  - flag thin provisioning and btrfs support options as experimental - hook in confirm dialog
+  - add a confirm dialog (faded background, alert box type function)
 
 0.6 (planned)
   - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 

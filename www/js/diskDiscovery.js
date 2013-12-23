@@ -39,13 +39,6 @@ function showDisks(req) {
 			
 			var col1 = newRow.insertCell(0); 	// Insert the column for Server Name
 			
-			/* if ( i == 0 ) {
-				
-				col1.rowSpan = numDevs;						// set number of rows for this cell based on 
-														// the number of devices found on this host
-				}
-				 		
-*/
 
 			var col2 = newRow.insertCell(-1); // device ID
 			var col3 = newRow.insertCell(-1); // Size (GB)
@@ -54,7 +47,7 @@ function showDisks(req) {
 			col1.innerHTML=nodeName;
 			col2.innerHTML=devID;
 			col3.innerHTML=devSize;
-			checkBox = "<input type='checkbox' name='selectDisk' id='" +nodeName + "_" + devID + "'/>"
+			checkBox = "<input type='checkbox' name='selectDisk' id='" +nodeName + "_" + devID + "' onchange='resetSelectAll()'/>"
 			col4.innerHTML=checkBox;
 		}
 	}
@@ -74,9 +67,14 @@ function selectAll() {
 	
 }
 
+function resetSelectAll() {
+	// turn of the check state of the selectAll element
+	document.getElementById('allDisks').checked = false;
+	
+}
+
 
 function findDisks() {
-	//alert('run get disks process')
 
 	document.getElementById('getDisks').disabled = true;
 		
@@ -92,6 +90,7 @@ function findDisks() {
 function registerHandler(req) {
 
 	xmlDoc = req.responseXML;
+	
 	// Example XML input
 	// <response><status-text>OK</status-text><features snapshot='YES' btrfs='NO' /></response>
 	

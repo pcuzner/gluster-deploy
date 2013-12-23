@@ -302,7 +302,10 @@ function showFinish(state) {
 function createVolume() {
 	
 	var volName = document.getElementById('volNameInput').value;
-	
+
+
+	// First check that the user has provided a volume name and used some
+	// bricks for the create volume request to work with
 	if (( volName.length == 0 ) || ( BRICKSUSED == 0 )) {
 		return;
 	}

@@ -246,3 +246,19 @@ function enableMsgLog() {
 	queryMsgs();
 }
 
+function showModal(state) {
+	// function to just toggle the display of the modal window
+
+	var state = state || 'off';
+
+	if ( state == 'on') {
+		// make it visible
+		document.getElementById('modal-window').className = 'md-modal md-show';
+	}
+	else {
+		// turn of modal window
+		document.getElementById('modal-window').className = 'md-modal';
+	}
+	
+}
+

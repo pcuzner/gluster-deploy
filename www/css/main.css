@@ -169,8 +169,8 @@ margin-left: 15px;
 .md-modal {
     position: fixed;
     top: 150px;
-    left: 220px;
-    width: 400px;
+    left: 250px;
+    width: 480px;
     z-index: 2000;
     visibility: hidden;
 }
@@ -183,7 +183,7 @@ margin-left: 15px;
 	background: white;
 	position: relative;
 	border-radius: 8px;
-	height:220px;
+	height:240px;
 	padding:10px;
 	margin: 0 auto;
 	box-shadow: 5px 5px 5px #888888;
@@ -209,11 +209,14 @@ margin-left: 15px;
 }
 
 .ctr_button {
-	position:relative;
+	position:absolute;
 	display:block;
-	width:100%;
-	text-align:center;
+	width:95%;
+	bottom:10px;
+	text-align:right;
 }
+
+
 
 /************************************/
 /* definitions for the content divs */
@@ -525,7 +528,7 @@ left: 0px;
 	position:fixed;
 	background-color: white;
 	top:180px;
-	left:390px;
+	left:340px;
 	width:290px;
 	height:300px;
 	border:1px;

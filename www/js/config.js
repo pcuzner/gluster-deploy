@@ -13,7 +13,6 @@ var pollingInterval = 1500; 	// ms polling delay used by queryMsgs
 
 var msgLog = new Array();		// array holding status messages from the server 
 
-
 /* Brick Object creator Method */
 function Brick(svr, fsname, size) {
 	this.server=svr;

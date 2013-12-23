@@ -1,57 +1,106 @@
+
+/*
+	This code segment defines the actions that provide the brick management 
+	logic                                                                   
+*/
+
 function updateSnapshot() {
 	num = document.getElementById('snapshotSpace').value;
 	document.getElementById('snapshotValue').innerHTML = num.toString() + "%";
 }
 
+
+
 function buildBricks() {
-	// gather the values from the prompts and form xml to 
-	// determine the brick format process
+	// gather the values from the prompts and check to see if a confirmation 
+	// dialog is needed
 	
 	if (! pageError) {
-	
-		document.getElementById('buildBricks').disabled=true;	// turn the button off
-		document.getElementById('useCase').disabled=true; 		// turn off the pulldown selection
-		
-		var useCase = document.getElementById('useCase').value;
+
 		var brickProvider = document.getElementById('brickProvider').value;
 		
 		// turn boolean value into yes or no
-		var snapRequired = (document.getElementById('snapshotsRequired').checked ? 'YES' : 'NO')
-		var snapshotReserve = document.getElementById('snapshotSpace').value;
-		var volumeGroup = document.getElementById('vgName').value;
-		var lvName = document.getElementById('lvName').value;
-		var mountPoint = document.getElementById('mountPoint').value;
+		var snapRequired = (document.getElementById('snapshotsRequired').checked ? 'YES' : 'NO');
 		
-		// Create XML string
+		// If snapshots are requested or the brickProvider is btrfs, we need to 
+		// confirm with the user since these are upstream experimental features
+		if (( snapRequired == 'YES') || ( brickProvider == 'BTRFS')) {
+			
+			// Confirmation is required to use these features. Using the js confirm dialog, is the
+			// easiest way to do this, but the look and feel is not consistent with the UI's theme.
+			// Instead we'll use a couple of div elements configured to provided the same modal window
+			// interaction, which allows the UI theme to be applied for a consistent look and feel.
+			
+			// Add text to the modal title div
+			document.getElementById('modal-title').innerHTML = '<h3>Experimental Features Selected</h3>';
+			
+			// add text to the modal text div area
+			var mdContent = "<p>Enabling snapshot support through the Logical Volume Manager ";
+			mdContent +=    "or the 'btrfs' filesystem are features that are still under development.</p>";
+			mdContent +=    "<p>They are included to enable easier testing of these features within ";
+			mdContent +=    "the glusterfs developer community, and are therefore not suitable for ";
+			mdContent +=    "production deployments</p>";
+			mdContent +=    "<p>By clicking 'OK' bricks will be configured with these experimental features enabled.</p>"; 
+
+			document.getElementById('modal-text').innerHTML = mdContent;
+			
+			// setup the buttons in the modal window to call appropriate function
+			document.getElementById('modal-btn-cancel').onclick = function(){ showModal(); } ;
+			document.getElementById('modal-btn-ok').onclick = function(){ showModal(); buildFmtRequest(); };
+			
+			// enable the modal dialog
+			showModal('on');
 		
-		var xmlString = "<data><request-type>build-bricks</request-type><brickparms usecase='" + useCase + "' ";
-		xmlString += "brickprovider='" + brickProvider + "' ";
-		xmlString += "snaprequired='" + snapRequired + "' ";
-		if ( snapRequired == 'YES') {
-			xmlString += "snapreserve='" + snapshotReserve.toString() + "' ";
 		}
-		if ( brickProvider == 'LVM' ) {
-			xmlString += "lvname='" + lvName + "' ";
-			xmlString += "volgroup='" + volumeGroup + "' ";				
+		else {
+			buildFmtRequest();
 		}
 
-		xmlString += "mountpoint='" + mountPoint + "'/></data>";
-		
-		//callerString = 'buildBricks|';
-		//callerString = callerString + retString;
-		
-		showBusy('Creating Bricks');
-		
-	
-		
-		// Pass the string back to the server
-		//xml_http_post('../www/main.html', callerString, bricksDefined);
-		xml_http_post('../www/main.html', xmlString, bricksDefined);	
-		
-		enableMsgLog();
 	}
 
 }
+
+function buildFmtRequest() {
+	
+	document.getElementById('buildBricks').disabled=true;	// turn the button off
+	document.getElementById('useCase').disabled=true; 		// turn off the pulldown selection
+	
+	
+	// Extract the settings from the UI page
+	var snapRequired = (document.getElementById('snapshotsRequired').checked ? 'YES' : 'NO');
+	var brickProvider = document.getElementById('brickProvider').value;	
+	var useCase = document.getElementById('useCase').value;
+	var snapshotReserve = document.getElementById('snapshotSpace').value;
+	var volumeGroup = document.getElementById('vgName').value;
+	var lvName = document.getElementById('lvName').value;
+	var mountPoint = document.getElementById('mountPoint').value;
+
+	// Create XML string to initiate the brick formatting process	
+	var xmlString = "<data><request-type>build-bricks</request-type><brickparms usecase='" + useCase + "' ";
+	xmlString += "brickprovider='" + brickProvider + "' ";
+	xmlString += "snaprequired='" + snapRequired + "' ";
+	
+	if ( snapRequired == 'YES') {
+		xmlString += "snapreserve='" + snapshotReserve.toString() + "' ";
+	}
+	
+	if ( brickProvider == 'LVM' ) {
+		xmlString += "lvname='" + lvName + "' ";
+		xmlString += "volgroup='" + volumeGroup + "' ";				
+	}
+
+	xmlString += "mountpoint='" + mountPoint + "'/></data>";
+	
+	showBusy('Creating Bricks');
+	
+
+	// Pass the string back to the server
+	xml_http_post('../www/main.html', xmlString, bricksDefined);
+	
+	enableMsgLog();		
+}
+
+
 
 function bricksDefined(req) {
 
@@ -59,7 +108,6 @@ function bricksDefined(req) {
 	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
 	
 	/* req is an xml string defining the bricks just created in the format
-	
 	 	<data>
 			<summary success='6' failed='0' />"
 				<brick fsname='/gluster/brick' size='10' servername='rhs1-1' />
@@ -176,3 +224,5 @@ function updateLV() {
 	var vgName = document.getElementById('vgName').value;
 	document.getElementById('lvName').value=vgName;
 }
+
+

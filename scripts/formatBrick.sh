@@ -115,6 +115,37 @@ function create_lv {
 }
 
 
+function create_btrfs_root {
+	local devPath=$1
+	
+	# Assign the device to btrfs
+	mkfs.btrfs $devPath
+	
+	# Create a root dir for the filesystem based on the required mount point
+	# info supplied to the script. Split the mount point into high level (hl) 
+	# and low level (ll) names and use these for the root dir and subvolume
+	# dir
+	IFS=/
+	set -- $mountPoint
+	local hlPath=$2
+	local llPath=$3
+	unset IFS
+	
+	mkdir -p /$hlPath
+	
+	# mount the filesystem, so the subvolume can be created
+	mount -t btrfs $devPath /$hlPath
+	btrfs filesystem label /$hlPath 'glusterfs root'
+	
+	# enable quota support on the whole filesystem
+	btrfs quota enable /$hlPath
+	
+	# create the subvolume for this brick
+	btrfs subvolume create /$hlPath/$llPath
+	
+}
+
+
 function create_filesystem {
 
 	local inodeSize=$1
@@ -142,7 +173,14 @@ function update_fstab {
 	local devPath=$1
 	local rc=0
 	
-	local uuid=$(blkid $devPath | cut -f2 -d'"')
+	local blkid=$(blkid $devPath)
+
+	if [[ "$blkid" == *LABEL* ]]; then 
+		local uuid=$(echo $blkid | cut -f4 -d'"')
+	else
+		local uuid=$(echo $blkid | cut -f2 -d'"')
+	fi
+	
 	grep -wq $uuid /etc/fstab 
 	if [ $? -eq 0 ] ; then 
 		logger "formatBrick.sh update of /etc/fstab skipped - entry already there"
@@ -157,7 +195,15 @@ function update_fstab {
 			  "0 2" >> /etc/fstab
 			rc=$?
 		else
-			echo "UUID=$uuid $mountPoint btrfs defaults 0 0" >> /etc/fstab
+			# Split the mountpoint up to yield a high level and low level name
+			IFS=/
+			set -- $mountPoint
+			local hlPath=$2
+			local llPath=$3
+			unset IFS
+			
+			echo "UUID=$uuid /$hlPath btrfs defaults 0 0" >> /etc/fstab
+			echo "/dev/$devID $mountPoint btrfs defaults,subvol=$lvName 0 0" >> /etc/fstab 
 			rc=$?
 		fi
 		
@@ -202,11 +248,10 @@ function create_brick {
 		
 		# btrfs configuration steps
 		devPath="/dev/$devID"
-		# mkfs.btrfs for the device
-		# create a root mount for the filesystem
-		# create a subvolume on the root
-		# mount the subvolume - this will be the brick filesystem
 		
+		# mkfs.btrfs for the device
+		create_btrfs_root $devPath || return $?
+	
 		:
 	else
 		logger "formatBrick.sh was passed an unknown brick type - run aborted"

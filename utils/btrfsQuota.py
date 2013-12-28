@@ -29,18 +29,6 @@ import argparse				# command line option parsing
 import subprocess
 import shlex
 
-def isBTRFS(mount_point):
-	""" Check that this filesystem is a btrfs filesystem (boolean return value) """
-
-	valid = False
-	
-	btrfsList = [f for f in open('/proc/mounts').readlines() if 'btrfs' in f]
-	
-	for fs in btrfsList:
-		if fs.split()[1] == mount_point:
-			valid = True
-		
-	return valid
 
 def issueCMD(command, shellNeeded=False):
 	""" issueCMD takes a command to issue to the host and returns the response as a list """
@@ -74,39 +62,51 @@ def main(units,mount_point):
 	subvolume_data = dict()
 	
 	cmd = "btrfs subvolume list " + mount_point
-	for line in issueCMD(cmd)[1]:
-		args = line.strip().split(' ')
-		subvolume_data[int(args[1])] = args[-1]
+	subvol_list = issueCMD(cmd)[1]
 	
-	print("Subvolume Name\t\t\t\t\tgroup         total    unshared")
-	print("-" * 79)
-	cmd = "btrfs qgroup show " + mount_point
-	
-	for line in issueCMD(cmd)[1][2:]:
-		args = line.strip().split()
-	
-		try:
-			subvolume_id = args[0].split('/')[-1]
-			subvolume_name = subvolume_data[int(subvolume_id)]
-		except:
-			subvolume_name = "(unknown/root)"
-	
-		multiplicator = 1024 ** multiplicator_lookup.index(units)
-	
-		try:
-			total = "%02.2f" % (float(args[1]) / multiplicator)
-			unshared = "%02.2f" % (float(args[2]) / multiplicator)
-	
-			print("%s\t%s\t%s%s %s%s" % (
-					subvolume_name.ljust(40),
-					args[0],
-					total.rjust(10), units,
-					unshared.rjust(10), units,
-					))
-		except IndexError:
-			pass
-	
-	print "\n"
+	# If we don't have any output, the mountpoint provided is not a btrfs filesystem
+	if not subvol_list:
+		
+		print "-> Mount point provided (" + sys_args.mount_point + ") is not a btrfs filesystem"
+		
+	else:
+		# subvolume command returned some output, so 1st create a lookup index
+		for line in subvol_list:
+			args = line.strip().split(' ')
+			subvolume_data[int(args[1])] = args[-1]
+
+		# Setup up the output headings
+		print("Subvolume Name\t\t\t\t\tgroup         total    unshared")
+		print("-" * 79)
+		
+		# Query the quota groups
+		cmd = "btrfs qgroup show " + mount_point
+		
+		for line in issueCMD(cmd)[1][2:]:
+			args = line.strip().split()
+		
+			try:
+				subvolume_id = args[0].split('/')[-1]
+				subvolume_name = subvolume_data[int(subvolume_id)]
+			except:
+				subvolume_name = "(unknown/root)"
+		
+			multiplicator = 1024 ** multiplicator_lookup.index(units)
+		
+			try:
+				total = "%02.2f" % (float(args[1]) / multiplicator)
+				unshared = "%02.2f" % (float(args[2]) / multiplicator)
+		
+				print("%s\t%s\t%s%s %s%s" % (
+						subvolume_name.ljust(40),
+						args[0],
+						total.rjust(10), units,
+						unshared.rjust(10), units,
+						))
+			except IndexError:
+				pass
+		
+		print "\n"
 	
 	
 if __name__ == "__main__":
@@ -126,14 +126,5 @@ if __name__ == "__main__":
 			 )
 			 
 	sys_args = parser.parse_args()
-
-
-	if isBTRFS(sys_args.mount_point):
 	
-		main(sys_args.unit.upper(), sys_args.mount_point)
-	
-	else:
-		
-		print "Mount point provided (" + sys_args.mount_point + ") is not a btrfs filesystem"
-		
-	
+	main(sys_args.unit.upper(), sys_args.mount_point)

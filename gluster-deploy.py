@@ -628,11 +628,9 @@ def main():
 
 		# Wait for threads to quiesce
 		print "\t\tWaiting for active threads(" + str(active_count()) + ") to quiesce"
-		for thread in enumerate():
-			try:
-				thread._Thread__stop()
-			except:
-				print "Thread " + str(thread.getName()) + " could not be terminated, use CTRL-C to exit"
+		
+		while active_count() > 1:
+			time.sleep(0.1)
 
 		httpd.server_close()
 		

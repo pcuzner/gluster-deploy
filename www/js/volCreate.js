@@ -253,6 +253,7 @@ function addOptions(optionName) {
 			break;
 			
 		case "Streaming":
+		case "Hadoop":
 		case "Generic":
 		
 			document.getElementById("virtInput").setAttribute("style","position:relative;  left:40px;height:20px;opacity:0;transition:opacity .75s;");

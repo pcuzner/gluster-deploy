@@ -41,8 +41,8 @@ Development Log
   - add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
   - update findDevs to return text OR xml, change calling code accordingly
   - Add btrfs brick build code
-  - flag thin provisioning and btrfs support options as experimental - hook in confirm dialog
-  - add a confirm dialog (faded background, alert box type function)
+  - flag thin provisioning and btrfs support options as experimental - hook in confirm dialog - DONE (9c7811f9)
+  - add a confirm dialog (faded background, alert box type function) - DONE (b7e94d54)
 
 0.6 (planned)
   - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 
@@ -63,6 +63,7 @@ Items under consideration
   - add the capability to update /etc/hosts on nodes (when DNS is not available/resolving)
   - change the webserver to use a self signed cert for http access
   - Review the ssh/pexpect code - can it be tidier?
+  - Add a magic button to the vol create page to decide on the brick layout automagically
   - add a disk wipe capability in the event bricks are reused (i.e. lv already exists - perhaps the 
     disk selection should also include defined disks, that are empty?)
 

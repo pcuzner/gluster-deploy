@@ -37,10 +37,13 @@ Development Log
   - tidy login page (hide 'breadcrumb' bar, merge logo into login element) - DONE
 
 0.5 (planned) 
-  - fix presentation of disks in disk discovery for many disks (separate header and data elements)
-  - add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
+  - fix: presentation of disks in disk discovery for many disks (separate header and data elements)
+  - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
   - update findDevs to return text OR xml, change calling code accordingly
-  - Add btrfs brick build code
+  - update config file logic to include a pathname
+  - update brickdefinition code to use config file default
+  - remove vg and lv definitions - basing vg and lv on the path name
+  - Add btrfs brick build code to formatBrick.sh - DONE (224caba9)
   - flag thin provisioning and btrfs support options as experimental - hook in confirm dialog - DONE (9c7811f9)
   - add a confirm dialog (faded background, alert box type function) - DONE (b7e94d54)
 

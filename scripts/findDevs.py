@@ -26,7 +26,7 @@ import subprocess
 import sys
 import os
 
-DEBUG=False
+from optparse import OptionParser
 
 def issueCMD(command):
 	""" issueCMD takes a command to issue to the host and returns the response as a list """
@@ -155,25 +155,19 @@ def getRaid():
 
 def getSysInfo():
 	""" Extract system attributes to associate with this node """
-	
-	
-	kernel = '.'.join(os.uname()[2].split('.')[:2])
-	thinp = 'yes' if os.path.exists('/usr/sbin/thin_check') else 'no'
-	btrfs = 'yes' if os.path.exists('/usr/sbin/btrfs') else 'no'
-	glusterVers = os.listdir('/usr/lib64/glusterfs')[0]
-	
-	memSize = open('/proc/meminfo').readlines()[0].split()[1]
-	cpuCount = len([ p for p in open('/proc/cpuinfo').readlines() if p.startswith('processor')])
-	raidCard = getRaid()
 
+	sysInfo = {}	# Declare a dict to use for the system information	
 	
-	sysinfo = ( "<sysinfo kernel='" + kernel + "' dmthinp='" + thinp + "' btrfs='"
-				+ btrfs + "' glustervers='" + glusterVers + "' memsize='" + memSize
-				+ "' cpucount='" + str(cpuCount) + "' raidcard='" + raidCard + "' />" ) 
+	sysInfo['kernel'] = '.'.join(os.uname()[2].split('.')[:2])
+	sysInfo['thinp'] = 'yes' if os.path.exists('/usr/sbin/thin_check') else 'no'
+	sysInfo['btrfs'] = 'yes' if os.path.exists('/usr/sbin/btrfs') else 'no'
+	sysInfo['glustervers'] = os.listdir('/usr/lib64/glusterfs')[0]
 	
+	sysInfo['memsize'] = open('/proc/meminfo').readlines()[0].split()[1]
+	sysInfo['cpucount'] = str(len([ p for p in open('/proc/cpuinfo').readlines() if p.startswith('processor')]))
+	sysInfo['raidcard'] = getRaid()
 	
-	return sysinfo 
-	
+	return sysInfo 
 
 def main():
 	""" 
@@ -193,20 +187,52 @@ def main():
 	noLVM = filterLVM(disks)
 	unusedDisks = filterBTRFS(noLVM)
 	
-	xmlString = "<data>" + sysInfo
+	if OUTPUTTYPE == 'xml':
+		
+		deviceInfo = "<data>" 
+		deviceInfo += ( "<sysinfo kernel='" + sysInfo['kernel'] + "' dmthinp='" + sysInfo['thinp'] + "' btrfs='"
+				+ sysInfo['btrfs'] + "' glustervers='" + sysInfo['glustervers'] + "' memsize='" + sysInfo['memsize']
+				+ "' cpucount='" + sysInfo['cpucount'] + "' raidcard='" + sysInfo['raidcard'] + "' />" ) 
+	
+	
+		for disk in unusedDisks:
+			deviceInfo += "<disk device='" + disk + "' sizeKB='" + unusedDisks[disk] + "' />"
+	
+		deviceInfo += "</data>"
+		
+	else:
+		# output type is txt so format the output in a more human readable form 
+		# to aid testing and debug
+		deviceInfo = "\nSystem Information\n"
+		deviceInfo += ( "\tKernel         - " + sysInfo['kernel'] + " series\n"
+					+   "\tInstalled RAM  - " + str(int(sysInfo['memsize'])/1024) + " MB\n"
+					+   "\tCores/Threads  - " + sysInfo['cpucount'] + "\n"
+					+   "\tRaid Card Info - " + sysInfo['raidcard'] + "\n\n"
+					+   "Capabilities:\n\tThin Provisioning - " + sysInfo['thinp'] + "\n"
+					+   "\tbtrfs - " + sysInfo['btrfs'] + "\n"
+					+   "\nGluster Version - " + sysInfo['glustervers'] + "\n\n"
+					+   "Unused Device List\n"
+					)
+		for disk in unusedDisks:
+			deviceInfo += "\t" + disk.ljust(6) + " "*4 + unusedDisks[disk] + " KB\n"
+			
+		deviceInfo += "\n"
 
-	for disk in unusedDisks:
-		xmlString += "<disk device='" + disk + "' sizeKB='" + unusedDisks[disk] + "' />"
-
-	xmlString += "</data>"
-
-	print xmlString
+	print deviceInfo
 
 	return 
 
 if __name__ == '__main__':
-	if len(sys.argv) > 1:
-		if sys.argv[1].lower() == 'debug':
-			DEBUG = True
+	
+	usageInfo = "usage: %prog [options]"
+	parser = OptionParser(usage=usageInfo,version="%prog 1.1")
+	parser.add_option("-f","--format",dest="outputFormat",default="xml",type="choice",choices=['xml','txt'],help="Output format - xml (default) or txt")
+	parser.add_option("-d","--debug",dest="debug",action="store_true", default=False, help="provide more debug info")
+
+	(options, args) = parser.parse_args()
+	
+	DEBUG = options.debug
+	OUTPUTTYPE = options.outputFormat
+
 	main()
 

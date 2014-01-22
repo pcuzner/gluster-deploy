@@ -372,9 +372,58 @@ left:0px;
 #disks.slide {
 left: 0px;
 }
-#diskTable th:first-child {
-	width:200px;
+#diskTable {
+position:relative;
+left:-20px;
+top:-20px;
+width:360px;
+
 }
+#diskHeading {
+position:absolute;}
+
+#diskHeading th:first-child {
+	width:180px;
+}
+
+#diskTable td:first-child {
+	width:170px;
+}
+#diskTable td:last-child {
+	width:48px;
+}
+#diskArea {
+	position: absolute;
+	left:90px;
+	top: 160px;
+	width:400px;
+	height:440px;
+	z-index: 5;
+	transition: opacity .75s; 
+	opacity: 0;
+
+
+
+}
+
+#diskArea.show {
+	opacity: 1;
+}
+
+#diskRows {
+
+		overflow-y:auto;
+		position:relative;
+        top:71px;
+        left:20px;
+        width:373px;
+		height:366px;
+}
+
+/* ****************************************************************** */
+/* brick definition elements                                          */
+/* ****************************************************************** */
+
 #snapshotValue {
 	position:relative;
 	top:-2px;
@@ -389,21 +438,7 @@ left: 0px;
 	border-radius:8px;
 }
 
-#diskArea {
-	position: absolute;
-	left:90px;
-	top: 160px;
-	width:400px;
-	height:350px;
-	z-index: 5;
-	transition: opacity .75s; 
-	opacity: 0;
 
-}
-
-#diskArea.show {
-	opacity: 1;
-}
 
 #bricks {
 	position: absolute;
@@ -421,6 +456,12 @@ left: 0px;
 #bricks.slide {
 	left: 0px;
 }
+
+
+/* ****************************************************************** */
+/* Volume definition elements                                         */
+/* ****************************************************************** */
+
 #volCreate {
 	position: absolute;
 	left: 650px;

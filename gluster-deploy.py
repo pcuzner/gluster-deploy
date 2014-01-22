@@ -221,7 +221,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 			success = 0 
 			failed = 0
-			g.LOGGER.info('%s createCluster joining %s nodes to the cluster', time.asctime(), len(nodeList))
+			g.LOGGER.info('%s createCluster joining %s nodes to the cluster', time.asctime(), (len(nodeList)-1))
 						
 			# create the node objects and add to the management dict		
 			for node in nodeList:

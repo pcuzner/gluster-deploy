@@ -347,7 +347,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				disk = glusterNodes[targetHost].diskList[targetDevice]
 				disk.formatRequired=True 
 			
-			response = "<response><status-text>OK</status-text><features "
+			response = "<response><status-text>OK</status-text>"
+			response += "<brick path='" + g.BRICKPATH + "' />"
 
 			# Determine whether snapshots are available, by looking at the capabilities
 			# of every node in the cluster. They must all tally for these features to be 
@@ -366,7 +367,9 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				if thisHost.btrfs == False:	# or thisHost.kernelVersion < required level
 					btrfsSupport = "NO"
 			
-			response += "snapshot='" + lvmSnapshot + "' btrfs='" + btrfsSupport + "' /></response>"
+			response += "<features snapshot='" + lvmSnapshot + "' btrfs='" + btrfsSupport + "' />"
+			response += "</response>"
+			
 			self.wfile.write(response)
 		
 

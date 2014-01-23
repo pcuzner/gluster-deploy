@@ -92,7 +92,7 @@ function registerHandler(req) {
 	xmlDoc = req.responseXML;
 	
 	// Example XML input
-	// <response><status-text>OK</status-text><features snapshot='YES' btrfs='NO' /></response>
+	// <response><status-text>OK</status-text><brick path='/gluster/brick1' /><features snapshot='YES' btrfs='NO' /></response>
 	
 	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
 	
@@ -102,6 +102,11 @@ function registerHandler(req) {
 		var features = xmlDoc.getElementsByTagName('features')[0].attributes;
 		var snapshotEnabled = features.getNamedItem('snapshot').value;
 		var btrfsEnabled = features.getNamedItem('btrfs').value;
+		
+		var brickInfo = xmlDoc.getElementsByTagName('brick')[0].attributes;
+		var brickPath = brickInfo.getNamedItem('path').value;
+		
+		document.getElementById('mountPoint').value = brickPath;
 		
 		if (btrfsEnabled == 'YES' ) {
 			// Add btrfs to the select options

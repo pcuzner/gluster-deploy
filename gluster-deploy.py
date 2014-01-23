@@ -656,7 +656,7 @@ if __name__ == '__main__':
 	
 	usageInfo = "usage: %prog [options]"
 	
-	parser = OptionParser(usage=usageInfo,version="%prog 0.5a")
+	parser = OptionParser(usage=usageInfo,version="%prog 0.5")
 	parser.add_option("-n","--no-password",dest="skipPassword",action="store_true",default=False,help="Skip access key checking (debug only)")
 	parser.add_option("-p","--port",dest="port",default=8080,type="int", help="Port to run UI on (> 1024)")
 	parser.add_option("-f","--config-file",dest="cfgFile",type="string",help="Config file providing server list bypassing subnet scan")

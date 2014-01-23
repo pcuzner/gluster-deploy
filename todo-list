@@ -36,13 +36,13 @@ Development Log
   - fix presentation of many nodes in keymgmt (separate header and data elements) - DONE (dea42349)
   - tidy login page (hide 'breadcrumb' bar, merge logo into login element) - DONE
 
-0.5 (pending) 
+0.5 (complete 23/01/2014) 
   - fix: presentation of disks in disk discovery for many disks (separate header and data elements) - DONE (9a8da4cd)
   - fix: log file entry created in createCluster showing all nodes, not just the nodes to add - DONE (f2edf737)
   - update findDevs to return text OR xml, change calling code accordingly - DONE (2b5458ef)
   - update config file logic to include a pathname - DONE (cfe7aa13)
-  - update brickdefinition code to use config file default - DONE (cc091991)
-  - remove vg and lv definitions - basing vg and lv on the path name provided
+  - update to pass config file brick parms through to UI - DONE (cc091991)
+  - fix: undodeploy fixed to account for system vg's being similar to the name used for gluster's vg - DONE (d67e1601)
   - Add btrfs brick build code to formatBrick.sh - DONE (224caba9)
   - flag thin provisioning and btrfs support options as experimental - hook in confirm dialog - DONE (9c7811f9)
   - add a confirm dialog (faded background, alert box type function) - DONE (b7e94d54)

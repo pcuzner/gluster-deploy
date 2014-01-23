@@ -74,13 +74,13 @@ function dropLVM {
 	local cmdOut=""
 	
 	echo -e "\t\tRemoving LVM definitions(LV and VG)"
-	cmd="pvs | awk '/"$vgName"/ {print \$1;}'"
+	cmd="pvs | awk '\$2 ~ /^"$vgName"/ {print \$1;}'"
 
 	if [ "$node" != "localhost" ] ; then 
 		conn="ssh $node "
 		local devList=$($conn $cmd)
 	else
-		local devList=$(pvs | awk "/$vgName/ {print \$1;}")
+		local devList=$(pvs | awk "\$2 ~ /^$vgName/ { print \$1;}")
 	fi
 	
 

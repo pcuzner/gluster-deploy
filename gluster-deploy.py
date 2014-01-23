@@ -81,6 +81,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		
 		self.send_response(200)         # completed ok
 		self.end_headers()              # blank line end of http response
+		self.finish()
 		self.server.stop=True
 		 
 		 

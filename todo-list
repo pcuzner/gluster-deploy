@@ -41,7 +41,7 @@ Development Log
   - fix: log file entry created in createCluster showing all nodes, not just the nodes to add - DONE (f2edf737)
   - update findDevs to return text OR xml, change calling code accordingly - DONE (2b5458ef)
   - update config file logic to include a pathname - DONE (cfe7aa13)
-  - update brickdefinition code to use config file default
+  - update brickdefinition code to use config file default - DONE (cc091991)
   - remove vg and lv definitions - basing vg and lv on the path name provided
   - Add btrfs brick build code to formatBrick.sh - DONE (224caba9)
   - flag thin provisioning and btrfs support options as experimental - hook in confirm dialog - DONE (9c7811f9)

@@ -29,6 +29,8 @@ import socket
 
 import network							# local module
 
+import globalvars as g					# bring in the global variables
+import time 
 
 
 class MsgStack:
@@ -88,11 +90,10 @@ def kernelCompare(thisKernel, kernelTarget):
 	return result
 
 
-def buildServerList(configFileName, hostIPs):
+def processConfigFile(configFileName):
 	""" 
-	Receive a user specfiied configuration file, process it to return a list of
-	servers that will be looked at for active glusterd processes - to bypass the 
-	subnet scan
+	Receive a user specfiied configuration file, process it to update global
+	runtime settings
 	"""
 	
 	config = ConfigParser.ConfigParser()
@@ -101,8 +102,13 @@ def buildServerList(configFileName, hostIPs):
 	try:
 		nodeNames = config.get("nodes","nodenames").split()
 	except:
-		print "\t\t-> Error processing the config file, subnet scanning will be used"
-		nodeNames = []		
+		print "\t\t-> Config file does not contain valid 'nodes' section, subnet scan will be used"
+
+	try:
+		brickPath = config.get("brick","brickpath")
+	except:
+		print ( "\t\t-> Config file does not contain a valid 'brick' section, a default of " 
+				+ g.BRICKPATH + "will be used")
 	
 	if nodeNames:
 		for node in nodeNames:
@@ -113,12 +119,17 @@ def buildServerList(configFileName, hostIPs):
 				print "\t\t-> dropping " + node + " (name doesn't resolve, or IP is invalid)"
 				nodeNames.remove(node)
 			else:
-				pass
+				g.LOGGER.info("%s server %s accepted as a potential gluster node", time.asctime(), node)
 				
-			pass
+		g.SERVERLIST = sorted(nodeNames)
 		
-	# return a sorted list	
-	return sorted(nodeNames)
+	if brickPath:
+		print "\t\t-> Using '" + brickPath + "' for the default brick path"
+		g.LOGGER.info("%s config file provided brick path name of %s", time.asctime(), brickPath)
+		g.BRICKPATH = brickPath
+		
+	return 
+
 
 if __name__ == '__main__':
 	pass

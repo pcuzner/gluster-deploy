@@ -39,6 +39,7 @@ def init():
 	global MSGSTACK
 	global BTRFSKERNEL
 	global SERVERLIST
+	global BRICKPATH
 
 	
 	LOGFILE = 'gluster-deploy.log'
@@ -72,6 +73,8 @@ def init():
 	# List of servers specified through a config file
 	SERVERLIST = []
 	
+	# default path for the gluster brick to be bound to
+	BRICKPATH = "/gluster/brick1"
 	
 	pass
 

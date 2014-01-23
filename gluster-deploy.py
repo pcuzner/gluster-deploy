@@ -30,7 +30,7 @@
 from functions.network import getSubnets,findService, getHostIP
 from functions.syscalls import issueCMD, generateKey, getMultiplier
 from functions.gluster import GlusterNode, createVolume
-from functions.utils import buildServerList
+from functions.utils import processConfigFile
 
 import functions.globalvars as g					# Import globals shared across the modules
 
@@ -586,18 +586,20 @@ def main():
 	if configFile:
 		
 		# user invoked with -f and has supplied a file that exists, so process it
-		print "\t\tProcessing config file(" + options.cfgFile + ")"
-		candidateSvrs = buildServerList(configFile, hostIPs)
-		numServers = len(candidateSvrs)
+		print "\t\tProcessing config file(" + configFile + ")"
+		
+		# config globals to use for nodes, brickpath etc
+		processConfigFile(configFile)
+		
+		numServers = len(g.SERVERLIST)
 		if numServers > 0:
 			print "\t\t-> Configuration file provided " + str(numServers) + " potentially usable nodes"
-			g.SERVERLIST = list(candidateSvrs)
 		else:
 			print "\t\t-> No suitable nodes detected, UI will offer subnet selection/scan"	
 			
 	else:
 		# no config file was specified at run time (default behaviour)
-		print "\t\t-> Not supplied, UI will perform subnet selection/scan"
+		print "\t\t-> Not supplied, program defaults will be used, together with\n\t\t   node discovery by subnet scan"
 	
 	
 	# Program relies on ssh key distrubution and passwordless ssh login across

@@ -190,7 +190,7 @@ function validateBrickParms(element) {
 		case 'lvName':
 			var patternRegex = validLVM;
 			break;
-		case 'mountpoint':
+		case 'mountPoint':
 			var patternRegex = validMountPoint
 			break;
 	}
@@ -219,10 +219,12 @@ function switchProvider(option) {
 
 }
 
-
 function updateLV() {
 	var vgName = document.getElementById('vgName').value;
 	document.getElementById('lvName').value=vgName;
 }
+
+
+
 
 

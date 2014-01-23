@@ -107,8 +107,22 @@ def processConfigFile(configFileName):
 	try:
 		brickPath = config.get("brick","brickpath")
 	except:
-		print ( "\t\t-> Config file does not contain a valid 'brick' section, a default of " 
+		print ( "\t\t-> brickpath setting not provided, a default of " 
 				+ g.BRICKPATH + "will be used")
+
+	try:
+		vgName = config.get("brick","vgname")
+	except:
+		print ( "\t\t-> vgname not provided, a default of " 
+				+ g.VGNAME + "will be used")
+				
+	try:
+		lvName = config.get("brick","lvname")
+	except:
+		print ( "\t\t-> lvname not provided, a default of "
+				+ g.LVNAME + "will be used")
+
+
 	
 	if nodeNames:
 		for node in nodeNames:
@@ -127,6 +141,15 @@ def processConfigFile(configFileName):
 		print "\t\t-> Using '" + brickPath + "' for the default brick path"
 		g.LOGGER.info("%s config file provided brick path name of %s", time.asctime(), brickPath)
 		g.BRICKPATH = brickPath
+
+	if vgName:
+		print "\t\t-> Using '" + vgName + "' as the volume group"
+		g.LOGGER.info("%s config file provided vg of %s", time.asctime(), vgName)
+		g.VGNAME = vgName
+	if brickPath:
+		print "\t\t-> Using '" + lvName + "' for LV name"
+		g.LOGGER.info("%s config file provided lv name of %s", time.asctime(), lvName)
+		g.LVNAME = lvName
 		
 	return 
 

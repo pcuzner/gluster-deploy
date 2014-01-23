@@ -40,6 +40,8 @@ def init():
 	global BTRFSKERNEL
 	global SERVERLIST
 	global BRICKPATH
+	global VGNAME
+	global LVNAME
 
 	
 	LOGFILE = 'gluster-deploy.log'
@@ -75,6 +77,8 @@ def init():
 	
 	# default path for the gluster brick to be bound to
 	BRICKPATH = "/gluster/brick1"
+	VGNAME = "gluster"
+	LVNAME = "gluster"
 	
 	pass
 

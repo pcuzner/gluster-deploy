@@ -349,7 +349,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				disk.formatRequired=True 
 			
 			response = "<response><status-text>OK</status-text>"
-			response += "<brick path='" + g.BRICKPATH + "' />"
+			response += "<brick path='" + g.BRICKPATH + "' vgname='" + g.VGNAME + "' lvname='" + g.LVNAME + "' />"
 
 			# Determine whether snapshots are available, by looking at the capabilities
 			# of every node in the cluster. They must all tally for these features to be 
@@ -597,7 +597,7 @@ def main():
 		
 		numServers = len(g.SERVERLIST)
 		if numServers > 0:
-			print "\t\t-> Configuration file provided " + str(numServers) + " potentially usable nodes"
+			print "\n\t\tConfiguration file provided " + str(numServers) + " potentially usable nodes"
 		else:
 			print "\t\t-> No suitable nodes detected, UI will offer subnet selection/scan"	
 			

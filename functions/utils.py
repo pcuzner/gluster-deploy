@@ -146,7 +146,8 @@ def processConfigFile(configFileName):
 		print "\t\t-> Using '" + vgName + "' as the volume group"
 		g.LOGGER.info("%s config file provided vg of %s", time.asctime(), vgName)
 		g.VGNAME = vgName
-	if brickPath:
+		
+	if lvName:
 		print "\t\t-> Using '" + lvName + "' for LV name"
 		g.LOGGER.info("%s config file provided lv name of %s", time.asctime(), lvName)
 		g.LVNAME = lvName

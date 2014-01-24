@@ -25,13 +25,13 @@
 #
 
 import sys
-from syscalls import issueCMD 
 import socket
 import struct
 import logging
 import time
 
-import globalvars as g
+from 	functions.syscalls import issueCMD 
+import 	functions.config as cfg
 
 def atod(a): 
 	""" ascii_to_decimal """
@@ -62,7 +62,7 @@ def listIPRange(subnet):
 		if not host.endswith(excludedSuffixes):
 			IPList.append(host)
 	
-	g.LOGGER.debug('%s IP range for %s has %d addresses', time.asctime(), subnet, len(IPList))
+	cfg.LOGGER.debug('%s IP range for %s has %d addresses', time.asctime(), subnet, len(IPList))
 	
 	return IPList
 
@@ -119,7 +119,7 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 			result = sock.connect_ex((IPaddr,targetPort))
 			if result == 0:
 								
-				g.LOGGER.debug('%s port %d found open on %s', time.asctime(),targetPort,IPaddr)
+				cfg.LOGGER.debug('%s port %d found open on %s', time.asctime(),targetPort,IPaddr)
 				
 				# if the ipaddr is a name, convert to IP address since it's the IP that gets used
 				# against the host's IP list to determine which is the local node 
@@ -145,13 +145,13 @@ def findService(subnet, targetPort=24007,scanTimeout=0.05):
 				serviceList.append(hostName)
 				
 				# Add 'found host' message to the message stack
-				g.MSGSTACK.pushMsg('Found %s' %(hostName))
+				cfg.MSGSTACK.pushMsg('Found %s' %(hostName))
 			
 			else:
 				# if the probe to the glusterd port failed, and the target was a 
 				# node supplied in the config file, report the error in the log
 				if serverList:
-					g.LOGGER.info("%s network.findService couldn't connect to glusterd on %s, dropping from the server list", time.asctime(), IPAddr)
+					cfg.LOGGER.info("%s network.findService couldn't connect to glusterd on %s, dropping from the server list", time.asctime(), IPAddr)
 					
 					
 			sock.close()
@@ -173,7 +173,7 @@ def getSubnets():
 	for dataLine in ipInfo:
 		if 'inet ' in dataLine:
 			interface = dataLine.split()[-1]
-			if interface.startswith(g.NICPREFIX):
+			if interface.startswith(cfg.NICPREFIX):
 				IPdata = dataLine.split()[1]
 				thisSubnet = calcSubnet(IPdata)
 				subnetList.append(thisSubnet)
@@ -190,7 +190,7 @@ def getHostIP():
 	for dataLine in ipInfo:
 		if 'inet ' in dataLine:
 			interface = dataLine.split()[-1]
-			if interface.startswith(g.NICPREFIX):
+			if interface.startswith(cfg.NICPREFIX):
 				dataLine = dataLine.replace('/',' ')
 				hostIP.append(dataLine.split()[1])
 

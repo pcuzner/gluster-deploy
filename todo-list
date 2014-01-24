@@ -47,6 +47,12 @@ Development Log
   - flag thin provisioning and btrfs support options as experimental - hook in confirm dialog - DONE (9c7811f9)
   - add a confirm dialog (faded background, alert box type function) - DONE (b7e94d54)
 
+0.51 (complete 24/01/2014)
+  - some tidy up across the python code
+    * web UI logic now in separate webservices module (more to do there, later)
+    * tidied up module imports 
+    * renamed globalvars module as 'config' to observe standard naming conventions
+
 0.6 (planned)
   - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
   - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 

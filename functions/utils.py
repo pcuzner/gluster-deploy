@@ -23,14 +23,11 @@
 #  
 
 import threading
-import os
 import ConfigParser						# renamed to configparser in python3!
-import socket
-
-import network							# local module
-
-import globalvars as g					# bring in the global variables
 import time 
+
+from 	functions.network import hostOK	# local module
+import 	functions.config as cfg			# bring in the global variables
 
 
 class MsgStack:
@@ -108,19 +105,19 @@ def processConfigFile(configFileName):
 		brickPath = config.get("brick","brickpath")
 	except:
 		print ( "\t\t-> brickpath setting not provided, a default of " 
-				+ g.BRICKPATH + "will be used")
+				+ cfg.BRICKPATH + "will be used")
 
 	try:
 		vgName = config.get("brick","vgname")
 	except:
 		print ( "\t\t-> vgname not provided, a default of " 
-				+ g.VGNAME + "will be used")
+				+ cfg.VGNAME + "will be used")
 				
 	try:
 		lvName = config.get("brick","lvname")
 	except:
 		print ( "\t\t-> lvname not provided, a default of "
-				+ g.LVNAME + "will be used")
+				+ cfg.LVNAME + "will be used")
 
 
 	
@@ -129,28 +126,28 @@ def processConfigFile(configFileName):
 			
 			# process each node to make sure it's a valid IP or name
 			# if not drop from the serverList
-			if not network.hostOK(node):
+			if not hostOK(node):
 				print "\t\t-> dropping " + node + " (name doesn't resolve, or IP is invalid)"
 				nodeNames.remove(node)
 			else:
-				g.LOGGER.info("%s server %s accepted as a potential gluster node", time.asctime(), node)
+				cfg.LOGGER.info("%s server %s accepted as a potential gluster node", time.asctime(), node)
 				
-		g.SERVERLIST = sorted(nodeNames)
+		cfg.SERVERLIST = sorted(nodeNames)
 		
 	if brickPath:
 		print "\t\t-> Using '" + brickPath + "' for the default brick path"
-		g.LOGGER.info("%s config file provided brick path name of %s", time.asctime(), brickPath)
-		g.BRICKPATH = brickPath
+		cfg.LOGGER.info("%s config file provided brick path name of %s", time.asctime(), brickPath)
+		cfg.BRICKPATH = brickPath
 
 	if vgName:
 		print "\t\t-> Using '" + vgName + "' as the volume group"
-		g.LOGGER.info("%s config file provided vg of %s", time.asctime(), vgName)
-		g.VGNAME = vgName
+		cfg.LOGGER.info("%s config file provided vg of %s", time.asctime(), vgName)
+		cfg.VGNAME = vgName
 		
 	if lvName:
 		print "\t\t-> Using '" + lvName + "' for LV name"
-		g.LOGGER.info("%s config file provided lv name of %s", time.asctime(), lvName)
-		g.LVNAME = lvName
+		cfg.LOGGER.info("%s config file provided lv name of %s", time.asctime(), lvName)
+		cfg.LVNAME = lvName
 		
 	return 
 

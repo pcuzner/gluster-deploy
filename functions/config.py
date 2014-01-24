@@ -24,9 +24,6 @@
 import logging
 import os
 import sys
-from functions.utils import MsgStack
-
-
 
 def init():
 	""" Initialise global variables """
@@ -44,6 +41,9 @@ def init():
 	global BRICKPATH
 	global VGNAME
 	global LVNAME
+	
+	# import is placed inside the function to prevent circular imports 
+	from functions.utils import MsgStack
 
 	
 	LOGFILE = 'gluster-deploy.log'

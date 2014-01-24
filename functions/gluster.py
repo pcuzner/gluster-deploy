@@ -22,15 +22,13 @@
 #  
 #  
 
-from syscalls import issueCMD, SSHsession
 import xml.etree.ElementTree as ETree
-
-import globalvars as g
-
 import logging
 import time
 import os
 
+from 	functions.syscalls import issueCMD, SSHsession
+import 	functions.config as cfg
 
 def parseOutput(outXML, elementType):
 	"""	Receive the output of a command in xml format, and search for 
@@ -128,7 +126,7 @@ def createVolume(xmlDoc):
 
 	# log the number of commands that will be run
 	numCmds = len(cmdQueue)
-	g.LOGGER.debug("%s Creating volume %s - %d steps", time.asctime(), volName, numCmds)
+	cfg.LOGGER.debug("%s Creating volume %s - %d steps", time.asctime(), volName, numCmds)
 	
 	# Process the command sequence	
 	retCode = 0
@@ -136,25 +134,25 @@ def createVolume(xmlDoc):
 	for cmd in cmdQueue:
 		
 		cmdType = ' '.join(cmd.split()[1:3]) + ' ...'
-		g.MSGSTACK.pushMsg("Step %d/%d starting (%s)" %(stepNum, numCmds,cmdType))
+		cfg.MSGSTACK.pushMsg("Step %d/%d starting (%s)" %(stepNum, numCmds,cmdType))
 		
 		(rc, cmdOutput) = issueCMD(cmd)
 		
 		if rc == 0:	# retcode is 1st element, so check it's 0
 						
 			# push this cmd to the queue for reporting in the UI
-			g.MSGSTACK.pushMsg("Step %d/%d completed" %(stepNum, numCmds))
+			cfg.MSGSTACK.pushMsg("Step %d/%d completed" %(stepNum, numCmds))
 			
 			# Log the cmd being run as successful
-			g.LOGGER.info("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
-			g.LOGGER.debug("%s Command successful : %s", time.asctime(), cmd)
+			cfg.LOGGER.info("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
+			cfg.LOGGER.debug("%s Command successful : %s", time.asctime(), cmd)
 			
 		else:
-			g.LOGGER.info("%s vol create step failed", time.asctime())
+			cfg.LOGGER.info("%s vol create step failed", time.asctime())
 			
-			g.LOGGER.debug("%s command failure - %s", time.asctime(), cmd)
+			cfg.LOGGER.debug("%s command failure - %s", time.asctime(), cmd)
 			
-			g.MSGSTACK.pushMsg("Step %d/%d failed - sequence aborted" %(stepNum, numCmds))
+			cfg.MSGSTACK.pushMsg("Step %d/%d failed - sequence aborted" %(stepNum, numCmds))
 			
 			# problem executing the command, log the response and return
 			retCode = 8
@@ -197,9 +195,9 @@ class GlusterDisk:
 	def formatBrick(self,userPassword,raidCard):
 		"""	Pass the node the format script for this brick """
 		
-		g.LOGGER.info('%s formatting %s as a brick on %s', time.asctime(), self.deviceID, self.nodeName )
+		cfg.LOGGER.info('%s formatting %s as a brick on %s', time.asctime(), self.deviceID, self.nodeName )
 
-		scriptPath = os.path.join(g.PGMROOT,'scripts/formatBrick.sh')
+		scriptPath = os.path.join(cfg.PGMROOT,'scripts/formatBrick.sh')
 		scriptParms = ( " -D -d %s -c %s -b %s -v %s -s %s -l %s -p %s -m %s -u %s -n %s " % 
 						(self.deviceID, 
 						raidCard, 
@@ -214,9 +212,9 @@ class GlusterDisk:
 						
 		scriptName = scriptPath + scriptParms
 		
-		g.LOGGER.debug('%s Script invocation: %s', time.asctime(),scriptName)
+		cfg.LOGGER.debug('%s Script invocation: %s', time.asctime(),scriptName)
 
-		g.MSGSTACK.pushMsg("%s format on %s starting" %(self.deviceID, self.nodeName))
+		cfg.MSGSTACK.pushMsg("%s format on %s starting" %(self.deviceID, self.nodeName))
 
 		if self.localDisk:
 			(rc, resp) = issueCMD(scriptName)
@@ -229,9 +227,9 @@ class GlusterDisk:
 			
 			self.formatStatus = 'complete' if (rc == 0) else 'failed'
 		
-		g.MSGSTACK.pushMsg("%s format on %s ended, RC=%d" %(self.deviceID, self.nodeName, rc))
+		cfg.MSGSTACK.pushMsg("%s format on %s ended, RC=%d" %(self.deviceID, self.nodeName, rc))
 		
-		g.LOGGER.debug('%s formatBrick complete on %s with retcode = %s', time.asctime(), self.nodeName, str(rc))
+		cfg.LOGGER.debug('%s formatBrick complete on %s with retcode = %s', time.asctime(), self.nodeName, str(rc))
 		
 		return 			
 
@@ -267,11 +265,11 @@ class GlusterNode:
 		
 		if copyRC <= 4:
 			#keyState.successList.append(nodeName)
-			g.LOGGER.info('%s ssh key added successfully to %s', time.asctime(), self.nodeName)
+			cfg.LOGGER.info('%s ssh key added successfully to %s', time.asctime(), self.nodeName)
 			self.hasKey = True
 		else:
 			#keyState.failureList.append(nodeName)
-			g.LOGGER.info('%s Adding ssh key to %s failed', time.asctime(), self.nodeName)
+			cfg.LOGGER.info('%s Adding ssh key to %s failed', time.asctime(), self.nodeName)
 			self.hasKey = False
 			
 		
@@ -282,12 +280,12 @@ class GlusterNode:
 		
 		if rc > 0:
 			# update the clusterState properties
-			g.LOGGER.debug("%s peer probe for %s failed", time.asctime(), self.nodeName)
+			cfg.LOGGER.debug("%s peer probe for %s failed", time.asctime(), self.nodeName)
 			#clusterState.failureList.append(thisNode)
 			self.inCluster = False
 		else:
 			# update the clusterState properties
-			g.LOGGER.debug("%s peer probe for %s succeeded", time.asctime(), self.nodeName)
+			cfg.LOGGER.debug("%s peer probe for %s succeeded", time.asctime(), self.nodeName)
 			#clusterState.successList.append(thisNode)
 			self.inCluster = True
 		pass
@@ -295,11 +293,11 @@ class GlusterNode:
 	def findDisks(self):
 		"""	pass a scan script to the node, returning a list of unused disks in xml format """
 
-		g.LOGGER.debug('%s getDisks scanning %s', time.asctime(), self.nodeName)
+		cfg.LOGGER.debug('%s getDisks scanning %s', time.asctime(), self.nodeName)
 		
-		scriptName = os.path.join(g.PGMROOT,'scripts/findDevs.py')
+		scriptName = os.path.join(cfg.PGMROOT,'scripts/findDevs.py')
 		
-		g.LOGGER.debug('%s getDisks using script from %s', time.asctime(), scriptName)
+		cfg.LOGGER.debug('%s getDisks using script from %s', time.asctime(), scriptName)
 
 		# check if this is the local node, if so, use issueCMD not ssh
 		if self.localNode:
@@ -342,7 +340,7 @@ class GlusterNode:
 			pass
 		
 				
-		g.LOGGER.debug('%s getDisks found %d devices on %s', time.asctime(), len(self.diskList), self.nodeName)
+		cfg.LOGGER.debug('%s getDisks found %d devices on %s', time.asctime(), len(self.diskList), self.nodeName)
 		
 class GlusterCluster:
 	""" Future - hold references to nodes in a cluster object """

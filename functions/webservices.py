@@ -32,6 +32,7 @@ import xml.etree.ElementTree as ETree
 import 	functions.config as cfg
 from 	functions.network 		import getSubnets,findService
 from 	functions.gluster 		import GlusterNode, createVolume
+from 	functions.syscalls		import getMultiplier
 
 # define a dict to hold gluster node objects, indexed by the node name
 glusterNodes = {}	

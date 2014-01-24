@@ -54,13 +54,14 @@ Development Log
     * renamed globalvars module as 'config' to observe standard naming conventions
 
 0.6 (planned)
-  - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
-  - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 
-  - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
   - review object structure - introduce cluster->nodes->volume->brick schema
+  - treat the lv and mountpoint names as prefixes, if more than one filesystem needs to be built on a node, allowing a suffix to be added 
+  - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
+  - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 
 
 
 0.7 (planned)
+  - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
   - update volCreate page to allow user to build >1 volume during the run
   - update buildBrick to account for raid card to set appropriate offsets on pvcreate and mkfs.xfs commands
   - add tooltip code 

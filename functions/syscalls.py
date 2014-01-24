@@ -208,12 +208,15 @@ def issueCMD(command, shellNeeded=False):
 		
 		# Get output...response is a byte string that includes \n		
 		(response, errors)=child.communicate()
+		
+		# Add any errors to the response string
+		response += errors
 		rc = child.returncode	 
 
 	except Exception:
 		response = 'command failed\n' 
 		rc=12
-
+		
 	cmdText = response.split('\n')[:-1]
 	
 	return (rc, cmdText)                 

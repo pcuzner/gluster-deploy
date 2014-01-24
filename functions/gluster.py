@@ -27,7 +27,8 @@ import logging
 import time
 import os
 
-from 	functions.syscalls import issueCMD, SSHsession
+from 	functions.syscalls 	import issueCMD, SSHsession
+from 	functions.utils 	import logErrorMsgs
 import 	functions.config as cfg
 
 def parseOutput(outXML, elementType):
@@ -280,7 +281,8 @@ class GlusterNode:
 		
 		if rc > 0:
 			# update the clusterState properties
-			cfg.LOGGER.debug("%s peer probe for %s failed", time.asctime(), self.nodeName)
+			cfg.LOGGER.debug("%s peer probe for %s failed (RC=%d)", time.asctime(), self.nodeName, rc)
+			logErrorMsgs(probeOutput)
 			#clusterState.failureList.append(thisNode)
 			self.inCluster = False
 		else:

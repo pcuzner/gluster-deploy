@@ -86,6 +86,11 @@ def kernelCompare(thisKernel, kernelTarget):
 			
 	return result
 
+def logErrorMsgs(msgs):
+	""" Receive a list of messages to write to the current log file """
+	for m in msgs:
+		cfg.LOGGER.debug("%s ---> %s", time.asctime(), m)
+
 
 def processConfigFile(configFileName):
 	""" 

@@ -73,7 +73,7 @@ class MsgStack:
 		return
 
 def kernelCompare(thisKernel, kernelTarget):	
-	""" Receive current and target kernels, return true if the current is > target """
+	""" Receive current and target kernels, return true if the current is >= target """
 		
 	result = False
 	

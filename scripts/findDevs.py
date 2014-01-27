@@ -158,7 +158,7 @@ def getSysInfo():
 
 	sysInfo = {}	# Declare a dict to use for the system information	
 	
-	sysInfo['kernel'] = '.'.join(os.uname()[2].split('.')[:2])
+	sysInfo['kernel'] = '.'.join(os.uname()[2].split('.')[:3])
 	sysInfo['thinp'] = 'yes' if os.path.exists('/usr/sbin/thin_check') else 'no'
 	sysInfo['btrfs'] = 'yes' if os.path.exists('/usr/sbin/btrfs') else 'no'
 	sysInfo['glustervers'] = os.listdir('/usr/lib64/glusterfs')[0]

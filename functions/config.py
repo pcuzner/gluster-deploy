@@ -41,9 +41,11 @@ def init():
 	global BRICKPATH
 	global VGNAME
 	global LVNAME
+	global CLUSTER
 	
 	# import is placed inside the function to prevent circular imports 
-	from functions.utils import MsgStack
+	from functions.utils 	import MsgStack
+	from functions.gluster 	import Cluster
 
 	
 	LOGFILE = 'gluster-deploy.log'
@@ -72,7 +74,6 @@ def init():
 	BTRFSKERNEL = 3.6
 		
 	PGMROOT = os.path.split(os.path.abspath(os.path.realpath(sys.argv[0])))[0]
-	# glusterNodes
 	
 	# List of servers specified through the config file (deploy.cfg)
 	SERVERLIST = []
@@ -82,4 +83,6 @@ def init():
 	VGNAME = "gluster"
 	LVNAME = "gluster"
 
+	# Create a cluster object to act as the top level object
+	CLUSTER = Cluster()
 

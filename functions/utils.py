@@ -72,8 +72,11 @@ class MsgStack:
 		self.lock.release()
 		return
 
-def kernelCompare(thisKernel, kernelTarget):	
+def kernelCompare(thisKernel, kernelTarget=''):	
 	""" Receive current and target kernels, return true if the current is >= target """
+	
+	if (not kernelTarget):
+		kernelTarget = cfg.BTRFSKERNEL
 		
 	result = False
 	

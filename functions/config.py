@@ -71,14 +71,14 @@ def init():
 	MSGSTACK = MsgStack()
 	
 	# Minimum kernel version required to support btrfs filesystem bricks
-	BTRFSKERNEL = 3.6
+	BTRFSKERNEL = '3.6'
 		
 	PGMROOT = os.path.split(os.path.abspath(os.path.realpath(sys.argv[0])))[0]
 	
 	# List of servers specified through the config file (deploy.cfg)
 	SERVERLIST = []
 	
-	# default path for the gluster brick to be bound to
+	# default path for the gluster brick to be bound to (overriden by deploy.cfg)
 	BRICKPATH = "/gluster/brick1"
 	VGNAME = "gluster"
 	LVNAME = "gluster"

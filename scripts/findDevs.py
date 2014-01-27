@@ -204,7 +204,7 @@ def main():
 		# output type is txt so format the output in a more human readable form 
 		# to aid testing and debug
 		deviceInfo = "\nSystem Information\n"
-		deviceInfo += ( "\tKernel         - " + sysInfo['kernel'] + " series\n"
+		deviceInfo += ( "\tKernel         - " + sysInfo['kernel'] + "\n"
 					+   "\tInstalled RAM  - " + str(int(sysInfo['memsize'])/1024) + " MB\n"
 					+   "\tCores/Threads  - " + sysInfo['cpucount'] + "\n"
 					+   "\tRaid Card Info - " + sysInfo['raidcard'] + "\n\n"

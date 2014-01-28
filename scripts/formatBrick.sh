@@ -219,10 +219,10 @@ function update_fstab {
 }
 
 function mount_filesystem {
-	local rc=0
-	mount -a
-	rc=$?
-	return $rc
+	
+	mount $mountPoint
+	
+	return $?
 }
 
 function create_brick {

@@ -53,8 +53,8 @@ Development Log
     * tidied up module imports 
     * renamed globalvars module as 'config' to observe standard naming conventions
 
-0.6 (planned)
-  - review object structure - introduce cluster->nodes->volume->brick schema
+0.6 (pending)
+  - review object structure - introduce cluster->nodes->volume->brick schema - DONE (3dc0e0a5)
   - treat the lv and mountpoint names as prefixes, if more than one filesystem needs to be built on a node, allowing a suffix to be added 
   - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
   - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 

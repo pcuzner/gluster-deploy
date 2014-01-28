@@ -31,151 +31,8 @@ from 	functions.syscalls 	import issueCMD, SSHsession
 from 	functions.utils 	import logErrorMsgs
 import 	functions.config as cfg
 
-def parseOutput(outXML, elementType):
-	"""	Receive the output of a command in xml format, and search for 
-		elements that match the required type. Once found return them
-		to the caller """
-	pass
-	return
-
-def clusterMembers():
-	"""	return a list of the members in a cluster using the output of
-		pool list
-	"""
-	return issueCMD('gluster pool list')
+class Brick:
 	
-def createVolume(xmlDoc):
-	"""	function to define a gluster volume given an xml volume definition """
-	
-	cmdQueue = []
-	bricks = []	
-	#xmlRoot = ETree.fromstring(xmlString)
-
-	
-	
-	# Volume parameters
-	volumeDefinition = xmlDoc.find('volume')
-	volName = volumeDefinition.attrib['name']
-	volType = volumeDefinition.attrib['type']
-	useCase = volumeDefinition.attrib['usecase']
-	replicaParm = ' ' if ( volumeDefinition.attrib['replica'] == 'none') else (' replica ' + volumeDefinition.attrib['replica'])
-	
-	# protocols
-	NFSstate  = 'nfs.disable off'  if ( xmlDoc.find('./volume/protocols').attrib['nfs'] == 'true' )  else 'nfs.disable on'
-	CIFSstate = 'user.cifs enable' if ( xmlDoc.find('./volume/protocols').attrib['cifs'] == 'true' ) else 'user.cifs disable'
-	
-	# bricks
-	for child in xmlDoc.findall('./volume/bricklist/brick'):
-		bricks.append(child.attrib['fullpath'])
-	numBricks = len(bricks)		# may want to check the number of bricks later...?
-				
-	# create volume syntax
-	createCMD = "gluster vol create " + volName + replicaParm + " transport tcp "
-	for brick in bricks:
-		createCMD += brick + " "
-	
-	createCMD += " force"		# added to allow the root of the brick to be used (glusterfs 3.4)
-	
-	cmdQueue.append(createCMD)
-	
-	# Post Processing Options
-	cmdQueue.append('gluster vol set ' + volName + ' ' + NFSstate)
-	cmdQueue.append('gluster vol set ' + volName + ' ' + CIFSstate)
-	
-	if useCase.lower() == 'hadoop':
-		# Added based on work done by Jeff Vance @ Red Hat
-		cmdQueue.append('gluster vol set ' + volName + ' quick-read off')
-		cmdQueue.append('gluster vol set ' + volName + ' cluster.eager-lock on')
-		cmdQueue.append('gluster vol set ' + volName + ' performance.stat-prefetch off')
-		pass
-		
-	elif useCase.lower() == 'virtualisation':
-		
-		# look to see what type of virt target it is
-		target = xmlDoc.find('./volume/tuning').attrib['target']
-		if target == 'glance':
-			cmdQueue.append('gluster vol set ' + volName + ' storage.owner-gid 161')
-			cmdQueue.append('gluster vol set ' + volName + ' storage.owner-uid 161')
-			pass
-		elif target == 'cinder':
-			cmdQueue.append('gluster vol set ' + volName + ' storage.owner-gid 165')
-			cmdQueue.append('gluster vol set ' + volName + ' storage.owner-uid 165')
-			pass
-		elif 'rhev' in target.lower():
-			cmdQueue.append('gluster vol set ' + volName + ' storage.owner-gid 36')
-			cmdQueue.append('gluster vol set ' + volName + ' storage.owner-uid 36')				
-		
-		if ('rhev' in target.lower()) or (target == 'cinder'):
-			
-			# Is the virt group available to use
-			if os.path.isfile('/var/lib/glusterd/groups/virt'):
-				cmdQueue.append('gluster vol set ' + volName + ' group virt')
-				pass
-			else:
-				# Fallback settings if local virt group definition is not there
-				cmdQueue.append('gluster vol set ' + volName + ' quick-read  off')
-				cmdQueue.append('gluster vol set ' + volName + ' read-ahead  off')
-				cmdQueue.append('gluster vol set ' + volName + ' io-cache  off')
-				cmdQueue.append('gluster vol set ' + volName + ' stat-prefetch  off')
-				cmdQueue.append('gluster vol set ' + volName + ' eager-lock enable')
-				cmdQueue.append('gluster vol set ' + volName + ' remote-dio enable')
-				pass
-			
-		
-	# Add volume start to the command sequence
-	cmdQueue.append('gluster vol start ' + volName)
-
-	# log the number of commands that will be run
-	numCmds = len(cmdQueue)
-	cfg.LOGGER.debug("%s Creating volume %s - %d steps", time.asctime(), volName, numCmds)
-	
-	# Process the command sequence	
-	retCode = 0
-	stepNum = 1
-	for cmd in cmdQueue:
-		
-		cmdType = ' '.join(cmd.split()[1:3]) + ' ...'
-		cfg.MSGSTACK.pushMsg("Step %d/%d starting (%s)" %(stepNum, numCmds,cmdType))
-		
-		(rc, cmdOutput) = issueCMD(cmd)
-		
-		if rc == 0:	# retcode is 1st element, so check it's 0
-						
-			# push this cmd to the queue for reporting in the UI
-			cfg.MSGSTACK.pushMsg("Step %d/%d completed" %(stepNum, numCmds))
-			
-			# Log the cmd being run as successful
-			cfg.LOGGER.info("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
-			cfg.LOGGER.debug("%s Command successful : %s", time.asctime(), cmd)
-			
-		else:
-			cfg.LOGGER.info("%s vol create step failed", time.asctime())
-			
-			cfg.LOGGER.debug("%s command failure - %s", time.asctime(), cmd)
-			
-			cfg.MSGSTACK.pushMsg("Step %d/%d failed - sequence aborted" %(stepNum, numCmds))
-			
-			# problem executing the command, log the response and return
-			retCode = 8
-			break
-			
-		stepNum +=1
-
-	
-	
-	return retCode
-
-def healthCheck():
-	pass
-		
-
-def getPeers():
-	"""	Run peer status to get a list of peers on the current server """
-	pass
-	return
-	
-
-class GlusterDisk:
 	def __init__(self,nodeName,deviceID, size,formatRequired=False):
 		self.nodeName = nodeName
 		self.deviceID = deviceID
@@ -234,7 +91,7 @@ class GlusterDisk:
 		
 		return 			
 
-class GlusterNode:
+class Node:
 	def __init__(self, nodeName):
 		self.nodeName = nodeName
 		self.userName = 'root'
@@ -247,6 +104,7 @@ class GlusterNode:
 		self.diskList = {}
 		self.raidCard=''
 		self.kernelVersion = ''
+		self.kernelVersionFull = ''
 		self.dmthinp = False
 		self.btrfs = False
 		self.glusterVersion = ''
@@ -257,19 +115,13 @@ class GlusterNode:
 	def pushKey(self):
 		""" push the local machines root account ssh key to this node """
 		
-		#(nodeName, nodePassword) = nodeData.split('*')
-		
-		#keyState.targetList.remove(nodeName)
-		
 		sshTarget = SSHsession(self.userName, self.nodeName, self.userPassword)
 		copyRC = sshTarget.sshCopyID()
 		
 		if copyRC <= 4:
-			#keyState.successList.append(nodeName)
 			cfg.LOGGER.info('%s ssh key added successfully to %s', time.asctime(), self.nodeName)
 			self.hasKey = True
 		else:
-			#keyState.failureList.append(nodeName)
 			cfg.LOGGER.info('%s Adding ssh key to %s failed', time.asctime(), self.nodeName)
 			self.hasKey = False
 			
@@ -283,12 +135,10 @@ class GlusterNode:
 			# update the clusterState properties
 			cfg.LOGGER.debug("%s peer probe for %s failed (RC=%d)", time.asctime(), self.nodeName, rc)
 			logErrorMsgs(probeOutput)
-			#clusterState.failureList.append(thisNode)
 			self.inCluster = False
 		else:
 			# update the clusterState properties
 			cfg.LOGGER.debug("%s peer probe for %s succeeded", time.asctime(), self.nodeName)
-			#clusterState.successList.append(thisNode)
 			self.inCluster = True
 		pass
 		
@@ -331,7 +181,7 @@ class GlusterNode:
 				deviceName = disk.attrib['device']
 				sizeMB = int(disk.attrib['sizeKB']) / 1024
 				
-				brick = GlusterDisk(self.nodeName, deviceName, sizeMB)
+				brick = Brick(self.nodeName, deviceName, sizeMB)
 				if self.localNode:
 					brick.localDisk = True
 				self.diskList[deviceName] = brick
@@ -344,11 +194,187 @@ class GlusterNode:
 				
 		cfg.LOGGER.debug('%s getDisks found %d devices on %s', time.asctime(), len(self.diskList), self.nodeName)
 		
-class GlusterCluster:
-	""" Future - hold references to nodes in a cluster object """
+class Cluster:
+	""" High Level 'cluster' object referencing nodes """
+	
 	def __init__(self):
-		pass
+		self.node={}
+		self.volume={}
+		self.glusterVersion=""
+		self.brickType=""
+		self.capability={}				# btrfs, thinp for example
+
+	def addNode(self,newNode):
+		""" Create a new node, and link it to this cluster object """
 		
+		thisNode = Node(newNode)
+		thisNode.joinCluster()
+
+		if thisNode.inCluster:
+			self.node[newNode] = thisNode
+	
+	def addVolume(self, xmlDoc):
+		""" Create a volume and link to this cluster object """
+		newVolume = Volume(xmlDoc)
+		volName = newVolume.volName
+		self.volume[volName] = newVolume
+
+		newVolume.createVolume()
+	
+	def nodeList(self):
+		return sorted(self.node.keys())
+	
+	def volumeList(self):
+		return sorted(self.volume.keys())
+		
+	def size(self):
+		return len(self.node.keys())
+
+
+class Volume:
+	
+	def __init__(self,xmlDoc):
+
+		self.bricks = []
+		self.protocols = {}
+		self.virtTarget = ''
+		
+		# Volume parameters
+		volumeDefinition = xmlDoc.find('volume')
+		self.volName = volumeDefinition.attrib['name']
+		self.volType = volumeDefinition.attrib['type']
+		self.useCase = volumeDefinition.attrib['usecase'].lower()
+		self.replicaParm = ' ' if ( volumeDefinition.attrib['replica'] == 'none') else (' replica ' + volumeDefinition.attrib['replica'])
+		
+		if self.useCase == 'virtualisation':
+			self.virtTarget = xmlDoc.find('./volume/tuning').attrib['target']
+
+
+		for child in xmlDoc.findall('./volume/bricklist/brick'):
+			self.bricks.append(child.attrib['fullpath'])
+
+		self.protocols['nfs'] = 'off' 	if ( xmlDoc.find('./volume/protocols').attrib['nfs'] == 'true' )  else 'on'
+		self.protocols['cifs'] = 'on' 	if ( xmlDoc.find('./volume/protocols').attrib['cifs'] == 'true' ) else 'off'
+
+
+		self.settings = []					# list of vol set commands used
+		self.state = ""						# created, failed or null 
+		self.retCode = 0
+		self.createMsgs = []				# output from each cmd used to 
+											# create the volume
+		
+		
+	def createVolume(self):
+		"""	function to define a gluster volume given an xml volume definition """
+	
+		cmdQueue = []
+		
+		# protocols
+		NFSstate  = 'nfs.disable off'  if ( self.protocols['nfs'] == 'off' )  else 'nfs.disable on'
+		CIFSstate = 'user.cifs enable' if ( self.protocols['cifs'] == 'on' ) else 'user.cifs disable'
+		
+					
+		# create volume syntax
+		createCMD = "gluster vol create " + self.volName + self.replicaParm + " transport tcp "
+		for brick in self.bricks:
+			createCMD += brick + " "
+		
+		createCMD += " force"		# added to allow the root of the brick to be used (glusterfs 3.4)
+		
+		cmdQueue.append(createCMD)
+		
+		# Post Processing Options
+		cmdQueue.append('gluster vol set ' + self.volName + ' ' + NFSstate)
+		cmdQueue.append('gluster vol set ' + self.volName + ' ' + CIFSstate)
+		
+		if self.useCase == 'hadoop':
+			# Added based on work done by Jeff Vance @ Red Hat
+			cmdQueue.append('gluster vol set ' + self.volName + ' quick-read off')
+			cmdQueue.append('gluster vol set ' + self.volName + ' cluster.eager-lock on')
+			cmdQueue.append('gluster vol set ' + self.volName + ' performance.stat-prefetch off')
+			pass
+			
+		elif self.useCase == 'virtualisation':
+			
+			# look to see what type of virt target it is
+			if self.virtTarget == 'glance':
+				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-gid 161')
+				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-uid 161')
+				pass
+			elif self.virtTarget == 'cinder':
+				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-gid 165')
+				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-uid 165')
+				pass
+			elif 'rhev' in self.virtTarget:
+				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-gid 36')
+				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-uid 36')				
+			
+			if ('rhev' in self.virtTarget) or (self.virtTarget == 'cinder'):
+				
+				# Is the virt group available to use
+				if os.path.isfile('/var/lib/glusterd/groups/virt'):
+					cmdQueue.append('gluster vol set ' + self.volName + ' group virt')
+					pass
+				else:
+					# Fallback settings if local virt group definition is not there
+					cmdQueue.append('gluster vol set ' + self.volName + ' quick-read  off')
+					cmdQueue.append('gluster vol set ' + self.volName + ' read-ahead  off')
+					cmdQueue.append('gluster vol set ' + self.volName + ' io-cache  off')
+					cmdQueue.append('gluster vol set ' + self.volName + ' stat-prefetch  off')
+					cmdQueue.append('gluster vol set ' + self.volName + ' eager-lock enable')
+					cmdQueue.append('gluster vol set ' + self.volName + ' remote-dio enable')
+					pass
+				
+		self.settings = list(cmdQueue)
+			
+		# Add volume start to the command sequence
+		cmdQueue.append('gluster vol start ' + self.volName)
+	
+		# log the number of commands that will be run
+		numCmds = len(cmdQueue)
+		cfg.LOGGER.debug("%s Creating volume %s - %d steps", time.asctime(), self.volName, numCmds)
+		
+		# Process the command sequence	
+		retCode = 0
+		stepNum = 1
+		
+		for cmd in cmdQueue:
+			
+			cmdType = ' '.join(cmd.split()[1:3]) + ' ...'
+			cfg.MSGSTACK.pushMsg("Step %d/%d starting (%s)" %(stepNum, numCmds,cmdType))
+			
+			(rc, cmdOutput) = issueCMD(cmd)
+			
+			self.createMsgs += cmdOutput
+			
+			if rc == 0:	# retcode is 1st element, so check it's 0
+							
+				# push this cmd to the queue for reporting in the UI
+				cfg.MSGSTACK.pushMsg("Step %d/%d completed" %(stepNum, numCmds))
+				
+				# Log the cmd being run as successful
+				cfg.LOGGER.info("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
+				cfg.LOGGER.debug("%s Command successful : %s", time.asctime(), cmd)
+				
+			else:
+				cfg.LOGGER.info("%s vol create step failed", time.asctime())
+				
+				cfg.LOGGER.debug("%s command failure - %s", time.asctime(), cmd)
+				
+				cfg.MSGSTACK.pushMsg("Step %d/%d failed - sequence aborted" %(stepNum, numCmds))
+				
+				# problem executing the command, log the response and return
+				retCode = 8
+				break
+				
+			stepNum +=1
+	
+		
+		self.state = "Created" if retCode == 0 else "Failed"
+		
+		self.retCode = retCode
+
+	
 
 if __name__ == '__main__':
 	pass

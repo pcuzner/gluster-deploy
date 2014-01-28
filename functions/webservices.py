@@ -31,11 +31,10 @@ import xml.etree.ElementTree as ETree
 
 import 	functions.config as cfg
 from 	functions.network 		import getSubnets,findService
-from 	functions.gluster 		import GlusterNode, createVolume
+from 	functions.gluster		import Cluster, Volume
 from 	functions.syscalls		import getMultiplier
+from 	functions.utils			import kernelCompare
 
-# define a dict to hold gluster node objects, indexed by the node name
-glusterNodes = {}	
 
 class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	
@@ -65,8 +64,9 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		
 		self.send_response(200)         # completed ok
 		self.end_headers()              # blank line end of http response
-		self.finish()
 		self.server.stop=True
+		self.finish()
+
 		 
 		 
 	def do_POST(self):
@@ -127,10 +127,6 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			if cfg.SERVERLIST:
 				cfg.LOGGER.info("%s Bypassing subnet scan, using nodes from configuration file", time.asctime())
 				response += "OK</status-text><request-type>servers</request-type>"
-				
-				#for node in cfg.SERVERLIST:
-				#	response += "<node>" + node +"</node>"
-				
 				response += "</response>"
 				
 				print "\t\tHost list from the configuration file passed to the UI (bypassing subnet scanning)"
@@ -208,24 +204,24 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			failed = 0
 			cfg.LOGGER.info('%s createCluster joining %s nodes to the cluster', time.asctime(), (len(nodeList)-1))
 						
-			# create the node objects and add to the management dict		
-			for node in nodeList:
+			# create the node objects 
+			for nodeName in nodeList:
 
-				if node.endswith('*'):
+				if nodeName.endswith('*'):
 					# this is the local node, lose the last char
-					node = node[:-1]
-					glusterNodes[node] = GlusterNode(node)
-					glusterNodes[node].localNode = True
-
+					nodeName = nodeName[:-1]
+					
 					# create a node object and set to local
 					# no need for joincluster or success/fail increment on the local node
-					pass
-				else:
-					# create a node object
-					glusterNodes[node] = GlusterNode(node)
+					cfg.CLUSTER.addNode(nodeName)
+					cfg.CLUSTER.node[nodeName].localNode = True
 
-					glusterNodes[node].joinCluster()
-					if glusterNodes[node].inCluster:
+				else:
+					
+					# create a node object
+					cfg.CLUSTER.addNode(nodeName)
+					
+					if cfg.CLUSTER.node[nodeName].inCluster:
 						success += 1
 					else:
 						failed +=1
@@ -236,9 +232,9 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						+ "' failed='" + str(failed) + "' />")
 			
 			# Add the nodes successfully added to the response	(sorted for display purposes)		
-			for node in sorted(glusterNodes):
-				if not glusterNodes[node].localNode:
-					response += "<node name='" + glusterNodes[node].nodeName + "' />"
+			for nodeName in cfg.CLUSTER.nodeList():
+				if not cfg.CLUSTER.node[nodeName].localNode:
+					response += "<node name='" + nodeName + "' />"
 			
 			response += "</response>" 
 			
@@ -251,6 +247,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 			cfg.LOGGER.info('%s gluster.createCluster complete - %d successful, %d failed', time.asctime(), success, failed)			
 		
+
 		
 		elif ( requestType == "push-keys" ):
 
@@ -262,9 +259,10 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				nodeName = node.attrib['server']
 				nodePassword = node.attrib['password']
 				
-				glusterNodes[nodeName].userPassword = nodePassword
-				glusterNodes[nodeName].pushKey()
-				if glusterNodes[nodeName].hasKey:
+				thisNode = cfg.CLUSTER.node[nodeName]
+				thisNode.userPassword = nodePassword
+				thisNode.pushKey()
+				if thisNode.hasKey:
 					success += 1
 				else:
 					failed += 1
@@ -293,19 +291,19 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			diskCount = 0
 			
 			cfg.LOGGER.info('%s findDisks invoked', time.asctime())
-			for node in sorted(glusterNodes.iterkeys()):
+			for nodeName in cfg.CLUSTER.nodeList():
 				
 				# Scan this node for unused disks
-				glusterNodes[node].findDisks()
+				thisNode = cfg.CLUSTER.node[nodeName]
+				thisNode.findDisks()
 				
 				# Look at this nodes diskList - if it's not empty add it to an XML string 
 				# to return to the caller
-				if glusterNodes[node].diskList:
-					#print glusterNodes[node].diskList
+				if thisNode.diskList:
 				
-					retString = retString + "<node><nodename name='" + node + "'/><disks>"
-					for deviceID in sorted(glusterNodes[node].diskList):
-						diskObj = glusterNodes[node].diskList[deviceID]
+					retString = retString + "<node><nodename name='" + nodeName + "'/><disks>"
+					for deviceID in sorted(thisNode.diskList):
+						diskObj = thisNode.diskList[deviceID]
 						sizeGB = diskObj.sizeMB / 1024
 						retString = retString + "<device id='" + deviceID + "' size='" + str(sizeGB) + "' />"
 						diskCount += 1
@@ -318,19 +316,21 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			cfg.LOGGER.info('%s findDisks complete', time.asctime())
 			print "\t\tNodes scanned for available (free) disks (" + str(diskCount) + " found)"
 			
-			
+
 			
 		elif ( requestType == "register-bricks" ):
 
-	
-
 			devices = xmlRoot.findall('device')
+			
+			# Cycle through the devices, and set the formatRequired flag
 			for device in devices:
 				targetHost = device.attrib['host']
 				targetDevice = device.attrib['device']
 				
-				disk = glusterNodes[targetHost].diskList[targetDevice]
-				disk.formatRequired=True 
+				thisNode = cfg.CLUSTER.node[targetHost]
+				
+				brick = thisNode.diskList[targetDevice]
+				brick.formatRequired=True 
 			
 			response = "<response><status-text>OK</status-text>"
 			response += "<brick path='" + cfg.BRICKPATH + "' vgname='" + cfg.VGNAME + "' lvname='" + cfg.LVNAME + "' />"
@@ -339,25 +339,36 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			# of every node in the cluster. They must all tally for these features to be 
 			# used.
 			
-			# FUTURE: Add these capabilities as attributes of a gluster cluster object?
-			lvmSnapshot = "YES"
+			thinpSupport = "YES"
 			btrfsSupport = "YES"
 			
-			# cylcle through all nodes. They must ALL match to have snapshot or btrfs 
+			# use a dict to determine if nodes are all on same version, or mixed
+			versionLookup={}
+			
+			# cycle through all nodes. They must ALL match to have snapshot or btrfs 
 			# features enabled
-			for node in sorted(glusterNodes.iterkeys()):   
-				thisHost = glusterNodes[node]
-				if thisHost.dmthinp == False:
-					lvmSnapshot = "NO"
-				if thisHost.btrfs == False:	# or thisHost.kernelVersion < required level
+			for nodeName in cfg.CLUSTER.nodeList():   
+				thisNode = cfg.CLUSTER.node[nodeName]
+				thisVersion = thisNode.glusterVersion
+				versionLookup[thisVersion] = 'OK'
+				
+				if thisNode.dmthinp == False:
+					thinpSupport = "NO"
+				if (thisNode.btrfs == False) or (not kernelCompare(thisNode.kernelVersion[:2])):
 					btrfsSupport = "NO"
 			
-			response += "<features snapshot='" + lvmSnapshot + "' btrfs='" + btrfsSupport + "' />"
+			# Update the cluster's capability based on the findings from 
+			# each node
+			cfg.CLUSTER.capability['btrfs'] = btrfsSupport
+			cfg.CLUSTER.capability['thinp'] = thinpSupport
+			cfg.CLUSTER.glusterVersion = thisVersion if len(versionLookup) == 1 else "Mixed (Warning!)"
+			
+			response += "<features snapshot='" + thinpSupport + "' btrfs='" + btrfsSupport + "' />"
 			response += "</response>"
 			
 			self.wfile.write(response)
 		
-
+			
 		elif ( requestType == "build-bricks" ):		
 			
 			success = 0 
@@ -384,20 +395,21 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			# UI for brick selection when creating the volume
 			brickList = []	
 						
-			for node in sorted(glusterNodes.iterkeys()):
-				pass
-				thisHost = glusterNodes[node]
+			for nodeName in cfg.CLUSTER.nodeList():
+
+				thisNode = cfg.CLUSTER.node[nodeName]
 				# take a look at this nodes disk list 
 				# for each disk with formatrequired
 				# 	call the formatbrick method
-				# 	if ret_code is ok update the state of the brick and post message to queue(future)
-				if thisHost.diskList:
+				# 	if ret_code is ok update the state of the brick and
+				#      post message to queue
+				if thisNode.diskList:
 					
-					for diskID in thisHost.diskList:
-						thisDisk = thisHost.diskList[diskID]
+					for diskID in thisNode.diskList:
+						thisDisk = thisNode.diskList[diskID]
 						
 						if thisDisk.formatRequired:
-							cfg.LOGGER.debug('%s format requested for node %s, disk %s',time.asctime(), node, thisDisk.deviceID)
+							cfg.LOGGER.debug('%s format requested for node %s, disk %s',time.asctime(), nodeName, thisDisk.deviceID)
 							thisDisk.vgName = vgName
 							thisDisk.mountPoint = mountPoint
 							thisDisk.brickType = brickType
@@ -416,7 +428,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 								thisDisk.thinSize = int((thisDisk.poolSize / 100) * pct)
 							
 							# issue command, and check status of the disk
-							thisDisk.formatBrick(thisHost.userPassword,thisHost.raidCard)
+							thisDisk.formatBrick(thisNode.userPassword,thisNode.raidCard)
 							if thisDisk.formatStatus == 'complete':
 								brickList.append(thisDisk)
 								success += 1
@@ -450,23 +462,26 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			RequestHandler.pollingEnabled = False
 		
 	
-
 		elif ( requestType == "vol-create" ):
 			
 			cfg.LOGGER.info('%s Initiating vol create process', time.asctime())
 			
-			rc = createVolume(xmlRoot)
-
+			cfg.CLUSTER.addVolume(xmlRoot)
+			
+			# Get the last volume from the cluster's volume list
+			volName = cfg.CLUSTER.volumeList()[-1]
+			
+			# Look at the return code from the create process
+			rc = cfg.CLUSTER.volume[volName].retCode
+			
 			if rc == 0:
 				# Create volume was successful
 				cfg.LOGGER.info('%s Volume creation was successful', time.asctime())
 				msg = 'OK'
-				pass
 			else:
 				# Problem creating the volume
 				cfg.LOGGER.info('%s Volume creation failed rc=%d', time.asctime(), rc)
 				msg = 'FAILED'
-				pass
 			
 			response = "<response><status-text>" + msg + "</status-text></response>"
 				

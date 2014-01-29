@@ -194,6 +194,19 @@ class Node:
 				
 		cfg.LOGGER.debug('%s getDisks found %d devices on %s', time.asctime(), len(self.diskList), self.nodeName)
 		
+	def formatCount(self):
+		""" Look at this objects disks, and return a count of the number of disks that 
+			are flagged as needing to be formatted """
+		
+		fmtCount = 0
+		
+		for diskID in self.diskList:
+			if self.diskList[diskID].formatRequired:
+				fmtCount+=1
+		
+		return fmtCount
+		
+		
 class Cluster:
 	""" High Level 'cluster' object referencing nodes """
 	

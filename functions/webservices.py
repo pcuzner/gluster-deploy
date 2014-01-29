@@ -398,6 +398,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			for nodeName in cfg.CLUSTER.nodeList():
 
 				thisNode = cfg.CLUSTER.node[nodeName]
+				multipleDisks = False
+				
 				# take a look at this nodes disk list 
 				# for each disk with formatrequired
 				# 	call the formatbrick method
@@ -405,17 +407,37 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				#      post message to queue
 				if thisNode.diskList:
 					
+					if thisNode.formatCount() > 1:
+						# Set a suffix to add to mountpoint and lvname
+						sfx = 1
+						multipleDisks = True
+						
+						# adjust the mountpoint and lvname if they end in a number
+						if mountPoint[-1].isdigit():
+							mountPoint = mountPoint[:-1]
+						if lvName[-1].isdigit():
+							lvName = lvName[:-1]
+
+						
 					for diskID in thisNode.diskList:
 						thisDisk = thisNode.diskList[diskID]
 						
 						if thisDisk.formatRequired:
 							cfg.LOGGER.debug('%s format requested for node %s, disk %s',time.asctime(), nodeName, thisDisk.deviceID)
+
+							if multipleDisks:
+								thisDisk.mountPoint = mountPoint + str(sfx)
+								thisDisk.lvName     = lvName + str(sfx)
+								sfx += 1
+							else:
+								thisDisk.mountPoint = mountPoint
+								thisDisk.lvName = lvName
+							
 							thisDisk.vgName = vgName
-							thisDisk.mountPoint = mountPoint
 							thisDisk.brickType = brickType
 							thisDisk.snapReserve = snapReserve
 							thisDisk.useCase = useCase
-							thisDisk.lvName = lvName
+
 							thisDisk.snapRequired = snapRequired
 							if ( thisDisk.snapRequired == 'YES' ):
 								pct = 100 - snapReserve
@@ -429,6 +451,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 							
 							# issue command, and check status of the disk
 							thisDisk.formatBrick(thisNode.userPassword,thisNode.raidCard)
+							
 							if thisDisk.formatStatus == 'complete':
 								brickList.append(thisDisk)
 								success += 1

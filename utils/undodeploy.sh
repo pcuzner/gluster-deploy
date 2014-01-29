@@ -43,7 +43,8 @@ function usage {
 
 function unmountFS {
 	local target=$1
-	local cmd="umount $brickPath"
+	local pathName=$2
+	local cmd="umount $pathName"
 
 	echo -e "\t\tUnmounting brick filesystem on $target"
 	if [ "$target" != "localhost" ] ; then
@@ -69,41 +70,78 @@ function fmtCmdOut {
 	
 
 function dropLVM {
+	# Assume that the relationship of brick to lv to pv is 1:1:1
+	#
+
 	local node=$1
+	local lv=$2
 	local conn=""
 	local cmdOut=""
+
+	local pv=$(getPV $node $lv)
+	local vg=$(getVG $node $lv)
 	
 	echo -e "\t\tRemoving LVM definitions(LV and VG)"
-	cmd="pvs | awk '\$2 ~ /^"$vgName"/ {print \$1;}'"
-
-	if [ "$node" != "localhost" ] ; then 
-		conn="ssh $node "
-		local devList=$($conn $cmd)
-	else
-		local devList=$(pvs | awk "\$2 ~ /^$vgName/ { print \$1;}")
+	
+	if [ $node != 'localhost' ]; then 
+		conn="ssh $node"
 	fi
-	
 
-	cmd="vgremove $vgName -f"
+	cmd="lvremove -f $lv"
 	cmdOut=$($pfx $conn $cmd 2>&1)
+	rc=$?
 	fmtCmdOut "$cmdOut"
-	
+	cont=false
 
-	echo -e "\t\tWiping PV label from device(s)"
-	cmd="pvremove $devList"
-	cmdOut=$($pfx $conn $cmd 2>&1)
-	fmtCmdOut "$cmdOut"
+	if [ $rc -eq 0 ]; then 
 
+		cmd="vgreduce $vg $pv"
+		cmdOut=$($pfx $conn $cmd 2>&1)
+		case $? in
+			0) 
+				echo -e "\t\tRemoving $pv from Volume Group $vg"
+				fmtCmdOut "$cmdOut"
+				cont=true
+				;;
+			5)	
+				echo -e "\t\tRemoving volume group $vg"
+				cmd="vgremove $vg"
+				cmdOut=$($pfx $conn $cmd 2>&1)
+				rc=$?
+				if [ $rc -eq 0 ] ; then 
+					fmtCmdOut "$cmdOut"
+					cont=true
+				fi
+				;;
+
+			*)	rc=99
+				;;
+
+		esac
+		
+		if $cont; then 
+			echo -e "\t\tWiping PV label from device(s)"
+			cmd="pvremove $pv"
+			cmdOut=$($pfx $conn $cmd)
+			rc=$?
+			fmtCmdOut "$cmdOut"
+		fi
+			
+	fi
+
+	return $rc
 }
 
 function dropBTRFS {
 	local node=$1
+	# issue a "wipefs -a" against the devices
 }
 
 
 
 function fstabUpdate {
 	local target=$1
+	local pathName=$2
 	local cmd=""
 	local conn=""
 	
@@ -117,18 +155,18 @@ function fstabUpdate {
 	echo -e "\t\tSaving the current fstab to /etc/fstab_saved"
 	$pfx $conn $cmd 
 	
-	echo -e "\t\tRemoving the fstab entry for $brickPath in fstab"
-	cmd="sed -n -i '\,$brickPath,"'!p'"' /etc/fstab"
+	echo -e "\t\tRemoving the fstab entry for $pathName in fstab"
+	cmd="sed -n -i '\,$pathName,"'!p'"' /etc/fstab"
 
 	# If this is the localhost, run the command directly
 	if [ "$target" == "localhost" ] ; then
-		sed -n -i '\,'$brickPath',!p' /etc/fstab	
+		sed -n -i '\,'$pathName',!p' /etc/fstab	
 	else
 		# Execute the commands built inside the variables
 		$pfx $conn $cmd
 	fi
 
-	$pfx $conn rm -fr "$brickPath"
+	$pfx $conn rm -fr "$pathName"
 
 }
 
@@ -182,7 +220,7 @@ function removeSSH {
 	# We only have to remove the keys for the remote hosts, so if this is the
 	# local machine, just return to the caller
 	if [ "$node" == "localhost" ] ; then 
-		echo -e "\t\tRemoving ssh keys skipped (no keys to remove on localhost)"
+		echo -e "\t\tRemoving ssh keys skipped (not applicable on local node)"
 		return 0
 	fi
 
@@ -198,21 +236,38 @@ function removeSSH {
 
 function resetCluster {
 
+	local brickPaths=($@)
+	local lvName=""
+
 	dropVolume || return $?
 
 	echo "Removing node configuration settings..." 
-	
-	for node in $nodeList;  do
+
+	for brickInfo in "${brickPaths[@]}"; do 
+
+		IFS=":"
+		set -- $brickInfo
+		local node=$1
+		local brickPath=$2		
+		unset IFS
+
+		if [ $node == $thisHost ] ; then 
+			node='localhost'
+		fi
 
 		echo -e "\n\tProcessing peer $node"
 
-		unmountFS $node || return $?
+		# It's important to perform the get lv before the unmount
+		# or we lose the x-ref between mountpoint and device
+		lvName=$(getLV $node $brickPath)
 
-		fstabUpdate $node || return $?
+		unmountFS $node $brickPath || return $?
+
+		fstabUpdate $node $brickPath || return $?
 		
 		case "$brickType" in 
 			xfs)
-				dropLVM $node || return $?
+				dropLVM $node $lvName || return $?
 				;;
 			btrfs)	
 				dropBTRFS $node || return $?
@@ -224,9 +279,66 @@ function resetCluster {
 		removeSSH $node || return $?
 
 	done
+}
+function getLocalBrick {
+
+	# I assume that all the bricks across the cluster are formatted in a consistent 
+	# manner by gluster-deploy, so I just need to find the first brick on the 
+	# local node to determine the fs type...fstype then indicates whether this is
+	# and lvm or btrfs environment
+
+	local brickPaths=($@)
+	for brick in "${brickPaths[@]}"; do
+		IFS=":"
+		set -- $brick
+		node=$1
+		if [ $node == $thisHost ]; then 
+			echo $2
+			break
+		fi
+		unset IFS
+	done
+
+}
+
+function getLV {
+	# Look in the mount table for a given brick path to find the associated lv
+	# output is written directly to stdout	
 	
+	local node=$1
+	local pathName=$2
+	if [ $node != 'localhost' ]; then 
+		ssh $node "awk -v fs=$pathName '{ if(\$2 == fs) { print \$1;}}' /proc/mounts"
+	else
+		awk -v fs=$pathName '{ if($2 == fs) { print $1;}}' /proc/mounts	
+	fi
+
 }
 	
+function getPV {
+	# Function which captures the pv of a given lv - output is written directly to stdout
+	#
+	
+	local node=$1
+	local lv=$2
+	if [ $node != 'localhost' ]; then 
+		ssh $node "lvdisplay $lv --maps | awk '/[Pp]hysical [Vv]olume/ { print \$3;}'"	
+	else
+		lvdisplay $lv --maps | awk '/[Pp]hysical [Vv]olume/ { print $3;}'
+	fi
+}
+
+function getVG {
+	local node=$1
+	local lv=$2
+
+	if [ $node != 'localhost' ] ; then 
+		ssh $node "lvs $lv --noheadings | awk '{print \$2;}'"
+	else 
+		lvs $lv --noheadings | awk '{print $2;}'
+	fi
+}
+
 
 function main {
 	
@@ -276,27 +388,22 @@ function main {
 		return 4
 	fi
 
-	brickList=$(gluster vol status $volName | tr ":" " " | awk '/Brick/ {print $3;}')
+	volList=$(gluster vol list 2>&1)
 	
+	#brickList=$(gluster vol status $volName | tr ":" " " | awk '/Brick/ {print $3;}')
+	brickList=$(gluster vol status $volName | awk '/^Brick/ {print $2;}')
 	if [ -z "$brickList" ] ; then
 			echo "-> Volume '$volName' does not exit. undodeploy.sh run aborted"
 			exit 12
 	fi
 	
+	localBrick=$(getLocalBrick "$brickList")
 	
-	
-	
-	# All bricks will be named the same for this volume, so use set to split the 
-	# brickList string up into $1,$2 ... and then just use the first definition ($1)
-	# e.g. 	brickList='/gluster/brick1 /gluster/brick1 /gluster/brick1'
-	#      	becomes
-	#		brickPath='/gluster/brick1'	
-	set -- $brickList
-	brickPath=$1
+	lvName=$(getLV 'localhost' $localBrick)
 
-	lvName=$(grep $brickPath /proc/mounts | awk '{ print $1;}')
-	vgName=$(lvs $lvName --noheadings | awk '{print $2;}')
- 	brickType=$(awk -v fs=$brickPath '{ if($2 == fs) { print $3;}}' /proc/mounts)
+	vgName=$(getVG 'localhost' $lvName)
+
+ 	brickType=$(awk -v fs=$localBrick '{ if($2 == fs) { print $3;}}' /proc/mounts)
 	
 	echo -e "Actions to undertake are as follows;"
 	echo -e "\t- drop gluster volume called $volName"
@@ -304,9 +411,7 @@ function main {
 	echo -e "\t- drop brick filesystem ($brickType)"
 	echo -e "\t- drop associated LVM volume group ($vgName) and all associated LV's & PV's"
 	echo -e "\t- remove fstab entries for filesystems used for the bricks"
-	
 
-	
 	while true; do
 		read -r -p "Are you Sure (y/n)?" confirm
 		case $confirm in 
@@ -322,7 +427,7 @@ function main {
 
 	if $goAhead ; then 
 		
-		resetCluster
+		resetCluster "$brickList"
 
 	else
 		echo -e "\n\nRun Aborted by user"

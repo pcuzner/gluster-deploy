@@ -55,28 +55,46 @@ Development Log
 
 0.6 (pending)
   - review object structure - introduce cluster->nodes->volume->brick schema - DONE (3dc0e0a5)
-  - treat the lv and mountpoint names as prefixes, if more than one filesystem needs to be built on a node, allowing a suffix to be added - DONE (b8f254a0)
+  - Support multiple disks from the same node DONE (b8f254a0)
+    * a numberic suffix is added to mountpoint and lv names if a node provides 
+      >1 disk for formatting
+    * assumptions in undodeploy reduced. Now using vg,lv and pv information from
+      the brick definitions - enabling support for multiple bricks from the 
+      same node
+  - move the brick formatting for each node into separate threads - reducing setup time. 
   - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
-  - move the brick formatting into separate threads - one per brick to drive all the formatting concurrently. 
 
 
 0.7 (planned)
   - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
-  - update volCreate page to allow user to build >1 volume during the run
-  - update buildBrick to account for raid card to set appropriate offsets on pvcreate and mkfs.xfs commands
-  - add tooltip code 
-  - add tooltips to help explain some ambiguous elements of the UI
+  - Add a magic button to the vol create page to decide on the brick layout automagically
+  - add an exit button to terminate the UI before the wizard is complete 
+    -> Add a toolbar div -  exit button initially
+
+0.8 (planned)
+  - add a help button to the toolbar, for step related guidance reusing the modal interface
 
   
 Items under consideration
-  - add an exit button to terminate the UI before the wizard is complete
+
+  - update buildBrick to account for raid card to set appropriate offsets on pvcreate and mkfs.xfs commands
+    -> Need access to different configurations to test integration with specific raid card cli's
+
   - change the code to permit forward and back navigation within the steps
-  - add the capability to update /etc/hosts on nodes (when DNS is not available/resolving)
+    -> Would need code base to include 'undo' code
+
+  - update volCreate page to allow user to build >1 volume during the run
+    -> likely need a redesign of brick to volume UI
+
+  - add the capability to update /etc/hosts on nodes (when DNS is not available/resolving) 
+    -> Could be an additional section in the config file (deploy.cfg)
+
   - change the webserver to use a self signed cert for http access
-  - Review the ssh/pexpect code - can it be tidier?
-  - Add a magic button to the vol create page to decide on the brick layout automagically
+
   - add a disk wipe capability in the event bricks are reused (i.e. lv already exists - perhaps the 
     disk selection should also include defined disks, that are empty?)
+    -> although these can be detected, it leaves the tool open to user error and data loss
+
 
 
   

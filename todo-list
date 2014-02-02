@@ -61,18 +61,24 @@ Development Log
     * assumptions in undodeploy reduced. Now using vg,lv and pv information from
       the brick definitions - enabling support for multiple bricks from the 
       same node
-  - move the brick formatting for each node into separate threads - reducing setup time. 
-  - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
+  - move the brick formatting for each node into separate threads - reducing setup time.DONE (66aa2cab)
+  - Update finddevs to gather os release information - DONE
+  - add os version info to node objects - DONE
+  - fix in finddevs to return raidcard type more accurately - DONE
+  - added new icons for planned exit and help buttons - DONE
+  - add toolbar for help and quit functions (will be disabled in this release)
 
 
 0.7 (planned)
-  - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
+  - implement the quit button (only active when tasks are not active)
   - Add a magic button to the vol create page to decide on the brick layout automagically
-  - add an exit button to terminate the UI before the wizard is complete 
-    -> Add a toolbar div -  exit button initially
 
 0.8 (planned)
+  - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
+
+0.9 (planned)
   - add a help button to the toolbar, for step related guidance reusing the modal interface
+  - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
 
   
 Items under consideration

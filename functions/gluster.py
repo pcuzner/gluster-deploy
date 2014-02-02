@@ -131,6 +131,7 @@ class Node:
 		self.glusterVersion = ''
 		self.memGB = 0
 		self.cpuCount = 0
+		self.osVersion = ''
 		
 		
 	def pushKey(self):

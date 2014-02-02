@@ -197,6 +197,7 @@ class Node:
 			self.memGB = int(sysInfo.attrib['memsize']) / 1024**2
 			self.cpuCount = int(sysInfo.attrib['cpucount'])
 			self.raidCard = sysInfo.attrib['raidcard']
+			self.osVersion = sysInfo.attrib['osversion']
 			
 			# Process the disk information
 			for disk in freeDisks:

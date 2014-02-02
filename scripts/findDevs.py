@@ -137,19 +137,19 @@ def getRaid():
 	cmd = "lspci | grep -i raid"
 	(rc, pciOutput) = issueCMD(cmd)
 
-	if len(pciOutput) == 0:
-		raidCard = "unknown"
+	if pciOutput[0] == "":
+		raidCard = "none"
 	else:							# lspci has returned something
 		pciInfo = pciOutput[0].lower()
-		if pciInfo == '':			# if no raid is present we just get null
-			raidCard = 'unknown'
+		
+		if 'smart' in pciInfo:
+			raidCard = 'smartarray'
+		elif 'lsi' in pciInfo:
+			raidCard = 'lsi'
+		elif 'adaptec' in pciInfo:
+			raidCard = 'adaptec'
 		else:
-			if 'smart' in pciInfo:
-				raidCard = 'smartarray'
-			elif 'lsi' in pciInfo:
-				raidCard = 'lsi'
-			elif 'adaptec' in pciInfo:
-				raidcard = 'adaptec'
+			raidCard = 'unknown'
 		
 	return raidCard
 

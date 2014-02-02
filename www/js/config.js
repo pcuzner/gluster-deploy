@@ -9,7 +9,7 @@ var MAXREPLICA = 2;
 var RAWGB = 0;
 var BRICKSUSED = 0;
 
-var pollingInterval = 1500; 	// ms polling delay used by queryMsgs
+var pollingInterval = 1000; 	// ms polling delay used by queryMsgs
 
 var msgLog = new Array();		// array holding status messages from the server 
 

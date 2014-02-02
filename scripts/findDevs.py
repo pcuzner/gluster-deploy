@@ -112,6 +112,8 @@ def filterBTRFS(disks):
 	Receive potential disks to use for gluster, and attempt to query btrfs to see
 	if they are btrfs devices. If so, filter them out and return remaining devices
 	to the caller 
+	
+	NB. This needs to run under root to work
 	"""
 	
 	toDelete =[]

@@ -31,7 +31,7 @@ import xml.etree.ElementTree as ETree
 
 import 	functions.config as cfg
 from 	functions.network 		import getSubnets,findService
-from 	functions.gluster		import Cluster, Volume
+from 	functions.gluster		import Cluster, Volume, FormatDisks
 from 	functions.syscalls		import getMultiplier
 from 	functions.utils			import kernelCompare
 
@@ -371,116 +371,118 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 		elif ( requestType == "build-bricks" ):		
 			
-			success = 0 
-			failed = 0
+			# Creating the bricks is done in two phases;
+			#
+			# 1. use the params from UI to set the parameters on each
+			#    disk
+			# 2. Initiate the format process by node (1 thread per node)
+			#
 			
-			# process the parameter XML file to set variables up for the script			
+			cfg.CLUSTER.resetOpStatus()
+			brickList=[]
+			
+			# define the variables that define the configuration of the brick
+			brickParms=['vgName','lvName','useCase','mountPoint','snapRequired', 'snapReserve','brickType']
+			
+			# process the parameter XML file from the UI 		
 			parms = xmlRoot.find('brickparms')
 			
+			snapReserve = 0 									# default - no reserve
 			useCase = parms.attrib['usecase']
 			brickType = parms.attrib['brickprovider']			# LVM or BTRFS
 			snapRequired = parms.attrib['snaprequired']			# YES or NO
-
-			lvName = parms.attrib['lvname'] if ( brickType == 'LVM' ) else ""
+			lvTemplate = parms.attrib['lvname'] if ( brickType == 'LVM' ) else ""
 			vgName = parms.attrib['volgroup'] if (brickType == 'LVM') else ""
+			pathTemplate = parms.attrib['mountpoint']
 			
 			if snapRequired == 'YES':
 				snapReserve = int(parms.attrib['snapreserve'])
-			else:
-				snapReserve = 0
 			
-			mountPoint = parms.attrib['mountpoint']
-
-			# Maintain a list of bricks that were formatted to pass back to the
-			# UI for brick selection when creating the volume
+			# brickList will provide a list of the bricks for formatting
 			brickList = []	
-						
+			
+			# 1. Set up the brick's parameters
 			for nodeName in cfg.CLUSTER.nodeList():
 
 				thisNode = cfg.CLUSTER.node[nodeName]
-				multipleDisks = False
 				
-				# take a look at this nodes disk list 
-				# for each disk with formatrequired
-				# 	call the formatbrick method
-				# 	if ret_code is ok update the state of the brick and
-				#      post message to queue
-				if thisNode.diskList:
+				disks2Format = thisNode.formatCount()
+				
+				nodePath = pathTemplate
+				nodeLV = lvTemplate
+				
+				if disks2Format > 0:
 					
-					if thisNode.formatCount() > 1:
+					if disks2Format > 1:
 						# Set a suffix to add to mountpoint and lvname
 						sfx = 1
-						multipleDisks = True
 						
-						# adjust the mountpoint and lvname if they end in a number
-						if mountPoint[-1].isdigit():
-							mountPoint = mountPoint[:-1]
-						if lvName[-1].isdigit():
-							lvName = lvName[:-1]
+						# adjust the template if it ends in a numeric
+						if nodePath[-1].isdigit():
+							nodePath = nodePath[:-1]
+						if nodeLV[-1].isdigit():
+							nodeLV = nodeLV[:-1]
 
-						
 					for diskID in thisNode.diskList:
 						thisDisk = thisNode.diskList[diskID]
 						
 						if thisDisk.formatRequired:
 							cfg.LOGGER.debug('%s format requested for node %s, disk %s',time.asctime(), nodeName, thisDisk.deviceID)
 
-							if multipleDisks:
-								thisDisk.mountPoint = mountPoint + str(sfx)
-								thisDisk.lvName     = lvName + str(sfx)
+							if disks2Format > 1:
+								mountPoint = nodePath + str(sfx)
+								lvName     = nodeLV + str(sfx)
 								sfx += 1
 							else:
-								thisDisk.mountPoint = mountPoint
-								thisDisk.lvName = lvName
-							
-							thisDisk.vgName = vgName
-							thisDisk.brickType = brickType
-							thisDisk.snapReserve = snapReserve
-							thisDisk.useCase = useCase
-
-							thisDisk.snapRequired = snapRequired
-							if ( thisDisk.snapRequired == 'YES' ):
-								pct = 100 - snapReserve
+								mountPoint = pathTemplate
+								lvName = lvTemplate
 								
-								# BZ998347 prevents a thinpool being defined with 100%PVS, so
-								# getMuliplier used to look at the device size and decide on a
-								# semi-sensible % to use for the thinpool lv.
-								pctMultiplier = getMultiplier(thisDisk.sizeMB)
-								thisDisk.poolSize = int(((thisDisk.sizeMB - 4) * pctMultiplier))		# 99.9% of HDD
-								thisDisk.thinSize = int((thisDisk.poolSize / 100) * pct)
-							
-							# issue command, and check status of the disk
-							thisDisk.formatBrick(thisNode.userPassword,thisNode.raidCard)
-							
-							if thisDisk.formatStatus == 'complete':
-								brickList.append(thisDisk)
-								success += 1
-							else:
-								failed += 1
+							settings={}
+							for keyName in brickParms:
+								settings[keyName] = eval(keyName)
+								
+							thisDisk.setParms(settings)	
 
+							brickList.append(thisDisk)							
 
+			# 2. Initiate the format threads
+			threadList=[]
+			for nodeName in cfg.CLUSTER.nodeList():
+				
+				thisNode = cfg.CLUSTER.node[nodeName]
+				if thisNode.formatCount() > 0:
+					
+					newThread = FormatDisks(thisNode)
+					newThread.start()
+					threadList.append(newThread)
+					
+			for thread in threadList:
+				thread.join()						# wait for this thread to terminate
 			
-			# Future: check the brickList to only allow bricks of the same size through to vol create
+			# Remove any intended bricks from the list that have their failed
+			# flag set
+			for brick in brickList:
+				if brick.formatStatus == "failed":
+					brickList.remove[brick]
 			
 			# Now the bricks have been formatted, we process the list
-			# to assemble an xml string ready for the UI to load into an
-			# array for use in the volCreate step				
-			respText = 'OK' if (failed == 0 ) else 'FAILED'
+			# to assemble an xml string ready for the volCreate UI page
+			respText = 'OK' if (cfg.CLUSTER.opStatus['failed'] == 0 ) else 'FAILED'
 			response = ( "<response><status-text>" + respText + "</status-text>"
-						+ "<summary success='" + str(success) + "' failed='" + str(failed) + "' />" )
+						+ "<summary success='" + str(cfg.CLUSTER.opStatus['success']) + "' failed='" + str(cfg.CLUSTER.opStatus['failed']) + "' />" )
 			
 			for brick in brickList:
+				
 				# eg. <brick fsname='/gluster/brick' size='10' servername='rhs1-1' />
-
 				sizeGB = ( brick.sizeMB / 1024 ) if brick.thinSize == 0 else ( brick.thinSize / 1024 )
-
 				response += "<brick fsname='" + brick.mountPoint + "' size='" + str(sizeGB) + "' servername='" + brick.nodeName + "' />"
+				
 			response += "</response>"
 
 			# Send to UI
 			self.wfile.write(response)
 			
-			print "\t\tBricks formatted : " + str(success) + " successful, " + str(failed) + " failed"
+			print "\t\tBricks formatted : " + str(cfg.CLUSTER.opStatus['success']) + " successful, " + str(cfg.CLUSTER.opStatus['failed']) + " failed"
 
 			RequestHandler.pollingEnabled = False
 		
@@ -538,7 +540,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 						
 		elif ( requestType == "quit"):
-			print "\t\tQuit received from the UI, shutting down"
+			print "\t\tQuit received from the UI"
 			
 			# Update the httpd servers state, so the run forever loop can be exited
 			self.server.stop = True

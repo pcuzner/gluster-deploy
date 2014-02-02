@@ -26,6 +26,7 @@ import xml.etree.ElementTree as ETree
 import logging
 import time
 import os
+import threading
 
 from 	functions.syscalls 	import issueCMD, SSHsession
 from 	functions.utils 	import logErrorMsgs
@@ -39,7 +40,7 @@ class Brick:
 		self.sizeMB = size
 		self.formatRequired = formatRequired
 		self.formatComplete = False			# deprecated
-		self.formatStatus = 'pending'		# pending -> complete || failed
+		self.formatStatus = 'pending'		# pending -> success || failed
 		self.mountPoint = ""
 		self.snapRequired = 'NO'
 		self.thinSize = 0
@@ -49,6 +50,27 @@ class Brick:
 		self.lvName = ""
 		self.localDisk = False
 		self.brickType = 'LVM'
+
+	def setParms(self, settings):
+		""" configure this brick based on the dict passed to it (settings) """
+		
+		# Use the dict to set all the bricks parameters
+		for keyName in settings:
+			if hasattr(self, keyName):
+				setattr(self, keyName, settings[keyName])
+
+		# Make some adjustments for snap enabled bricks
+		if ( self.snapRequired == 'YES' ) and (self.brickType == 'LVM'):
+			pct = 100 - self.snapReserve
+			
+			# BZ998347 prevents a thinpool being defined with 100%PVS, so
+			# getMuliplier used to look at the device size and decide on a
+			# 'semi-sensible' % to use for the thinpool lv.
+			pctMultiplier = getMultiplier(self.sizeMB)
+			self.poolSize = int(((self.sizeMB - 4) * pctMultiplier))		# 99.9% of HDD
+			self.thinSize = int((self.poolSize / 100) * pct)
+
+		
 		
 	def formatBrick(self,userPassword,raidCard):
 		"""	Pass the node the format script for this brick """
@@ -76,14 +98,13 @@ class Brick:
 
 		if self.localDisk:
 			(rc, resp) = issueCMD(scriptName)
-			self.formatStatus = 'complete' if (rc == 0) else 'failed'
-
 		else:
-			
 			ssh=SSHsession('root',self.nodeName,userPassword)
 			(rc, resp) = ssh.sshScript(scriptName)
 			
-			self.formatStatus = 'complete' if (rc == 0) else 'failed'
+		self.formatStatus = 'success' if (rc == 0) else 'failed'
+		
+		cfg.CLUSTER.opStatus[self.formatStatus] += 1
 		
 		cfg.MSGSTACK.pushMsg("%s format on %s ended, RC=%d" %(self.deviceID, self.nodeName, rc))
 		
@@ -101,7 +122,7 @@ class Node:
 		self.hasKey = False
 		self.diskScanned = False
 		self.brickCreated = False			# not needed?
-		self.diskList = {}
+		self.diskList = {}					# device name pointing to Brick Object
 		self.raidCard=''
 		self.kernelVersion = ''
 		self.kernelVersionFull = ''
@@ -216,6 +237,7 @@ class Cluster:
 		self.glusterVersion=""
 		self.brickType=""
 		self.capability={}				# btrfs, thinp for example
+		self.opStatus = { 'success':0, 'failed':0 }
 
 	def addNode(self,newNode):
 		""" Create a new node, and link it to this cluster object """
@@ -242,6 +264,11 @@ class Cluster:
 		
 	def size(self):
 		return len(self.node.keys())
+		
+	def resetOpStatus(self):
+		self.opStatus['success'] = 0
+		self.opStatus['failed'] = 0
+		return
 
 
 class Volume:
@@ -387,7 +414,31 @@ class Volume:
 		
 		self.retCode = retCode
 
+class FormatDisks(threading.Thread):
 	
+	def __init__(self,nodeObject):
+		self.node = nodeObject
+		threading.Thread.__init__(self)
+	
+	def run(self):
+		""" Loop through the disks that need formatting on this node """
+		
+		cfg.LOGGER.debug("%s Thread started to process disk formats for node %s", time.asctime(), self.node.nodeName)
+		
+		thisNode = self.node
+		
+		for diskID in self.node.diskList:
+			thisDisk = self.node.diskList[diskID]
+			if thisDisk.formatRequired:
+				thisDisk.formatBrick(thisNode.userPassword,thisNode.raidCard)
+				pass
+	
+		
+		cfg.LOGGER.debug("%s Format thread complete for node %s", time.asctime(), self.node.nodeName)
+		
+		return
+		
+
 
 if __name__ == '__main__':
 	pass

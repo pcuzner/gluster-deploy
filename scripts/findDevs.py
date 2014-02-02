@@ -166,6 +166,12 @@ def getSysInfo():
 	sysInfo['memsize'] = open('/proc/meminfo').readlines()[0].split()[1]
 	sysInfo['cpucount'] = str(len([ p for p in open('/proc/cpuinfo').readlines() if p.startswith('processor')]))
 	sysInfo['raidcard'] = getRaid()
+
+	if os.path.exists('/etc/redhat-storage-release'):
+		sysInfo['osversion'] = open('/etc/redhat-storage-release').readlines()[0].rstrip('\n')
+	else:
+		sysInfo['osversion'] = open('/etc/issue').readlines()[0].rstrip('\n')
+
 	
 	return sysInfo 
 
@@ -192,7 +198,8 @@ def main():
 		deviceInfo = "<data>" 
 		deviceInfo += ( "<sysinfo kernel='" + sysInfo['kernel'] + "' dmthinp='" + sysInfo['thinp'] + "' btrfs='"
 				+ sysInfo['btrfs'] + "' glustervers='" + sysInfo['glustervers'] + "' memsize='" + sysInfo['memsize']
-				+ "' cpucount='" + sysInfo['cpucount'] + "' raidcard='" + sysInfo['raidcard'] + "' />" ) 
+				+ "' cpucount='" + sysInfo['cpucount'] + "' raidcard='" + sysInfo['raidcard'] 
+			 	+ "' osversion='" + sysInfo['osversion'] + "' />" ) 
 	
 	
 		for disk in unusedDisks:
@@ -205,6 +212,7 @@ def main():
 		# to aid testing and debug
 		deviceInfo = "\nSystem Information\n"
 		deviceInfo += ( "\tKernel         - " + sysInfo['kernel'] + "\n"
+					+   "\tOS Release     - " + sysInfo['osversion'] + "\n"
 					+   "\tInstalled RAM  - " + str(int(sysInfo['memsize'])/1024) + " MB\n"
 					+   "\tCores/Threads  - " + sysInfo['cpucount'] + "\n"
 					+   "\tRaid Card Info - " + sysInfo['raidcard'] + "\n\n"

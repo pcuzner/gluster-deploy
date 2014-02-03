@@ -74,6 +74,14 @@
 <!-- Overlay mask used to darken the main window for the modal dialog -->
 <div class="md-overlay"></div>
 
+<div id="toolbar">
+	<span></span>
+	<button type="button"  class="toolbarBtn icon-info" id="helpme" onclick="alert('Help Selected');" onmouseover="this.title='Get help for this page'" 
+			onmouseout="this.title=''"  disabled ></button>
+	<button type="button"  class="toolbarBtn icon-exit" id="quit" onclick="alert('Quit Selected');" onmouseover="this.title='Quit the UI'" 
+			onmouseout="this.title=''" disabled></button>
+</div>
+
 <div id="steps" class="invisible" >
 		<ul style="list-style:none; padding:0px;">
 			<li id="m-overview" class="pending">Overview</li>

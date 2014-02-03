@@ -216,6 +216,38 @@ margin-left: 15px;
 	text-align:right;
 }
 
+/************************************/
+/* Toolbar containing the help/quit */
+/* buttons                          */
+/************************************/
+#toolbar {
+	position:fixed;
+	left:-82px;
+	top:5px;
+	background-color:#808080;
+	border: 1px solid white;
+	width:90px;
+	height:40px;
+	border-radius:8px;
+	transition: all 300ms;
+	-o-transition: all 300ms;
+	-webkit-transition: all 300ms;
+	-moz-transition: all 300ms;
+	z-index:999;
+	opacity:0;
+}
+
+#toolbar:not([disabled]):hover  {
+	left:-6px;
+	box-shadow: 3px 3px 3px #888888;
+	
+}
+
+/* Padding 'span' for better button alignement */
+#toolbar span {
+	display:inline-block;
+	width:5px;
+}
 
 
 /************************************/

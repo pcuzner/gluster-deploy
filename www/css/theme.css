@@ -78,6 +78,21 @@ h2 {
 
 }
 
+/**************************************************************/
+/* Define the look of the toolbar buttons                     */
+/**************************************************************/
+.toolbarBtn {
+	border-radius:14px;
+	border:1px solid #c0c0c0;
+	height:28px;
+	margin-left: 3px;
+	margin-top:5px;
+	width:30px;
+	outline:none;	/* needed for chrome to avoid button selected outline */
+}
+
+
+
 select {
 	position:relative;
 	border: 1px solid #c0c0c0; 
@@ -338,7 +353,7 @@ table tr:hover td {
 .icon-keys:before { content: '\e809'; }
 .icon-next:before { content: '\e80a'; }
 .icon-search:before { font-size:12px; content: '\e80d'; position:relative; top:-.1em; }
-.icon-exit:before { content: '\e80f'; }
-.icon-info:before { content: '\e810'; }
+.icon-exit:before { content: '\e80f'; margin-left: .3em; font-size:18px;}
+.icon-info:before { content: '\e810'; margin-left:.65em;font-size:14px;}
 .icon-wand:before { content: '\e80c'; }
 .icon-replicate:before { content: '\e811'; }

@@ -37,6 +37,8 @@ function slide(oldDiv, newDiv) {
 	switch (newDiv) {
 		
 		case 'error' :
+			disableDiv(toolbar);
+			document.getElementById('toolbar').className = 'invisible'
 			break;
 		
 		default : 

@@ -34,13 +34,18 @@ function slide(oldDiv, newDiv) {
 
 	document.getElementById(newDiv).className = 'slide';
 	
-	if ( newDiv != 'error' ) {
+	switch (newDiv) {
 		
-		// Update the menu area
-		var oldTask = 'm-' + oldDiv
-		var newTask = 'm-' + newDiv
-		document.getElementById(oldTask).className = 'done';
-		document.getElementById(newTask).className = 'active';
+		case 'error' :
+			break;
+		
+		default : 
+			// Update the menu area
+			var oldTask = 'm-' + oldDiv
+			var newTask = 'm-' + newDiv
+			document.getElementById(oldTask).className = 'done';
+			document.getElementById(newTask).className = 'active';
+			break;
 	}
 	
 	disableDiv(oldDiv);
@@ -60,9 +65,12 @@ function showBusy(msg) {
 		document.getElementById('busyLog').className = "";
 		document.getElementById('busyLog').innerHTML = "";
 		msgLog.length = 0									// reset the message log array
+		
+		document.getElementById('quitBtn').disabled = true;
 	}
 	else {
 		document.getElementById('busy').style.visibility = 'visible';
+		document.getElementById('quitBtn').disabled = false;
 	}
 	
 }

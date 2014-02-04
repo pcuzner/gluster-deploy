@@ -53,7 +53,7 @@ Development Log
     * tidied up module imports 
     * renamed globalvars module as 'config' to observe standard naming conventions
 
-0.6 (pending)
+0.6 (complete 04/02/2014)
   - review object structure - introduce cluster->nodes->volume->brick schema - DONE (3dc0e0a5)
   - Support multiple disks from the same node DONE (b8f254a0)
     * a numberic suffix is added to mountpoint and lv names if a node provides 
@@ -66,7 +66,8 @@ Development Log
   - add os version info to node objects - DONE
   - fix in finddevs to return raidcard type more accurately - DONE
   - added new icons for planned exit and help buttons - DONE
-  - add toolbar for help and quit functions (will be disabled in this release)
+  - add toolbar for help and quit functions (will be disabled in this release) - DONE (4e1374f1)
+  - fix: query thread getting disabled, before it could start during brick definition. Added a time delay to starting the query polling, after the build-brick code gets invoked
 
 
 0.7 (planned)

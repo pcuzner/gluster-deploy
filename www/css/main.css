@@ -234,7 +234,6 @@ margin-left: 15px;
 	-webkit-transition: all 300ms;
 	-moz-transition: all 300ms;
 	z-index:999;
-	opacity:0;
 }
 
 #toolbar:not([disabled]):hover  {

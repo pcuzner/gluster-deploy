@@ -159,10 +159,12 @@ input[type='text'].error {
 	box-shadow: 0 1px 0 red inset, 0 -1px 0 red inset, 1px 0 0 red inset, -1px 0 0 red inset, 0 0 4px rgba(255,0,0,0.5);
 }
 
-
+/* removed due to switch to font icons for tick marks
 .tick {
 	list-style-image:url("../images/bullet-tick.png") ;
 }
+
+*/
 
 button {
 	border-radius: 8px; 

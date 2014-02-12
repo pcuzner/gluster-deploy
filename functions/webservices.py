@@ -41,6 +41,10 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	adminIP = ''
 	pollingEnabled = False
 	pollingEnabledTasks = ['build-bricks','vol-create', 'find-nodes']
+	
+	# define a list to hold a summary completion message added at the end 
+	# of each phase of the 'wizard'
+	taskLog = []
 
 	def do_GET(self):
 		""" 
@@ -129,7 +133,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				response += "OK</status-text><request-type>servers</request-type>"
 				response += "</response>"
 				
-				print "\t\tHost list from the configuration file passed to the UI (bypassing subnet scanning)"
+				msg = "Candidate servers provided by the configuration file (bypassing subnet scanning)"
+
 				
 			else:
 				# server list has not been provided, so let look at the hosts IP config and 
@@ -147,11 +152,13 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				
 					cfg.LOGGER.debug("%s network.getSubnets found - %s", time.asctime(), allSubnets)
 					
-					print "\t\tHost checked for active NIC's"				
+					msg = "Candidate servers determined by subnet scan"
 				
 				else:
 					response = "<response><status-text>FAILED</status-text></response>"
-				
+					
+			RequestHandler.taskLog.append(msg)
+			print "\t\t" + msg	
 			self.wfile.write(response)
 			
 		elif ( requestType == "find-nodes" ):
@@ -180,7 +187,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			else:
 				response = "<response><status-text>FAILED</status-text></response>"
 
-			print "\t\tNodes scanned for open glusterd ports - " + str(len(nodeList)) + " found"
+
 			
 			# Using the list of servers for the nodes completes really quickly, and they never get displayed
 			# but stack in the message stack, appearing on the next tasks msg log. To prevent this, we drop
@@ -189,6 +196,9 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				cfg.MSGSTACK.reset()
 			
 			self.wfile.write(response)
+			msg = "%d candidate servers found that have glusterd running"%(len(nodeList))
+			RequestHandler.taskLog.append(msg)
+			print "\t\t" + msg
 			
 			RequestHandler.pollingEnabled = False	
 			
@@ -240,7 +250,12 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 			cfg.LOGGER.debug('%s createCluster results - success %d, failed %d',time.asctime(), success, failed)
 			
-			print "\t\tCluster created - added " + str(success) + " nodes to this node (" + str(failed) + " nodes failed)"
+			
+			msg = "Cluster creation complete - %d nodes successful, %d nodes failed"%(success,failed)
+			print "\t\t" + msg
+			
+			# Add task completion state to the log
+			RequestHandler.taskLog.append(msg)
 
 			# return success and failed counts to the caller (UI)			
 			self.wfile.write(response)
@@ -274,11 +289,15 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			response = ( "<response><status-text>" + respText + "</status-text><summary success='" 
 						+ str(success) + "' failed='" + str(failed) + "' /></response>" )
 						
-			self.wfile.write(response)
-			
 			cfg.LOGGER.info('%s pushKeys complete - success %d, failed %d', time.asctime(), success, failed)
 			
-			print "\t\tSSH keys distributed"
+			msg = "SSH keys distributed - %d successful, %d failed"%(success,failed)
+			
+			# Add task completion state to the log
+			RequestHandler.taskLog.append(msg)
+			
+			self.wfile.write(response)
+			print "\t\t" + msg
 			
 			
 			
@@ -314,7 +333,10 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.wfile.write(retString)
 			
 			cfg.LOGGER.info('%s findDisks complete', time.asctime())
-			print "\t\tNodes scanned for available (free) disks (" + str(diskCount) + " found)"
+			
+			msg = "Nodes scanned, %d candidate disks detected"%(diskCount)
+			RequestHandler.taskLog.append(msg)
+			print "\t\t" + msg
 			
 
 			
@@ -481,8 +503,10 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 			# Send to UI
 			self.wfile.write(response)
+			msg = "Candidate filesystems formatted as 'bricks' - %d successful, %d failed"%(cfg.CLUSTER.opStatus['success'],cfg.CLUSTER.opStatus['failed'])
+			RequestHandler.taskLog.append(msg)
 			
-			print "\t\tBricks formatted : " + str(cfg.CLUSTER.opStatus['success']) + " successful, " + str(cfg.CLUSTER.opStatus['failed']) + " failed"
+			print "\t\t"+msg
 
 			RequestHandler.pollingEnabled = False
 		
@@ -502,18 +526,22 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			if rc == 0:
 				# Create volume was successful
 				cfg.LOGGER.info('%s Volume creation was successful', time.asctime())
-				msg = 'OK'
+				createMsg = 'OK'
+				msg = "Gluster volume '%s' created successfully"%(volName) 
 			else:
 				# Problem creating the volume
 				cfg.LOGGER.info('%s Volume creation failed rc=%d', time.asctime(), rc)
-				msg = 'FAILED'
+				createMsg = 'FAILED'
+				msg = "Volume create failed for %s"%(volName)
 			
-			response = "<response><status-text>" + msg + "</status-text></response>"
+			response = "<response><status-text>" + createMsg + "</status-text></response>"
+			
+			RequestHandler.taskLog.append(msg)
 				
 			self.wfile.write(response)	
 			
-			print "\t\tVolume create result: " + msg	
-			
+			print "\t\t" + msg
+						
 			RequestHandler.pollingEnabled = False	
 
 

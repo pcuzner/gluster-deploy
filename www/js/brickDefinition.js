@@ -97,7 +97,7 @@ function buildFmtRequest() {
 	// Pass the string back to the server
 	xml_http_post('../www/main.html', xmlString, bricksDefined);
 	
-	setTimeout(enableMsgLog(),400);
+	setTimeout(enableMsgLog,400);
 }
 
 

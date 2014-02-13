@@ -2,27 +2,18 @@
 // * these functions handle the final page(s) of the deploy UI *
 // *************************************************************
 
-function showFinish(state) {
-	showBusy(); // turn off the showbusy message
+function getSummary() {
 
-	if ( state == 'OK') {
-		// invoke the finish call back to the server to get a
-		// summary of what was done
+	//showBusy(); // turn off the showbusy message
+
+	// invoke the finish call back to the server to get a
+	// summary of what was done
 		
-		var xmlString = "<data><request-type>finish</request-type></data>";
+	var xmlString = "<data><request-type>finish</request-type></data>";
 	
-		xml_http_post('../www/main.html', xmlString, showSummary);
-	
-	}
-	else {
-		
-		//activate the error page
-		slide('error');
-		shutDown();
-	}
+	xml_http_post('../www/main.html', xmlString, showSummary);
 
 }
-
 
 function showSummary(req) {
 	
@@ -38,10 +29,10 @@ function showSummary(req) {
 
 	summary.innerHTML = taskSummary;
 	
-	// check if the last msgText value shows Volume created, if not 
-	// change the nextsteps text to say the wizard has been stopped
-	if ( msgText.indexOf("Gluster volume") == -1) {
-		var nextSteps = document.getElementById('nextSteps');
+	// check if the current UI page is the volume create step to 
+	// determine if the closing remarks needs to change
+	if ( currentPage != "volCreate") {
+		var nextSteps = document.getElementById('nextsteps');
 		terminationMsg = "<p>You have chosen to terminate the deploy wizard early.</p>"
 		terminationMsg += "<p>You may now complete the remaining steps for your configuration manually.</p>"
 		

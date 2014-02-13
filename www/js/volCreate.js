@@ -272,15 +272,17 @@ function createVolHandler(req) {
 	// change the spinner to a green tick
 	if ( state == 'OK' ) {
 		document.getElementById('busyGraphic').className = 'success';
+		document.getElementById('busyButton').onclick = function() { showBusy(); getSummary();};
+		
 	}
 	else {
 		document.getElementById('busyGraphic').className = 'fail';
+		document.getElementById('busyButton').onclick = function() { showError;};
 	}
 																										
 	document.getElementById('busyButton').disabled = false;
 	document.getElementById('busyButton').style.visibility = 'visible';
-	document.getElementById('busyButton').onclick = function() { showFinish(state);};
-	
+
 }
 
 

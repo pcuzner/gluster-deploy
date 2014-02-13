@@ -197,9 +197,11 @@ function quitUI() {
 	child = document.getElementById('quitButton');
 	parent.removeChild(child);
 	
-	// remove the hyperlink
-	link = document.getElementById('mountHelp'); 
-	link.removeAttribute('href');
+	// remove the hyperlink, if it exists on the page
+	if ( parent.contains(mountHelp) ) {
+		link = document.getElementById('mountHelp'); 
+		link.removeAttribute('href');
+	}
 		
 	document.getElementById('goodbye').className = 'reveal';
 	shutDown();
@@ -276,3 +278,9 @@ function showModal(state) {
 	
 }
 
+function showError() {
+	// Just slide the error page into view and initiate the shutdown
+	slide('error');
+	shutDown();
+}
+	

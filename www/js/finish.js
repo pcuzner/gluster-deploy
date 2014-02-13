@@ -4,8 +4,6 @@
 
 function getSummary() {
 
-	//showBusy(); // turn off the showbusy message
-
 	// invoke the finish call back to the server to get a
 	// summary of what was done
 		

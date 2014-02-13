@@ -18,6 +18,10 @@ function keyAction(req) {
 		document.getElementById('overviewNext').disabled = false;
 		document.getElementById('m-overview').className='active';
 		currentPage = 'overview';
+		
+		// Make the toolbar visible
+		document.getElementById('toolbar').className = 'visible';
+		
 	}
 	else {
 		// user suppled invalid password, so indicate the error

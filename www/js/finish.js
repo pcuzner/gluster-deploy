@@ -39,4 +39,6 @@ function showSummary(req) {
 
 	slide('finish');
 	
+	document.getElementById('quitBtn').disabled = true;
+	
 }

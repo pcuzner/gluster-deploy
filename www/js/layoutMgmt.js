@@ -54,12 +54,16 @@ function slide(newDiv) {
 	
 	currentPage = newDiv;
 	
+	document.getElementById('quitBtn').disabled = false;
+	
 }
 
 function showBusy(msg) {
 	
 	var msg = msg || '';
 	document.getElementById('busyMsg').innerHTML = msg;
+	
+	// if the busy dialog is visible, turn it off
 	if (document.getElementById('busy').style.visibility == 'visible') {
 
 		document.getElementById('busy').style.visibility = 'hidden';
@@ -70,11 +74,14 @@ function showBusy(msg) {
 		document.getElementById('busyLog').innerHTML = "";
 		msgLog.length = 0									// reset the message log array
 		
-		document.getElementById('quitBtn').disabled = true;
+		document.getElementById('quitBtn').disabled = false;
 	}
 	else {
+		
+		// the busy dialog box was hidden, so show it and disable the quit
+		// button
 		document.getElementById('busy').style.visibility = 'visible';
-		document.getElementById('quitBtn').disabled = false;
+		document.getElementById('quitBtn').disabled = true;
 	}
 	
 }
@@ -198,7 +205,7 @@ function quitUI() {
 	parent.removeChild(child);
 	
 	// remove the hyperlink, if it exists on the page
-	if ( parent.contains(mountHelp) ) {
+	if ( document.getElementById('mountHelp') ) {
 		link = document.getElementById('mountHelp'); 
 		link.removeAttribute('href');
 	}

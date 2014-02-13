@@ -52,6 +52,8 @@ function slide(oldDiv, newDiv) {
 	
 	disableDiv(oldDiv);
 	
+	currentPage = newDiv;
+	
 }
 
 function showBusy(msg) {

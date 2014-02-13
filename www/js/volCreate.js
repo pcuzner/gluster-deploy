@@ -283,22 +283,6 @@ function createVolHandler(req) {
 	
 }
 
-function showFinish(state) {
-	showBusy(); // turn off the showbusy message
-
-	if ( state == 'OK') {
-		// activate finish div	
-		slide('volCreate','finish');
-	}
-	else {
-		//activate the error page
-		slide('volCreate','error');
-		shutDown();
-	}
-
-}
-
-
 
 function createVolume() {
 	

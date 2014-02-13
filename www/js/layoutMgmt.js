@@ -30,9 +30,7 @@ function disableDiv(divName) {
 	}
 }
 
-function slide(oldDiv, newDiv) {
-
-	document.getElementById(newDiv).className = 'slide';
+function slide(newDiv) {
 	
 	switch (newDiv) {
 		
@@ -50,7 +48,9 @@ function slide(oldDiv, newDiv) {
 			break;
 	}
 	
-	disableDiv(oldDiv);
+	disableDiv(currentPage);
+	
+	document.getElementById(newDiv).className = 'slide';
 	
 	currentPage = newDiv;
 	

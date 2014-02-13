@@ -70,7 +70,10 @@ Development Log
   - fix: query thread getting disabled, before it could start during brick definition. Added a time delay to starting the query polling, after the build-brick code gets invoked
 
 
-0.7 (planned)
+0.7 (pending)
+  - updates summary information to be more friendly
+  - sync'd the summary info in the UI finish page with the summary info in the CLI
+  - updated the closing remarks on the final page to change if the user aborts the wizard early
   - implement the quit button (only active when tasks are not active)
   - Add a magic button to the vol create page to decide on the brick layout automagically
 

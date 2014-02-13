@@ -188,7 +188,7 @@ function showMountHelp() {
 	//shutDown();
 }
 
-function finish() {
+function quitUI() {
 
 	parent = document.getElementById('finish');
 	child = document.getElementById('quitButton');

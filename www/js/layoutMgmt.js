@@ -189,11 +189,13 @@ function showMountHelp() {
 }
 
 function quitUI() {
-
+	
+	// remove the quit button from the UI
 	parent = document.getElementById('finish');
 	child = document.getElementById('quitButton');
 	parent.removeChild(child);
 	
+	// remove the hyperlink
 	link = document.getElementById('mountHelp'); 
 	link.removeAttribute('href');
 		

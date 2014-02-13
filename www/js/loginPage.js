@@ -17,6 +17,7 @@ function keyAction(req) {
 		document.getElementById('overview').className = 'slide';
 		document.getElementById('overviewNext').disabled = false;
 		document.getElementById('m-overview').className='active';
+		currentPage = 'overview';
 	}
 	else {
 		// user suppled invalid password, so indicate the error

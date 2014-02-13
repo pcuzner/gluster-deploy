@@ -150,13 +150,13 @@ function showVolCreate(state) {
 	showBusy(); // Turn off the showbusy spinner
 	
 	if ( state == 'OK' ) {
-		slide('bricks','volCreate'); // slide the volcreate page into view
+		slide('volCreate'); // slide the volcreate page into view
 
 
 	}
 	else {
 		// build brick hit errors
-		slide('bricks','error');
+		slide('error');
 		shutDown();
 	}
 }

@@ -41,7 +41,7 @@ function slide(newDiv) {
 		
 		default : 
 			// Update the menu area
-			var oldTask = 'm-' + oldDiv
+			var oldTask = 'm-' + currentPage
 			var newTask = 'm-' + newDiv
 			document.getElementById(oldTask).className = 'done';
 			document.getElementById(newTask).className = 'active';

@@ -17,7 +17,7 @@ function showFinish(state) {
 	else {
 		
 		//activate the error page
-		slide('volCreate','error');
+		slide('error');
 		shutDown();
 	}
 
@@ -48,6 +48,6 @@ function showSummary(req) {
 		nextSteps.innerHTML = terminationMsg
 	}
 
-	slide('volCreate','finish');
+	slide('finish');
 	
 }

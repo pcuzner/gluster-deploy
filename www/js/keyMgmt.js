@@ -21,7 +21,7 @@ function startKeyMgmt() {
 	}
 	
 	
-	slide('nodes','keys');
+	slide('keys');
 	
 	document.getElementById('busyButton').style.visibility = 'hidden';
 	document.getElementById('busyGraphic').className = 'spinner';

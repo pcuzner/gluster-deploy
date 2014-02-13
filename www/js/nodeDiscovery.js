@@ -8,7 +8,7 @@ function startNodesPage() {
 	// Make a call back to the host, and set up response handler
 	xml_http_post('../www/main.html',xmlString, subnetSetup);
 	
-	slide("overview","nodes") ;
+	slide("nodes") ;
 }
 
 function subnetSetup(req) {

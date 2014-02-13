@@ -5,7 +5,7 @@
 function startDiskDiscovery() {
 
 	showBusy(); // turn of the busy dialog
-	slide("keys","disks");
+	slide("disks");
 	
 	
 }
@@ -102,7 +102,7 @@ function registerHandler(req) {
 	
 	if (state == 'OK') {
 		// trigger slide transition to build bricks page
-		// slide('disks','bricks');
+		// slide('bricks');
 		var features = xmlDoc.getElementsByTagName('features')[0].attributes;
 		var snapshotEnabled = features.getNamedItem('snapshot').value;
 		var btrfsEnabled = features.getNamedItem('btrfs').value;
@@ -133,7 +133,7 @@ function registerHandler(req) {
 			
 		}
 	
-		slide('disks','bricks');
+		slide('bricks');
     
 	}
 	

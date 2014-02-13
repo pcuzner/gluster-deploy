@@ -532,7 +532,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				# Problem creating the volume
 				cfg.LOGGER.info('%s Volume creation failed rc=%d', time.asctime(), rc)
 				createMsg = 'FAILED'
-				msg = "Volume create failed for %s"%(volName)
+				msg = "Gluster volume create failed for '%s'"%(volName)
 			
 			response = "<response><status-text>" + createMsg + "</status-text></response>"
 			

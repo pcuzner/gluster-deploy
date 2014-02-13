@@ -32,11 +32,22 @@ function showSummary(req) {
 	var taskSummary = "";
 	
 	for (var i=0; i<msg.length; i++) {
-		taskSummary += "<li class='icon-ok'>" + msg[i].childNodes[0].nodeValue + "</li>"
+		msgText = msg[i].childNodes[0].nodeValue
+		taskSummary += "<li class='icon-ok'>" + msgText + "</li>"
 	}
-	
+
 	summary.innerHTML = taskSummary;
 	
+	// check if the last msgText value shows Volume created, if not 
+	// change the nextsteps text to say the wizard has been stopped
+	if ( msgText.indexOf("Gluster volume") == -1) {
+		var nextSteps = document.getElementById('nextSteps');
+		terminationMsg = "<p>You have chosen to terminate the deploy wizard early.</p>"
+		terminationMsg += "<p>You may now complete the remaining steps for your configuration manually.</p>"
+		
+		nextSteps.innerHTML = terminationMsg
+	}
+
 	slide('volCreate','finish');
 	
 }

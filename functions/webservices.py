@@ -182,7 +182,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				response += "</response>"
 					
 				cfg.LOGGER.info('%s network.findService scan complete', time.asctime())
-				cfg.LOGGER.debug("%s network.findService found %s services", time.asctime(), str(len(nodeList)))
+				cfg.LOGGER.debug("%s network.findService found %d services", time.asctime(), len(nodeList))
 
 			else:
 				response = "<response><status-text>FAILED</status-text></response>"
@@ -503,7 +503,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 			# Send to UI
 			self.wfile.write(response)
-			msg = "Candidate filesystems formatted as 'bricks' - %d successful, %d failed"%(cfg.CLUSTER.opStatus['success'],cfg.CLUSTER.opStatus['failed'])
+			msg = "%d candidate disks formatted as 'bricks', %d failed"%(cfg.CLUSTER.opStatus['success'],cfg.CLUSTER.opStatus['failed'])
 			RequestHandler.taskLog.append(msg)
 			
 			print "\t\t"+msg
@@ -545,6 +545,18 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			RequestHandler.pollingEnabled = False	
 
 
+		elif (requestType == "finish"):
+			
+			cfg.LOGGER.debug("%s Sending results to the UI for display", time.asctime())
+			
+			response = "<response><tasksummary>"
+			for taskInfo in RequestHandler.taskLog:
+				response += "<message>" + taskInfo + "</message>"
+			response += "</tasksummary></response>"
+			
+			self.wfile.write(response)
+
+
 		elif (requestType == "query-status"):
 			
 			cfg.LOGGER.debug("%s query-status received from the web client", time.asctime())
@@ -565,8 +577,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.wfile.write(response)
 			
 			self.request.close()
-			
-						
+
+		
 		elif ( requestType == "quit"):
 			print "\t\tQuit received from the UI"
 			

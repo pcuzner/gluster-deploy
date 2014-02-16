@@ -209,6 +209,9 @@ function quitUI() {
 		link = document.getElementById('mountHelp'); 
 		link.removeAttribute('href');
 	}
+	
+	// hide the toolbar
+	document.getElementById('toolbar').className = "invisible";
 		
 	document.getElementById('goodbye').className = 'reveal';
 	shutDown();

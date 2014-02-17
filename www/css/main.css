@@ -257,7 +257,7 @@ margin-left: 15px;
 	position:relative;
 	/*border:1px solid gray; */
 	left:250px;
-	top:-100px;
+	top:-120px;
 	width:650px;
 	height:650px;
 	z-index:1;
@@ -509,6 +509,23 @@ position:absolute;}
 #volCreate.slide {
 	left: 0px;
 }
+
+#brickautoselect {
+	position:relative;
+    left:23px;
+    height:30px;display:inline-block;
+}
+
+.autoselect {
+position: relative;
+
+}
+
+
+
+
+
+
 #finish {
 	position: absolute;
 	left: 650px;
@@ -678,6 +695,7 @@ position:absolute;}
 	position:absolute;
 	left:214px;
 	width:37px;
+	margin-top:8px;
 
 }
 
@@ -699,10 +717,10 @@ position:absolute;}
 	position:absolute;
 	overflow-y:auto;
 	border:0px solid black; /*debug only */
-	top:222px;
+	top:232px;
 	left:260px;
 	width:343px;
-	height:297px;
+	height:275px;
 }
 #brickTable {
 	margin:0px;
@@ -716,7 +734,7 @@ position:absolute;}
 }
 #brickHeaders {
 	position:absolute;
-	top:170px;
+	top:182px;
 	left:240px;
 	width:330px;
 }

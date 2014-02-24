@@ -104,7 +104,8 @@ Items under consideration
   - add a disk wipe capability in the event bricks are reused (i.e. lv already exists - perhaps the 
     disk selection should also include defined disks, that are empty?)
     -> although these can be detected, it leaves the tool open to user error and data loss
-
+  
+  - allow empty partitions to be selectable as gluster brick candidates (rfe from Ryan Nix)
 
 
   

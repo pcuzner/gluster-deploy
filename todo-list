@@ -85,7 +85,7 @@ Development Log
   - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
 
   
-Items under consideration
+Items under consideration (aka Backlog)
 
   - update buildBrick to account for raid card to set appropriate offsets on pvcreate and mkfs.xfs commands
     -> Need access to different configurations to test integration with specific raid card cli's
@@ -106,6 +106,8 @@ Items under consideration
     -> although these can be detected, it leaves the tool open to user error and data loss
   
   - allow empty partitions to be selectable as gluster brick candidates (rfe from Ryan Nix)
+  
+  - if no disks are found invoke the modal dialog to warn the user and explain why (Eco Wilson)
 
 
   

@@ -87,6 +87,8 @@ Development Log
   
 Items under consideration (aka Backlog)
 
+  - add an option on brick dialog to specify raid card in use, provide su,sw numbers
+
   - update buildBrick to account for raid card to set appropriate offsets on pvcreate and mkfs.xfs commands
     -> Need access to different configurations to test integration with specific raid card cli's
 

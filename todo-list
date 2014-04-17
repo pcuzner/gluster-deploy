@@ -110,6 +110,8 @@ Items under consideration (aka Backlog)
   - allow empty partitions to be selectable as gluster brick candidates (rfe from Ryan Nix)
   
   - if no disks are found invoke the modal dialog to warn the user and explain why (Eco Wilson)
+  
+  - issue a warning if the version of gluterfs across the nodes is not consistent (Jeff Vance)
 
 
   

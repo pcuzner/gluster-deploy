@@ -112,7 +112,8 @@ Items under consideration (aka Backlog)
   - if no disks are found invoke the modal dialog to warn the user and explain why (Eco Wilson)
   
   - issue a warning if the version of gluterfs across the nodes is not consistent (Jeff Vance)
-
+  
+  - when hadoop use case selected on vol create screen, add additional option which if selected would mount the volume across all nodes and update fstab (Jeff Vance)
 
   
   

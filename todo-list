@@ -115,5 +115,6 @@ Items under consideration (aka Backlog)
   
   - when hadoop use case selected on vol create screen, add additional option which if selected would mount the volume across all nodes and update fstab (Jeff Vance)
 
+  - when thin provisioning selected, add a cron job to each node to run discard (fstrim brick-path) 
   
-  
+  - Add a performance check phase. Once bricks are created, run a distributed dd or fio run across all bricks returning the performance data. Present the data in a table or scattergram to ensure all nodes are performing as expected.

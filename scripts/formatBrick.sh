@@ -161,7 +161,7 @@ function create_filesystem {
 	logger "formatBrick.sh creating filesystem on lv $lv"
 	[ $dryrun -eq 1 ] && return 4
 	
-	if [ -n "$stripeUnit" ]; then 
+	if [[ -n "$stripeUnit" ]] && [[ $snapRequired == "NO" ]]; then 
 		# use the raid definitions provided
 		stripeSpec="-d su=${stripeUnit}k,sw=${stripeWidth} "
 	fi

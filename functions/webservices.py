@@ -36,6 +36,18 @@ from 	functions.syscalls		import getMultiplier
 from 	functions.utils			import kernelCompare
 
 
+def loadHTML(fileName):
+	""" receive a html file to load, and return the file as a string to
+		to the caller after removing any newline and tab characters
+	"""
+	
+	with open(fileName) as htmlData:
+		htmlStr = htmlData.read()
+		htmlStr = htmlStr.replace('\t','').replace('\n','')
+		
+	return htmlStr
+
+
 class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	
 	adminIP = ''
@@ -117,24 +129,32 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				cfg.LOGGER.info('%s passwordCheck bypassed by -n parameter',time.asctime())
 				retString = 'OK'
 			
-			response = "<response><status-text>" + retString + "</status-text></response>"
+			response = "<response><status-text>" + retString + "</status-text>"
+			
+			if retString == 'OK':
+				# Pass the client the html and next div to use in the UI
+				response += ( "<page-info><next-div div-name='overview'/>" 
+						+ "<div-contents><![CDATA["
+						+ loadHTML('www/overview.html')
+						+ "]]></div-contents></page-info>")
+						
+			response += "</response>"
 			
 			self.wfile.write(response)	
 				
 			
 		elif ( requestType == "subnet-list" ):
 
-			response = "<response><status-text>"
+			response = "<response>"
 
 			# If there are servers in the SERVERLIST, we pass back the server IP/names not
 			# subnets to allow subnet selection and scan to be bypassed
 			if cfg.SERVERLIST:
 				cfg.LOGGER.info("%s Bypassing subnet scan, using nodes from configuration file", time.asctime())
-				response += "OK</status-text><request-type>servers</request-type>"
-				response += "</response>"
+				respText = 'OK'
+				response += "<request-type>servers</request-type>"
 				
 				msg = "Candidate servers provided by the configuration file (bypassing subnet scanning)"
-
 				
 			else:
 				# server list has not been provided, so let look at the hosts IP config and 
@@ -143,22 +163,35 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				subnets = getSubnets()
 				
 				if subnets:
-					response = "<response><status-text>OK</status-text><request-type>scan</request-type>"
+					respText = "OK"
+					response += "<request-type>scan</request-type>"
 					for subnet in subnets:
 						response += "<subnet>" + subnet + "</subnet>"
-					response += "</response>"
-	
+
 					allSubnets = ' '.join(subnets)
 				
 					cfg.LOGGER.debug("%s network.getSubnets found - %s", time.asctime(), allSubnets)
 					
-					msg = "Candidate servers determined by subnet scan"
+					msg = "Candidate servers will be determined by subnet scan"
 				
 				else:
-					response = "<response><status-text>FAILED</status-text></response>"
+					respText = "FAILED"
+					msg = "ERROR - Unable to locate subnets on this host"
 					
+			response += "<status-text>"+respText+"</status-text>"
+					
+			if respText == 'OK':
+				# lets provide the html for the node discovery page
+				response += ( "<page-info><next-div div-name='nodes'/>" 
+							+ "<div-contents><![CDATA["
+							+ loadHTML('www/nodes.html')
+							+ "]]></div-contents></page-info>")				
+			
+			response += "</response>"			
+			
 			RequestHandler.taskLog.append(msg)
 			print "\t\t" + msg	
+						
 			self.wfile.write(response)
 			
 		elif ( requestType == "find-nodes" ):
@@ -246,6 +279,12 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				if not cfg.CLUSTER.node[nodeName].localNode:
 					response += "<node name='" + nodeName + "' />"
 			
+			# Pass the client the html and next div to use in the UI
+			response += ( "<page-info><next-div div-name='keys'/>" 
+						+ "<div-contents><![CDATA["
+						+ loadHTML('www/keys.html')
+						+ "]]></div-contents></page-info>")
+			
 			response += "</response>" 
 			
 			cfg.LOGGER.debug('%s createCluster results - success %d, failed %d',time.asctime(), success, failed)
@@ -287,7 +326,15 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 			respText = "OK" if failed == 0 else "FAILED"
 			response = ( "<response><status-text>" + respText + "</status-text><summary success='" 
-						+ str(success) + "' failed='" + str(failed) + "' /></response>" )
+						+ str(success) + "' failed='" + str(failed) + "' />")
+						
+			# Pass the client the html and next div to use in the UI
+			response += ( "<page-info><next-div div-name='disks'/>" 
+						+ "<div-contents><![CDATA["
+						+ loadHTML('www/disks.html')
+						+ "]]></div-contents></page-info>")			
+						
+			response += "</response>" 
 						
 			cfg.LOGGER.info('%s pushKeys complete - success %d, failed %d', time.asctime(), success, failed)
 			
@@ -386,6 +433,14 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			cfg.CLUSTER.glusterVersion = thisVersion if len(versionLookup) == 1 else "Mixed (Warning!)"
 			
 			response += "<features snapshot='" + thinpSupport + "' btrfs='" + btrfsSupport + "' />"
+			
+			# Add the HTML for the next div - bricks.html
+			response += ( "<page-info><next-div div-name='bricks'/>" 
+			+ "<div-contents><![CDATA["
+			+ loadHTML('www/bricks.html')
+			+ "]]></div-contents></page-info>")	
+			
+			
 			response += "</response>"
 			
 			self.wfile.write(response)
@@ -498,10 +553,17 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				# eg. <brick fsname='/gluster/brick' size='10' servername='rhs1-1' />
 				sizeGB = ( brick.sizeMB / 1024 ) if brick.thinSize == 0 else ( brick.thinSize / 1024 )
 				response += "<brick fsname='" + brick.mountPoint + "' size='" + str(sizeGB) + "' servername='" + brick.nodeName + "' />"
-				
+			
+			# Populate the volCreate div, if all is well :)
+			if respText == 'OK':
+				response += ( "<page-info><next-div div-name='volCreate'/>" 
+				+ "<div-contents><![CDATA["
+				+ loadHTML('www/volCreate.html')
+				+ "]]></div-contents></page-info>")				
+			
 			response += "</response>"
 
-			# Send to UI
+			# Send to client
 			self.wfile.write(response)
 			msg = "%d candidate disks formatted as 'bricks', %d failed"%(cfg.CLUSTER.opStatus['success'],cfg.CLUSTER.opStatus['failed'])
 			RequestHandler.taskLog.append(msg)

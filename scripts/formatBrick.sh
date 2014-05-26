@@ -22,17 +22,23 @@ FSBLOCKSIZE=8192
 
 function create_pv {
 	local devID=$1
+	local rc=0
 	
-	# Future - use dataalignment based on whether the disk is a raid lun?
-	# could detect this in the findDisks.py code, and update the disk object 
-	# with an attribute that we can use in formatBrick.sh
 	logger "formatBrick.sh running pvcreate for device $devID"
 	
 	[ $dryrun -eq 1 ] && return 4
 	
-	pvcreate  /dev/$devID
-	local rc=$?
-	
+	if [ -n "$stripeUnit" ] ; then 
+		# variable has been defined, so try and use it (trust the caller!)
+		offset="$(echo $stripeUnit*$stripeWidth | bc)K"
+		pvcreate --dataalignment $offset /dev/$devID
+		rc=$?
+	else
+		# stripe unit not set so just allocate the pv - no alignment		
+		pvcreate  /dev/$devID
+		rc=$?
+	fi	
+		
 	if [ $rc -eq 0 ] ; then 
 		logger "formatBrick.sh pvcreate completed OK on device $devID"
 	else
@@ -150,12 +156,18 @@ function create_filesystem {
 
 	local inodeSize=$1
 	local rc=0
+	local stripeSpec=""
 	
 	logger "formatBrick.sh creating filesystem on lv $lv"
 	[ $dryrun -eq 1 ] && return 4
 	
+	if [ -n "$stripeUnit" ]; then 
+		# use the raid definitions provided
+		stripeSpec="-d su=${stripeUnit}k,sw=${stripeWidth} "
+	fi
+		
 	# run mkfs.xfs with an inode, and imaxpct of 25
-	mkfs.xfs -i size=$inodeSize -n size=$FSBLOCKSIZE  /dev/$vgName/$lvName 
+	mkfs.xfs -i size=$inodeSize -n size=$FSBLOCKSIZE $stripeSpec /dev/$vgName/$lvName 
 	rc=$?
 	
 	if [ $rc -eq 0 ] ; then 
@@ -283,6 +295,8 @@ function dump_parms {
 	logger "mount : $mountPoint"
 	logger "workload : $workload"
 	logger "inodesz : $inodeSize"
+	logger "SU : $stripeUnit"
+	logger "SW : $stripeWidth"
 
 }
 
@@ -295,7 +309,10 @@ function main {
 	local debug=false
 	dryrun=0
 	
-	while getopts "tDu:c:s:l:p:b:v:m:n:d:" OPT; do
+	args=("$@")
+	logger "Invocation parms: $args"
+	
+	while getopts "tDu:c:s:l:p:b:v:m:n:d:r:w:" OPT; do
 		case "$OPT" in
 			t)
 				dryrun=1
@@ -326,6 +343,12 @@ function main {
 				;;				
 			v)	
 				vgName=$OPTARG
+				;;
+			r)
+				stripeUnit=$OPTARG
+				;;
+			w)
+				stripeWidth=$OPTARG
 				;;
 			m)
 				mountPoint=$OPTARG

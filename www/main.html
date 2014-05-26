@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <!--
    main.html
@@ -113,268 +112,24 @@
 
 <div id="container" >
 	
-	<div id="overview"><h2>Overview</h2>
-	<p>
-	Once the glusterfs packages are installed, you need to configure the gluster environment
-	before any volumes can be presented to 'clients'. This tools enables you to quickly setup a 
-	gluster cluster, by moving through several configuration phases;</p>
-	<p><li><b>Node discovery :</b> scan a subnet to identify candidate nodes to build a cluster from</li></p>
-	<p><li><b>SSH keys :</b> push ssh keys out to the cluster nodes to enable remote scripts to be run</li></p>
-	<p><li><b>Disk discovery :</b> select which disks on the nodes are to be used as gluster 'bricks'</li></p>
-	<p><li><b>Brick definition :</b> execution of scripts across nodes to create bricks in a standard manner</li></p>
-	<p><li><b>Volume creation :</b> create and optimise a volume for a specific use case</li></p>
-	<p>
-	Once this process is complete you will have a fully functioning gluster environment, with the first volume
-	created and available for client connections.
-	</p>
-	<button id="overviewNext" type="button" disabled onclick='startNodesPage()' class="nextButton">Next</button>
+	<div id="overview">
 	</div>
 	
-	<div id="nodes"><h2>Node Discovery</h2>
-		<div id="nodesProvided">
-		  <p>The nodes shown below are provided by the configuration file supplied when gluster-deploy was invoked.</p>
-		</div>
-		<div id="nodeScanning">
-			<p>Subnet to scan&nbsp;
-			<select id="network-select">
-			</select>
-			<button id="network-scan-btn" type="button" disabled onclick="scanSubnet()"><i class="icon-search"></i>Scan</button>
-			</p>
-		</div>
-
-	  <div id="nodeSelect">
-		<select id="candidateNodes" onchange="enableButton('addNodes')" multiple size=28>
-		</select>
-		<button id="addNodes" type="button" disabled onclick="promoteNodes()"><i class="icon-right-big"></i></button>
-		<select id="selectedNodes"  multiple size=28>
-		</select>
-		<button id="createCluster" type="button" disabled onclick="createCluster()">Create</button>
-	  </div>
+	<div id="nodes">
 	</div>
 	
-	<div id="keys"><h2>SSH Keys</h2>
-		<p>SSH keys are available on this host to push to the nodes in the cluster. Once the public key
-		has been distributed, disks on the nodes can be discovered and formatted as gluster bricks.</p>
-		<input type="radio" name="passwordMethod" value="generic" checked="checked" onclick="togglePassword('generic');">Use a generic password for all hosts/nodes&nbsp;
-		  <span >
-			  <input type="text" id="genericPassword" size="26" maxlength="26" >
-		  </span><br>
-		<input type="radio" name="passwordMethod" value="unique" onclick="togglePassword('unique');">Each node has a unique password&nbsp;<br>
-		<br>
-		<button id="pushKeys" type="button" onclick="pushKeys()"><i class="icon-keys"></i>Distribute</button>
-		<table id="keysHeading" cellspacing='0'>
-			<thead>
-				<tr>
-					<th>Server Name</th>
-					<th>Password</th>
-				</tr>
-			</thead>
-		</table>		
-		<div id="keysArea">	
-			<table id="keysTable" cellspacing='0'>
-				<tbody>
-				</tbody>
-			</table>
-		</div>
-
-		
+	<div id="keys">
 	</div>
 	
-	<div id="disks"><h2>Disk Discovery</h2>
-	<p>With the ssh keys in place, the nodes can now be scanned to collect a list of 'unclaimed' disks to be used as gluster bricks<br>
-	</p>
-	<button id="getDisks" type="button" onclick="findDisks()"><i class="icon-search"></i>Find Disks</button>
-		<div id="diskArea">
-			<table id="diskHeading" cellspacing='0'>
-				<thead>
-					<tr>
-						<th>Server Name</th>
-						<th>Device</th>
-						<th>Capacity<br>(GB)</th>
-						<th>Select<br>
-							<input type='checkbox' id='allDisks' onclick="selectAll();" />
-						</th>
-					</tr>
-				</thead>
-			</table>
-			<div id="diskRows">
-				<table id="diskTable" cellspacing="0">
-					<tbody>
-					</tbody>
-				</table>
-			</div>
-			<button id="registerBricks" class="registerButton hidden" type="button" onclick="registerBricks()">Next</button>
-		</div>
-
+	<div id="disks">
 	</div>
 	
-	<div id="bricks"><h2>Brick Definition</h2>
-		<p>Typically each node in the cluster will have an identical configuration to ensure balanced application performance. 
-		This configuration page, gathers the metrics that allow bricks to be defined optimally for a given workload. </p>
-		<p>Complete the items below, then click on the "Build Bricks" button to start the formatting process.
-		</p>
-		Use Case
-		<select id="useCase">
-			<option value="generic" selected="selected">Generic File Serving</option>
-			<option value="virtualisation">Virtualisation</option>
-			<option value="object">Object Storage</option>
-		</select>
-		<p>
-		Brick Filesystem Provided by&nbsp;
-		<select id="brickProvider" onchange="switchProvider(this.value)">
-			<option value="LVM" selected="selected">Logical Volume Manager (LVM)</option>
-		</select>
-		</p>
-		<div id="lvm">
-			<div id="snapRequired">
-				Volume Snapshots&nbsp;
-				<label id="snapshotSwitch" class="switch" >
-					<input id="snapshotsRequired" type="checkbox" onclick="snapToggle(this.checked)" class="switch-input">
-					<span class="switch-label" data-on="On" data-off="Off"></span>
-					<span class="switch-handle"></span>
-				</label>
-				<div id="snapReserve">
-					Snapshot Space&nbsp;<span id="snapshotValue" >10%</span>&nbsp;&nbsp;&nbsp;<strong>0</strong>
-					<input id="snapshotSpace" oninput="updateSnapshot();" onkeyup="updateSnapshot();" onmouseup="updateSnapshot();" type='range' min="0" max="30" value="10" >
-					<span style="position:relative; left:-15px;" ><strong>30</strong></span>
-				</div>
-
-			</div>
-	
-			Volume Group to create&nbsp;  
-			<input type='text' id="vgName" class="brickInputField" value="gluster" onkeyup="updateLV();" onchange="validateBrickParms(this);" ></p>
-			Logical Volume Name&nbsp;  
-			<input type='text' id="lvName" value="gluster"  class="brickInputField" onfocus="validateBrickParms(this)" onchange="validateBrickParms(this);"></p>
-
-		</div>
-		<p>Mount point for the brick&nbsp;
-		<input type="text" id="mountPoint" class="brickInputField" onchange="validateBrickParms(this);"></p>
-		<button id="buildBricks" class="bricksButton" type="button" onclick="buildBricks()"><i class="icon-commit-config"></i>Build Bricks</button>
+	<div id="bricks">
 	</div>
 	
-	<div id="volCreate"><h2>Create a Volume</h2>
-		<p style="position:relative; top:-15px;line-height:2;">
-			Volume Name: 
-			<input id="volNameInput" type="text" size=26 onkeyup="updateSummary('volume')">
-			<br>
-			
-			Use Case:&nbsp;
-			<select id="volUseCase" style="position:relative; left:21px; width:130px;" onchange="addOptions(this.options[this.selectedIndex].value);">
-				<option>Generic</option>
-				<option>Virtualisation</option>
-				<option>Streaming</option>
-				<option>Hadoop</option>
-			</select>
-			<span id="virtInput" style="position:relative;left:40px;opacity:0;transition: opacity .75s;">
-				Target environment&nbsp;
-				<select id="virtUser" disabled>
-					<option>glance</option>
-					<option>cinder</option>
-					<option>RHEV / oVirt</option>
-				</select>
-			</span>
-			<span id="streamingInput">
-			</span>
-			<span id="genericInput">
-			</span>
-			<br>
-			Volume Type:&nbsp;
-			<select id="volType" onchange="addOptions(this.options[this.selectedIndex].value)" >
-				<option>Distributed</option>
-				<option>Replicated</option>
-			</select>
-			<span id="replicaCount" style="opacity:0;transition: opacity .75s;">
-				Replica Count&nbsp;
-				<select id="replicaCountInput" disabled >
-					<option>2</option>
-				</select>
-			</span>
-			<br>
-			Automatic brick selection:
-			<span id="brickautoselect">
-			<label class="switch autoselect" >
-				<input id="autobrick" type="checkbox" class="switch-input" disabled>
-				<span class="switch-label" data-on="On" data-off="Off"></span>
-				<span class="switch-handle"></span>
-			</label>
-			</span>
-			<br>
-			Additional Protocols:
-			<span id="protocols" >
-			NFS
-			<label class="switch protocols" >
-				<input id="nfsRequired" type="checkbox" class="switch-input" >
-				<span class="switch-label" data-on="On" data-off="Off"></span>
-				<span class="switch-handle"></span>
-			</label>
-			</span>
-			
-			<span id="protocols">
-			&nbsp;&nbsp;CIFS
-			<label class="switch protocols" >
-				<input id="cifsRequired" type="checkbox" class="switch-input">
-				<span class="switch-label" data-on="On" data-off="Off"></span>
-				<span class="switch-handle"></span>
-			</label>
-			</span>
-		</p>
-		<span style="position:relative; top:-25px;">
-		Available Bricks<br>
-		<select id="brickPool" class="brickPool" multiple >
-		</select>
-		</span>
-		<button id="useBrick" class="useBrick" onclick="useBrick()" ><i class="icon-right-big"></i></button>
-		
-		<!-- two tables are used - one for headers, the other for data. This allows the 
-			table rows to be scrolled leaving the table headings in place. -->
-			
-		<table id="brickHeaders" cellspacing="0">
-			<thead>
-				<tr>
-					<th >Bricks / Replica Sets</th>
-					<th >&nbsp;</th>					
-				</tr>
-			</thead>
-		</table>
-		
-		<div id="brickLayout">
-			<table id="brickTable" cellspacing="0" >
-				<tbody>
-					<tr>
-						<td>
-						</td>
-						<td><button class="delbtn" onclick='delBrickRow(this)'><i class="icon-cancel"></i></button>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-		<table id="configSummary" cellspacing="0">
-			<thead style="height:20;">
-				<tr >
-					<th style="width:165px;">Volume Summary</th>
-					<th style="width:60px;"># Bricks</th>
-					<th style="width:60px;">Raw</th>
-					<th style="width:60px;">Usable</th>
-					<th style="width:120px;">Fault Tolerance</th>
-					<th style="width:85px;">&nbsp;</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr style="height:30px;">
-					<td></td>
-					<td>0</td>
-					<td>0</td>
-					<td>0</td>
-					<td>None</td>
-					<td>
-						<button id="volCreateBtn" class="createBtn" onclick="createVolume()"><i class="icon-commit-config"></i>Create</button>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-
+	<div id="volCreate">
 	</div>	
+	
 	<div id="finish"><h2>Finish</h2>
 		<p>Initial configuration is now complete.
 		<ul style="list-style:none;padding-left:0px;">

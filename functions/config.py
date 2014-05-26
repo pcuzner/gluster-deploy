@@ -42,6 +42,8 @@ def init():
 	global VGNAME
 	global LVNAME
 	global CLUSTER
+	global STRIPEUNIT
+	global STRIPEWIDTH
 	
 	# import is placed inside the function to prevent circular imports 
 	from functions.utils 	import MsgStack
@@ -82,6 +84,11 @@ def init():
 	BRICKPATH = "/gluster/brick1"
 	VGNAME = "gluster"
 	LVNAME = "gluster"
+	
+	# define the vars used to describe the raidgroup
+	STRIPEUNIT  = ''
+	STRIPEWIDTH = ''
+	
 
 	# Create a cluster object to act as the top level object
 	CLUSTER = Cluster()

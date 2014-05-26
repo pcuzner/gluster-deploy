@@ -70,22 +70,24 @@ Development Log
   - fix: query thread getting disabled, before it could start during brick definition. Added a time delay to starting the query polling, after the build-brick code gets invoked
 
 
-0.7 (pending)
+0.7 (complete)
   - updates summary information to be more friendly - DONE
   - sync'd the summary info in the UI finish page with the summary info in the CLI - DONE
   - updated the closing remarks on the final page to change if the user aborts the wizard early - DONE
   - implement the quit button (only active when tasks are not active) - DONE
-  - Add a magic button to the vol create page to decide on the brick layout automagically
-
-0.8 (planned)
-  - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
-
-0.9 (planned)
-  - add a help button to the toolbar, for step related guidance reusing the modal interface
-  - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
+  - moved all dialog pages out of main.html to separate files, adding them to the interface as needed - DONE
+  - added pv offset global variable to the config file enabling disk alignment to be honoured for raid cards
 
   
 Items under consideration (aka Backlog)
+
+  - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
+
+  - add a help button to the toolbar, for step related guidance reusing the modal interface
+
+  - Add a magic button to the vol create page to decide on the brick layout automagically
+
+  - fix: add scrollbar calc to ensure scrollbar aligned to table sides, regardless of browser theme 
 
   - add an option on brick dialog to specify raid card in use, provide su,sw numbers
 
@@ -111,7 +113,7 @@ Items under consideration (aka Backlog)
   
   - if no disks are found invoke the modal dialog to warn the user and explain why (Eco Wilson)
   
-  - issue a warning if the version of gluterfs across the nodes is not consistent (Jeff Vance)
+  - issue a warning if the version of glusterfs across the nodes is not consistent (Jeff Vance)
   
   - when hadoop use case selected on vol create screen, add additional option which if selected would mount the volume across all nodes and update fstab (Jeff Vance)
 

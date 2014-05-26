@@ -90,6 +90,9 @@ class Brick:
 						self.useCase,
 						self.lvName) )
 						
+		if cfg.STRIPEUNIT:
+			scriptParms += "-r %s -w %s "%(cfg.STRIPEUNIT, cfg.STRIPEWIDTH)
+						
 		scriptName = scriptPath + scriptParms
 		
 		cfg.LOGGER.debug('%s Script invocation: %s', time.asctime(),scriptName)

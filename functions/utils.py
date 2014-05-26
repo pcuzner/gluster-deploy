@@ -127,6 +127,15 @@ def processConfigFile(configFileName):
 		print ( "\t\t-> lvname not provided, a default of "
 				+ cfg.LVNAME + "will be used")
 
+	try:
+		stripeUnit = config.get("brick","stripeUnit")
+	except:
+		pass
+		
+	try:
+		stripeWidth = config.get("brick","stripeWidth")
+	except:
+		pass
 
 	
 	if nodeNames:
@@ -156,6 +165,14 @@ def processConfigFile(configFileName):
 		print "\t\t-> Using '" + lvName + "' for LV name"
 		cfg.LOGGER.info("%s config file provided lv name of %s", time.asctime(), lvName)
 		cfg.LVNAME = lvName
+		
+	if stripeUnit and stripeWidth:
+		print "\t\t-> Raid parameters provided"
+		print "\t\t\tStripe Unit = %sK"%(stripeUnit)
+		print "\t\t\tStripe Width = %s"%(stripeWidth)	
+		cfg.STRIPEUNIT = stripeUnit
+		cfg.STRIPEWIDTH = stripeWidth
+		
 		
 	return 
 

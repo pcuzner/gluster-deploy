@@ -105,6 +105,7 @@ function buildFmtRequest() {
 function bricksDefined(req) {
 
 	var xmlDoc = req.responseXML;
+	
 	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
 	
 	/* req is an xml string defining the bricks just created in the format
@@ -117,6 +118,10 @@ function bricksDefined(req) {
 	
 	if ( state == 'OK' ) {
 		document.getElementById('busyGraphic').className = 'success';
+		
+		// Set up the volCreate Page
+		populateDiv(xmlDoc);
+		
 		
 		// populate the brick list
 		var brick = xmlDoc.getElementsByTagName("brick");

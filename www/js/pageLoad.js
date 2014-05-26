@@ -9,6 +9,8 @@ if (window.addEventListener) { // Mozilla, Netscape, Firefox
 
 function pageLoad() {
 	document.getElementById('checkKey').disabled = false;
-	document.getElementById('overviewNext').disabled=true;
+	
+	// Not needed since the divs are now loaded dynamically.
+	// document.getElementById('overviewNext').disabled=true;
 }
 

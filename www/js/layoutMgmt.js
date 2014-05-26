@@ -294,3 +294,14 @@ function showError() {
 	shutDown();
 }
 	
+function populateDiv(xmlDoc) {
+	// This function receives a xmldocument, extracting the next div name
+	// and contents enabling the webpage to be updated dynamically
+	
+	var nextDiv = xmlDoc.getElementsByTagName('next-div')[0].getAttribute('div-name');
+	var divContents = xmlDoc.getElementsByTagName("div-contents")[0].childNodes[0].nodeValue
+				
+	document.getElementById(nextDiv).innerHTML = divContents;
+
+	
+}

@@ -8,7 +8,7 @@ function startNodesPage() {
 	// Make a call back to the host, and set up response handler
 	xml_http_post('../www/main.html',xmlString, subnetSetup);
 	
-	slide("nodes") ;
+
 }
 
 function subnetSetup(req) {
@@ -19,6 +19,10 @@ function subnetSetup(req) {
 	var requestType = xmlDoc.getElementsByTagName("request-type")[0].childNodes[0].nodeValue;
 	
 	if ( state == 'OK' ) {
+		
+		populateDiv(xmlDoc);
+		
+		slide("nodes") ;
 		
 		switch(requestType) {
 			case "scan" :
@@ -55,7 +59,7 @@ function subnetSetup(req) {
 		}		
 	}
 	else {
-		// insert error handler here!
+		// insert your error handler here!
 	}
 	
 }
@@ -173,7 +177,6 @@ function promoteNodes() {
 	}
 }
 
-// TODO - make this handler generic to be used for cluster, key and disk summary
 
 function clusterHandler(req) {
 
@@ -184,6 +187,9 @@ function clusterHandler(req) {
 	var failed = xmlDoc.getElementsByTagName("summary")[0].getAttribute("failed");
 
 	if ( state == "OK" ) {
+		
+		// get the next page info, and populate the div
+		populateDiv(xmlDoc);
 		
 		// Add the nodes passed back as successful, to an array (used by keyMgmt.js)
 		var nodes = xmlDoc.getElementsByTagName('node');

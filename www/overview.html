@@ -1,0 +1,15 @@
+<h2>Overview</h2>
+	<p>
+	Once the glusterfs packages are installed, you need to configure the gluster environment
+	before any volumes can be presented to 'clients'. This tools enables you to quickly setup a 
+	gluster cluster, by moving through several configuration phases;</p>
+	<p><li><b>Node discovery :</b> scan a subnet to identify candidate nodes to build a cluster from</li></p>
+	<p><li><b>SSH keys :</b> push ssh keys out to the cluster nodes to enable remote scripts to be run</li></p>
+	<p><li><b>Disk discovery :</b> select which disks on the nodes are to be used as gluster 'bricks'</li></p>
+	<p><li><b>Brick definition :</b> execution of scripts across nodes to create bricks in a standard manner</li></p>
+	<p><li><b>Volume creation :</b> create and optimise a volume for a specific use case</li></p>
+	<p>
+	Once this process is complete you will have a fully functioning gluster environment, with the first volume
+	created and available for client connections.
+	</p>
+	<button id="overviewNext" type="button" onclick='startNodesPage()' class="nextButton">Next</button>

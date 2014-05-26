@@ -1,0 +1,25 @@
+<h2>Disk Discovery</h2>
+	<p>With the ssh keys in place, the nodes can now be scanned to collect a list of 'unclaimed' disks to be used as gluster bricks<br>
+	</p>
+	<button id="getDisks" type="button" onclick="findDisks()"><i class="icon-search"></i>Find Disks</button>
+		<div id="diskArea">
+			<table id="diskHeading" cellspacing='0'>
+				<thead>
+					<tr>
+						<th>Server Name</th>
+						<th>Device</th>
+						<th>Capacity<br>(GB)</th>
+						<th>Select<br>
+							<input type='checkbox' id='allDisks' onclick="selectAll();" />
+						</th>
+					</tr>
+				</thead>
+			</table>
+			<div id="diskRows">
+				<table id="diskTable" cellspacing="0">
+					<tbody>
+					</tbody>
+				</table>
+			</div>
+			<button id="registerBricks" class="registerButton hidden" type="button" onclick="registerBricks()">Next</button>
+		</div>

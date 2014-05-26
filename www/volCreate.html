@@ -1,0 +1,121 @@
+<h2>Create a Volume</h2>
+		<p style="position:relative; top:-15px;line-height:2;">
+			Volume Name: 
+			<input id="volNameInput" type="text" size=26 onkeyup="updateSummary('volume')">
+			<br>
+			
+			Use Case:&nbsp;
+			<select id="volUseCase" style="position:relative; left:21px; width:130px;" onchange="addOptions(this.options[this.selectedIndex].value);">
+				<option>Generic</option>
+				<option>Virtualisation</option>
+				<option>Streaming</option>
+				<option>Hadoop</option>
+			</select>
+			<span id="virtInput" style="position:relative;left:40px;opacity:0;transition: opacity .75s;">
+				Target environment&nbsp;
+				<select id="virtUser" disabled>
+					<option>glance</option>
+					<option>cinder</option>
+					<option>RHEV / oVirt</option>
+				</select>
+			</span>
+			<span id="streamingInput">
+			</span>
+			<span id="genericInput">
+			</span>
+			<br>
+			Volume Type:&nbsp;
+			<select id="volType" onchange="addOptions(this.options[this.selectedIndex].value)" >
+				<option>Distributed</option>
+				<option>Replicated</option>
+			</select>
+			<span id="replicaCount" style="opacity:0;transition: opacity .75s;">
+				Replica Count&nbsp;
+				<select id="replicaCountInput" disabled >
+					<option>2</option>
+				</select>
+			</span>
+			<br>
+			Automatic brick selection:
+			<span id="brickautoselect">
+			<label class="switch autoselect" >
+				<input id="autobrick" type="checkbox" class="switch-input" disabled>
+				<span class="switch-label" data-on="On" data-off="Off"></span>
+				<span class="switch-handle"></span>
+			</label>
+			</span>
+			<br>
+			Additional Protocols:
+			<span id="protocols" >
+			NFS
+			<label class="switch protocols" >
+				<input id="nfsRequired" type="checkbox" class="switch-input" >
+				<span class="switch-label" data-on="On" data-off="Off"></span>
+				<span class="switch-handle"></span>
+			</label>
+			</span>
+			
+			<span id="protocols">
+			&nbsp;&nbsp;CIFS
+			<label class="switch protocols" >
+				<input id="cifsRequired" type="checkbox" class="switch-input">
+				<span class="switch-label" data-on="On" data-off="Off"></span>
+				<span class="switch-handle"></span>
+			</label>
+			</span>
+		</p>
+		<span style="position:relative; top:-25px;">
+		Available Bricks<br>
+		<select id="brickPool" class="brickPool" multiple >
+		</select>
+		</span>
+		<button id="useBrick" class="useBrick" onclick="useBrick()" ><i class="icon-right-big"></i></button>
+		
+		<!-- two tables are used - one for headers, the other for data. This allows the 
+			table rows to be scrolled leaving the table headings in place. -->
+			
+		<table id="brickHeaders" cellspacing="0">
+			<thead>
+				<tr>
+					<th >Bricks / Replica Sets</th>
+					<th >&nbsp;</th>					
+				</tr>
+			</thead>
+		</table>
+		
+		<div id="brickLayout">
+			<table id="brickTable" cellspacing="0" >
+				<tbody>
+					<tr>
+						<td>
+						</td>
+						<td><button class="delbtn" onclick='delBrickRow(this)'><i class="icon-cancel"></i></button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<table id="configSummary" cellspacing="0">
+			<thead style="height:20;">
+				<tr >
+					<th style="width:165px;">Volume Summary</th>
+					<th style="width:60px;"># Bricks</th>
+					<th style="width:60px;">Raw</th>
+					<th style="width:60px;">Usable</th>
+					<th style="width:120px;">Fault Tolerance</th>
+					<th style="width:85px;">&nbsp;</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr style="height:30px;">
+					<td></td>
+					<td>0</td>
+					<td>0</td>
+					<td>0</td>
+					<td>None</td>
+					<td>
+						<button id="volCreateBtn" class="createBtn" onclick="createVolume()"><i class="icon-commit-config"></i>Create</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>

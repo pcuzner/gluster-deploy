@@ -1,0 +1,42 @@
+<h2>Brick Definition</h2>
+		<p>Typically each node in the cluster will have an identical configuration to ensure balanced application performance. 
+		This configuration page, gathers the metrics that allow bricks to be defined optimally for a given workload. </p>
+		<p>Complete the items below, then click on the "Build Bricks" button to start the formatting process.
+		</p>
+		Use Case
+		<select id="useCase">
+			<option value="generic" selected="selected">Generic File Serving</option>
+			<option value="virtualisation">Virtualisation</option>
+			<option value="object">Object Storage</option>
+		</select>
+		<p>
+		Brick Filesystem Provided by&nbsp;
+		<select id="brickProvider" onchange="switchProvider(this.value)">
+			<option value="LVM" selected="selected">Logical Volume Manager (LVM)</option>
+		</select>
+		</p>
+		<div id="lvm">
+			<div id="snapRequired">
+				Volume Snapshots&nbsp;
+				<label id="snapshotSwitch" class="switch" >
+					<input id="snapshotsRequired" type="checkbox" onclick="snapToggle(this.checked)" class="switch-input">
+					<span class="switch-label" data-on="On" data-off="Off"></span>
+					<span class="switch-handle"></span>
+				</label>
+				<div id="snapReserve">
+					Snapshot Space&nbsp;<span id="snapshotValue" >10%</span>&nbsp;&nbsp;&nbsp;<strong>0</strong>
+					<input id="snapshotSpace" oninput="updateSnapshot();" onkeyup="updateSnapshot();" onmouseup="updateSnapshot();" type='range' min="0" max="30" value="10" >
+					<span style="position:relative; left:-15px;" ><strong>30</strong></span>
+				</div>
+
+			</div>
+	
+			Volume Group to create&nbsp;  
+			<input type='text' id="vgName" class="brickInputField" value="gluster" onkeyup="updateLV();" onchange="validateBrickParms(this);" ></p>
+			Logical Volume Name&nbsp;  
+			<input type='text' id="lvName" value="gluster"  class="brickInputField" onfocus="validateBrickParms(this)" onchange="validateBrickParms(this);"></p>
+
+		</div>
+		<p>Mount point for the brick&nbsp;
+		<input type="text" id="mountPoint" class="brickInputField" onchange="validateBrickParms(this);"></p>
+		<button id="buildBricks" class="bricksButton" type="button" onclick="buildBricks()"><i class="icon-commit-config"></i>Build Bricks</button>

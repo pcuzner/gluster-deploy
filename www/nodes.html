@@ -1,0 +1,20 @@
+<h2>Node Discovery</h2>
+		<div id="nodesProvided">
+		  <p>The nodes shown below are provided by the configuration file supplied when gluster-deploy was invoked.</p>
+		</div>
+		<div id="nodeScanning">
+			<p>Subnet to scan&nbsp;
+			<select id="network-select">
+			</select>
+			<button id="network-scan-btn" type="button" disabled onclick="scanSubnet()"><i class="icon-search"></i>Scan</button>
+			</p>
+		</div>
+
+	  <div id="nodeSelect">
+		<select id="candidateNodes" onchange="enableButton('addNodes')" multiple size=28>
+		</select>
+		<button id="addNodes" type="button" disabled onclick="promoteNodes()"><i class="icon-right-big"></i></button>
+		<select id="selectedNodes"  multiple size=28>
+		</select>
+		<button id="createCluster" type="button" disabled onclick="createCluster()">Create</button>
+	  </div>

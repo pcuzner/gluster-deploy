@@ -65,6 +65,9 @@ function keyHandler(req) {
 
 	if ( state == 'OK' ) {
 		
+		// Setup the next DIV
+		populateDiv(xmlDoc);
+		
 		// change the spinner to a green tick
 		document.getElementById('busyGraphic').className = 'success';																								
 		document.getElementById('busyButton').disabled = false;

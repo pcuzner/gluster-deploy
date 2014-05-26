@@ -7,6 +7,10 @@ function keyAction(req) {
 	var state = xmlDoc.getElementsByTagName("status-text")[0].childNodes[0].nodeValue;
 	
 	if (state == "OK") {
+		
+		// Password checks out, so create populate the overview screen
+		populateDiv(xmlDoc);
+		
 		// remove the 'invisible' class from the breadcrumb bar ('steps' div)
 		document.getElementById('steps').className = '';
 
@@ -15,7 +19,10 @@ function keyAction(req) {
 			
 		// Enable the next button and slide the overview page into view
 		document.getElementById('overview').className = 'slide';
-		document.getElementById('overviewNext').disabled = false;
+		
+		// Not needed since the divs are now loaded dynamically.
+		// document.getElementById('overviewNext').disabled = false;
+		
 		document.getElementById('m-overview').className='active';
 		currentPage = 'overview';
 		

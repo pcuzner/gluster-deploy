@@ -103,6 +103,10 @@ function registerHandler(req) {
 	if (state == 'OK') {
 		// trigger slide transition to build bricks page
 		// slide('bricks');
+		
+		// Setup up the next DIV
+		populateDiv(xmlDoc);
+		
 		var features = xmlDoc.getElementsByTagName('features')[0].attributes;
 		var snapshotEnabled = features.getNamedItem('snapshot').value;
 		var btrfsEnabled = features.getNamedItem('btrfs').value;

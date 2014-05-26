@@ -1,0 +1,29 @@
+	<!-- This html provides the keys dialog page -->
+	
+	
+	<h2>SSH Keys</h2>
+		<p>SSH keys are available on this host to push to the nodes in the cluster. Once the public key
+		has been distributed, disks on the nodes can be discovered and formatted as gluster bricks.</p>
+		<input type="radio" name="passwordMethod" value="generic" checked="checked" onclick="togglePassword('generic');">Use a generic password for all hosts/nodes&nbsp;
+		  <span >
+			  <input type="text" id="genericPassword" size="26" maxlength="26" >
+		  </span><br>
+		<input type="radio" name="passwordMethod" value="unique" onclick="togglePassword('unique');">Each node has a unique password&nbsp;<br>
+		<br>
+		<button id='pushKeys' type='button' onclick='pushKeys()'><i class='icon-keys'></i>Distribute</button>
+		<table id='keysHeading' cellspacing='0'>
+			<thead>
+				<tr>
+					<th>Server Name</th>
+					<th>Password</th>
+				</tr>
+			</thead>
+		</table>		
+		<div id='keysArea'>	
+			<table id='keysTable' cellspacing='0'>
+				<tbody>
+				</tbody>
+			</table>
+		</div>
+
+	

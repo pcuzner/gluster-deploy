@@ -539,8 +539,9 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			# Remove any intended bricks from the list that have their failed
 			# flag set
 			for brick in brickList:
+				
 				if brick.formatStatus == "failed":
-					brickList.remove[brick]
+					brickList.remove(brick)
 			
 			# Now the bricks have been formatted, we process the list
 			# to assemble an xml string ready for the volCreate UI page

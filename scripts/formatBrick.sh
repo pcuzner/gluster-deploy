@@ -93,10 +93,12 @@ function create_lv {
 
 	if [ $snapRequired == "YES" ]; then 
 		# need to allocate the thinpool then the thindev
-		local poolName=$vgName"pool"
-		echo "lvcreate -l $poolSize -T $vgName/$poolName"
-		lvcreate -L "$poolSize"m -T $vgName/$poolName
+		local poolName=$lvName"pool"
+		echo "lvcreate -l $poolSize -T $vgName/$poolName -c 1M --poolmetadatasize $metadSize"
+		#lvcreate -L "$poolSize"m -T $vgName/$poolName -c 1M --poolmetadatasize ${metadSize}m
+		lvcreate -L ${poolSize}m -T $vgName/$poolName -c 1M --poolmetadatasize ${metadSize}m
 		rc=$?
+		
 		if [ $rc -eq 0 ]; then 
 			# Allocate the thindev
 			echo "lvcreate -V "$lvSize"m -T $vgName/$poolName -n $lvName"
@@ -290,6 +292,7 @@ function dump_parms {
 	logger "snapReqd : $snapRequired"
 	logger "lvsize: $lvSize"
 	logger "poolSize: $poolSize"
+	logger "metadata: $metadSize"
 	logger "lvName : $lvName"
 	logger "vgName : $vgName"
 	logger "mount : $mountPoint"
@@ -312,7 +315,7 @@ function main {
 	args=("$@")
 	logger "Invocation parms: $args"
 	
-	while getopts "tDu:c:s:l:p:b:v:m:n:d:r:w:" OPT; do
+	while getopts "tDu:c:s:l:p:b:v:m:n:d:r:w:M:" OPT; do
 		case "$OPT" in
 			t)
 				dryrun=1
@@ -338,6 +341,9 @@ function main {
 			p)	
 				poolSize=$OPTARG
 				;;			
+			M)
+				metadSize=$OPTARG
+				;;
 			n)	
 				lvName=$OPTARG
 				;;				

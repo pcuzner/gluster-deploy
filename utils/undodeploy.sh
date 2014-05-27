@@ -70,16 +70,19 @@ function fmtCmdOut {
 	
 
 function dropLVM {
-	# Assume that the relationship of brick to lv to pv is 1:1:1
-	#
+	# 1 LUN = 1 VG = 1 Brick
+	# for a thin vol, you can't easily determine the associated pv
+	# so to keep things simple - dropping the vg with force
 
 	local node=$1
 	local lv=$2
 	local conn=""
 	local cmdOut=""
 
-	local pv=$(getPV $node $lv)
 	local vg=$(getVG $node $lv)
+	local pv=$(getPV $node $vg)
+
+	#local pool=$(getPool $node $lv)
 	
 	echo -e "\t\tRemoving LVM definitions(LV and VG)"
 	
@@ -87,47 +90,66 @@ function dropLVM {
 		conn="ssh $node"
 	fi
 
-	cmd="lvremove -f $lv"
+
+	# lvremove /dev/vg/lv --> does not remove the thinpool
+	# lvremove lv --> does remove thinpool and lv
+
+	cmd="vgremove -f $vg"
 	cmdOut=$($pfx $conn $cmd 2>&1)
 	rc=$?
 	fmtCmdOut "$cmdOut"
-	cont=false
+	#cont=false
 
-	if [ $rc -eq 0 ]; then 
+	#if [ $rc -eq 0 ]; then 
 
-		cmd="vgreduce $vg $pv"
-		cmdOut=$($pfx $conn $cmd 2>&1)
-		case $? in
-			0) 
-				echo -e "\t\tRemoving $pv from Volume Group $vg"
-				fmtCmdOut "$cmdOut"
-				cont=true
-				;;
-			5)	
-				echo -e "\t\tRemoving volume group $vg"
-				cmd="vgremove $vg"
-				cmdOut=$($pfx $conn $cmd 2>&1)
-				rc=$?
-				if [ $rc -eq 0 ] ; then 
-					fmtCmdOut "$cmdOut"
-					cont=true
-				fi
-				;;
-
-			*)	rc=99
-				;;
-
-		esac
+		## lv removed OK, but need to check if lv has a pool to remove
+		## that as well.
+		#if [ -n "$pool" ]; then 
+			#cmd="lvremove -f /dev/$vg/$pool"
+			#cmdOut=$($pfx $conn $cmd 2>&1)
+			#rc=$?
+			#fmtCmdOut "$cmdOut"
+		#fi
 		
-		if $cont; then 
-			echo -e "\t\tWiping PV label from device(s)"
-			cmd="pvremove $pv"
-			cmdOut=$($pfx $conn $cmd)
-			rc=$?
-			fmtCmdOut "$cmdOut"
-		fi
+		#echo "acting on vg >$vg< and pv >$pv<"
+		#cmd="vgreduce $vg $pv"
+		#cmdOut=$($pfx $conn $cmd 2>&1)
+		#case $? in
+			#0) 
+				#echo -e "\t\tRemoving $pv from Volume Group $vg"
+				#fmtCmdOut "$cmdOut"
+				#cont=true
+				#;;
 			
+			##   Can't remove final physical volume "bla" from volume group "wah"
+			## or
+			##   Physical volume "/dev/vdb" still in use 
+			#5)	
+				#echo -e "\t\tRemoving volume group $vg"
+				#cmd="vgremove $vg"
+				#cmdOut=$($pfx $conn $cmd 2>&1)
+				#rc=$?
+				#if [ $rc -eq 0 ] ; then 
+					#fmtCmdOut "$cmdOut"
+					#cont=true
+				#fi
+				#;;
+
+			#*)	fmtCmdOut "$cmdOut"
+				#rc=99
+				#;;
+
+		#esac
+		
+	if [ $rc -eq 0 ] ; then 
+		echo -e "\t\tWiping PV label from device(s)"
+		cmd="pvremove $pv"
+		cmdOut=$($pfx $conn $cmd)
+		rc=$?
+		fmtCmdOut "$cmdOut"
 	fi
+			
+	#fi
 
 	return $rc
 }
@@ -307,6 +329,7 @@ function getLV {
 	
 	local node=$1
 	local pathName=$2
+	
 	if [ $node != 'localhost' ]; then 
 		ssh $node "awk -v fs=$pathName '{ if(\$2 == fs) { print \$1;}}' /proc/mounts"
 	else
@@ -314,17 +337,31 @@ function getLV {
 	fi
 
 }
-	
-function getPV {
-	# Function which captures the pv of a given lv - output is written directly to stdout
-	#
-	
+
+function getPool {
+	# get the poolname. Using xargs as a simple way to trim leading/trailing whitespace
 	local node=$1
 	local lv=$2
+	
 	if [ $node != 'localhost' ]; then 
-		ssh $node "lvdisplay $lv --maps | awk '/[Pp]hysical [Vv]olume/ { print \$3;}'"	
+		ssh $node "lvs $lv --noheading -o pool_lv | xargs"
 	else
-		lvdisplay $lv --maps | awk '/[Pp]hysical [Vv]olume/ { print $3;}'
+		lvs $lv --noheading -o pool_lv | xargs
+	fi
+
+}
+
+	
+function getPV {
+	# receive a vg and return the associated PV
+	# assumes 1 PV = 1 VG
+	
+	local node=$1
+	local vg=$2
+	if [ $node != 'localhost' ]; then 
+		ssh $node "vgs $vg -o pv_name --noheadings | xargs"	
+	else
+		vgs $vg -o pv_name --noheadings | xargs
 	fi
 }
 
@@ -333,9 +370,9 @@ function getVG {
 	local lv=$2
 
 	if [ $node != 'localhost' ] ; then 
-		ssh $node "lvs $lv --noheadings | awk '{print \$2;}'"
+		ssh $node "lvs $lv --noheadings -o vg_name | xargs"
 	else 
-		lvs $lv --noheadings | awk '{print $2;}'
+		lvs $lv --noheadings -o vg_name | xargs
 	fi
 }
 

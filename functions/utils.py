@@ -170,8 +170,8 @@ def processConfigFile(configFileName):
 		print "\t\t-> Raid parameters provided"
 		print "\t\t\tStripe Unit = %sK"%(stripeUnit)
 		print "\t\t\tStripe Width = %s"%(stripeWidth)	
-		cfg.STRIPEUNIT = stripeUnit
-		cfg.STRIPEWIDTH = stripeWidth
+		cfg.STRIPEUNIT = int(stripeUnit)
+		cfg.STRIPEWIDTH = int(stripeWidth)
 		
 		
 	return 

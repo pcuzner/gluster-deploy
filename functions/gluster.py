@@ -43,8 +43,10 @@ class Brick:
 		self.formatStatus = 'pending'		# pending -> success || failed
 		self.mountPoint = ""
 		self.snapRequired = 'NO'
+		self.snapReserve = 0 
 		self.thinSize = 0
 		self.poolSize = 0
+		self.metadSize = 0
 		self.useCase = ""
 		self.vgName = ""
 		self.lvName = ""
@@ -63,12 +65,35 @@ class Brick:
 		if ( self.snapRequired == 'YES' ) and (self.brickType == 'LVM'):
 			pct = 100 - self.snapReserve
 			
+			# usable space = pv size -4M (vg overhead)
+			usable = self.sizeMB - 4
+
+			# Adjust usable space if pv alignmeent is requested
+			if cfg.STRIPEUNIT:
+				if (cfg.STRIPEUNIT * cfg.STRIPEWIDTH)%1024 == 0:
+					usable -= (cfg.STRIPEUNIT * STRIPEWIDTH) / 1024
+				else:
+					usable -= (((cfg.STRIPEUNIT * cfg.STRIPEWIDTH)/1024)+1)
+			
+			
+			# if the disk is > 1TB, just use a flat 16GB max metadata region
+			if self.sizeMB > 1000000:
+				self.metadSize = 16384	# 16GB of pool metadata
+			else:
+				# otherwise, allocate 0.1% of the size as metadata rounded 
+				# to nearest 4M (default PE size)
+				temp = int(float(usable * 0.001))
+				self.metadSize = temp if ( temp%4 ==0) else 4*((temp/4)+1)
+			
+			self.poolSize = int(usable - self.metadSize)
+			self.thinSize = int((self.poolSize / 100) * pct)
+			
 			# BZ998347 prevents a thinpool being defined with 100%PVS, so
 			# getMuliplier used to look at the device size and decide on a
 			# 'semi-sensible' % to use for the thinpool lv.
-			pctMultiplier = getMultiplier(self.sizeMB)
-			self.poolSize = int(((self.sizeMB - 4) * pctMultiplier))		# 99.9% of HDD
-			self.thinSize = int((self.poolSize / 100) * pct)
+			#pctMultiplier = getMultiplier(self.sizeMB)
+			#self.poolSize = int(((self.sizeMB - 4) * pctMultiplier))		# 99.9% of HDD
+			#self.thinSize = int((self.poolSize / 100) * pct)
 
 		
 		
@@ -78,7 +103,7 @@ class Brick:
 		cfg.LOGGER.info('%s formatting %s as a brick on %s', time.asctime(), self.deviceID, self.nodeName )
 
 		scriptPath = os.path.join(cfg.PGMROOT,'scripts/formatBrick.sh')
-		scriptParms = ( " -D -d %s -c %s -b %s -v %s -s %s -l %s -p %s -m %s -u %s -n %s " % 
+		scriptParms = ( " -D -d %s -c %s -b %s -v %s -s %s -l %s -p %s -M %s -m %s -u %s -n %s " % 
 						(self.deviceID, 
 						raidCard, 
 						self.brickType, 
@@ -86,12 +111,13 @@ class Brick:
 						self.snapRequired, 
 						str(self.thinSize), 
 						str(self.poolSize),
+						str(self.metadSize),
 						self.mountPoint, 
 						self.useCase,
 						self.lvName) )
 						
 		if cfg.STRIPEUNIT:
-			scriptParms += "-r %s -w %s "%(cfg.STRIPEUNIT, cfg.STRIPEWIDTH)
+			scriptParms += "-r %d -w %d "%(cfg.STRIPEUNIT, cfg.STRIPEWIDTH)
 						
 		scriptName = scriptPath + scriptParms
 		
@@ -103,7 +129,7 @@ class Brick:
 			(rc, resp) = issueCMD(scriptName)
 		else:
 			ssh=SSHsession('root',self.nodeName,userPassword)
-			(rc, resp) = ssh.sshScript(scriptName)
+			(rc, resp) = ssh.sshScript(scriptName,300)	# 300 sec timeout on the ssh session
 			
 		self.formatStatus = 'success' if (rc == 0) else 'failed'
 		

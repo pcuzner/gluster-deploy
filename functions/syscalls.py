@@ -52,7 +52,7 @@ class SSHsession:
 		""" run a standard ssh with a single command """
 		return self.__exec("ssh -l %s %s %s" % (self.user,self.host,command))
 	
-	def sshScript(self,scriptName):
+	def sshScript(self,scriptName,timeOut=30):
 		""" 
 		Execute a bash script on the remote machine, returning a tuple of retcode and list
 		"""
@@ -65,7 +65,8 @@ class SSHsession:
 			# The -- is critical to stop bash from claiming any parameter string passed to the script
 			command = """/bin/bash -c "/usr/bin/ssh  %s@%s 'bash -s' -- < %s" """ % (self.user, self.host, scriptName)
 			
-			(rc, output) = self.__exec(command)
+			(rc, output) = self.__exec(command,timeOut)
+			
 			for line in output:
 				if isinstance(line,basestring):
 					if line > '':
@@ -155,13 +156,13 @@ class SSHsession:
 		return objInfo
 		
 	
-	def __exec(self,command):
+	def __exec(self,command,timeOut=30):
 		""" 
 		Execute the given command string and handle the ssh interaction 
 		The returned output is a list in unicode format
 		"""
 		
-		child = pexpect.spawn(command, timeout=30)	# 30 sec timeout
+		child = pexpect.spawn(command, timeout=timeOut)	
 		ptr = child.expect(self.responses)
 		if ptr == 0:
 			# first time connecting
@@ -188,10 +189,14 @@ class SSHsession:
 			
 		elif ptr == 3:
 			# Child process exited
-			child.close()
 			cfg.LOGGER.debug('%s Child process to %s exited with %s', time.asctime(), self.host,str(child.exitstatus))
-			pass
-	
+			
+		elif ptr == 4:
+			# timeout condition met
+			cfg.LOGGER.debug("%s Child process to %s encountered timeout (%d)",time.asctime(),self.host,timeOut)
+			
+		child.close()	# sets the exitstatus
+		
 		return (child.exitstatus, child.before.split('\n'))
 
 

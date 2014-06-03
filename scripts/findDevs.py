@@ -174,6 +174,21 @@ def getSysInfo():
 	else:
 		sysInfo['osversion'] = open('/etc/issue').readlines()[0].rstrip('\n')
 
+	profileList = ['Not Available']
+	
+	if os.path.exists('/usr/bin/tuned-adm'):
+		
+		(rc, tunedOutput) = issueCMD('tuned-adm list')
+		if rc == 0:
+			profileList = [ profile.split(' ')[1] for profile in tunedOutput if profile.startswith('-')]
+		else:
+			pass
+
+	# convert the list of profiles to a string
+	profiles = ','.join(profileList)
+	
+	sysInfo['tunedprofiles'] = profiles
+		
 	
 	return sysInfo 
 
@@ -201,7 +216,7 @@ def main():
 		deviceInfo += ( "<sysinfo kernel='" + sysInfo['kernel'] + "' dmthinp='" + sysInfo['thinp'] + "' btrfs='"
 				+ sysInfo['btrfs'] + "' glustervers='" + sysInfo['glustervers'] + "' memsize='" + sysInfo['memsize']
 				+ "' cpucount='" + sysInfo['cpucount'] + "' raidcard='" + sysInfo['raidcard'] 
-			 	+ "' osversion='" + sysInfo['osversion'] + "' />" ) 
+			 	+ "' osversion='" + sysInfo['osversion'] + "' tunedprofiles='" + sysInfo['tunedprofiles'] + "' />" ) 
 	
 	
 		for disk in unusedDisks:
@@ -213,11 +228,15 @@ def main():
 		# output type is txt so format the output in a more human readable form 
 		# to aid testing and debug
 		deviceInfo = "\nSystem Information\n"
+		tunedList = sysInfo['tunedprofiles'].split(',')
+		tunedString = '\n'.join(['\t\t'+profName for profName in tunedList])
 		deviceInfo += ( "\tKernel         - " + sysInfo['kernel'] + "\n"
 					+   "\tOS Release     - " + sysInfo['osversion'] + "\n"
 					+   "\tInstalled RAM  - " + str(int(sysInfo['memsize'])/1024) + " MB\n"
 					+   "\tCores/Threads  - " + sysInfo['cpucount'] + "\n"
-					+   "\tRaid Card Info - " + sysInfo['raidcard'] + "\n\n"
+					+   "\tRaid Card Info - " + sysInfo['raidcard'] + "\n"
+					+	"\ttuned Profles  - \n"
+					+	tunedString + "\n"
 					+   "Capabilities:\n\tThin Provisioning - " + sysInfo['thinp'] + "\n"
 					+   "\tbtrfs - " + sysInfo['btrfs'] + "\n"
 					+   "\nGluster Version - " + sysInfo['glustervers'] + "\n\n"

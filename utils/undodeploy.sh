@@ -6,9 +6,11 @@
 # * WARNING                                                     *
 # * This script is for testing purposes ONLY and is intended to *
 # * be used to enable quicker testing of the gluster-deploy.py  *
-# * tool. Using this script to drop a configuration created by  *
-# * another tool will likely result in errors and introduce the *
-# * potential of data loss.                                     *
+# * tool.   													*
+# * 															*
+# * It has been tested on cluster that use DNS for the gluster  *
+# * peers only - using it for an IP based cluster will not end  *
+# * well!														*
 # *                                                             *
 # * YOU HAVE BEEN WARNED!                                       *
 # *                                                             *
@@ -43,11 +45,12 @@ function usage {
 
 function unmountFS {
 	local target=$1
-	local pathName=$2
-	local cmd="umount $pathName"
+	local volumePath=$2
+	
+	local cmd="umount $volumePath"
 
 	echo -e "\t\tUnmounting brick filesystem on $target"
-	if [ "$target" != "localhost" ] ; then
+	if [ "$target" != $localNode ] ; then
 		cmd="ssh $target $cmd"
 	fi
 
@@ -86,60 +89,19 @@ function dropLVM {
 	
 	echo -e "\t\tRemoving LVM definitions(LV and VG)"
 	
-	if [ $node != 'localhost' ]; then 
+	if [ $node != $localNode ]; then 
 		conn="ssh $node"
 	fi
 
 
 	# lvremove /dev/vg/lv --> does not remove the thinpool
 	# lvremove lv --> does remove thinpool and lv
+	# vgremove with -f does BOTH which is what we want!
 
 	cmd="vgremove -f $vg"
 	cmdOut=$($pfx $conn $cmd 2>&1)
 	rc=$?
 	fmtCmdOut "$cmdOut"
-	#cont=false
-
-	#if [ $rc -eq 0 ]; then 
-
-		## lv removed OK, but need to check if lv has a pool to remove
-		## that as well.
-		#if [ -n "$pool" ]; then 
-			#cmd="lvremove -f /dev/$vg/$pool"
-			#cmdOut=$($pfx $conn $cmd 2>&1)
-			#rc=$?
-			#fmtCmdOut "$cmdOut"
-		#fi
-		
-		#echo "acting on vg >$vg< and pv >$pv<"
-		#cmd="vgreduce $vg $pv"
-		#cmdOut=$($pfx $conn $cmd 2>&1)
-		#case $? in
-			#0) 
-				#echo -e "\t\tRemoving $pv from Volume Group $vg"
-				#fmtCmdOut "$cmdOut"
-				#cont=true
-				#;;
-			
-			##   Can't remove final physical volume "bla" from volume group "wah"
-			## or
-			##   Physical volume "/dev/vdb" still in use 
-			#5)	
-				#echo -e "\t\tRemoving volume group $vg"
-				#cmd="vgremove $vg"
-				#cmdOut=$($pfx $conn $cmd 2>&1)
-				#rc=$?
-				#if [ $rc -eq 0 ] ; then 
-					#fmtCmdOut "$cmdOut"
-					#cont=true
-				#fi
-				#;;
-
-			#*)	fmtCmdOut "$cmdOut"
-				#rc=99
-				#;;
-
-		#esac
 		
 	if [ $rc -eq 0 ] ; then 
 		echo -e "\t\tWiping PV label from device(s)"
@@ -166,8 +128,10 @@ function fstabUpdate {
 	local pathName=$2
 	local cmd=""
 	local conn=""
+	#local actualPath=$(dirname $pathName)
 	
-	if [ "$target" != "localhost" ]; then 
+	
+	if [ "$target" != $localNode ]; then 
 		conn="ssh $target "
 	fi
 
@@ -181,7 +145,7 @@ function fstabUpdate {
 	cmd="sed -n -i '\,$pathName,"'!p'"' /etc/fstab"
 
 	# If this is the localhost, run the command directly
-	if [ "$target" == "localhost" ] ; then
+	if [ "$target" == $localNode ] ; then
 		sed -n -i '\,'$pathName',!p' /etc/fstab	
 	else
 		# Execute the commands built inside the variables
@@ -205,18 +169,14 @@ function dropVolume {
 
 }
 
-function getNodes {
-	# Requires glusterfs 3.4+ for the gluster pool list command
-	local nodes=$(gluster pool list | awk '/-/ { print $2; }')
-	echo $nodes
-}
+
 
 function dropNode {
 	local node=$1
 	local cmd=""
 	local cmdOut=""
 
-	if [ "$node" == "localhost" ]; then 
+	if [ "$node" == $localNode ]; then 
 		return 0
 	fi
 
@@ -241,7 +201,7 @@ function removeSSH {
 
 	# We only have to remove the keys for the remote hosts, so if this is the
 	# local machine, just return to the caller
-	if [ "$node" == "localhost" ] ; then 
+	if [ "$node" == $localNode ] ; then 
 		echo -e "\t\tRemoving ssh keys skipped (not applicable on local node)"
 		return 0
 	fi
@@ -270,12 +230,13 @@ function resetCluster {
 		IFS=":"
 		set -- $brickInfo
 		local node=$1
-		local brickPath=$2		
+
+		local brickPath=$(dirname $2)		
 		unset IFS
 
-		if [ $node == $thisHost ] ; then 
-			node='localhost'
-		fi
+		#if [ $node == $localNode ] ; then 
+		#	node='localhost'
+		#fi
 
 		echo -e "\n\tProcessing peer $node"
 
@@ -295,13 +256,67 @@ function resetCluster {
 				dropBTRFS $node || return $?
 				;;
  		esac
-		
-		dropNode $node || return $?
 
-		removeSSH $node || return $?
+		let disksProcessed[$node]=${disksProcessed[$node]}+1
+		
+
+
+		# if this is the last brick on this node, we can remove the ssh
+		# keys and drop the node from the gluster config
+		if [ ${disksProcessed[$node]} == ${totalDisks[$node]} ]; then 
+			
+			removeSSH $node || return $?
+			
+			dropNode $node || return $?
+			
+		else
+			echo -e "\t\tBypassing ssh key removal, since more bricks to remove on this node($node)"
+		fi
+		
 
 	done
 }
+
+function isName {
+	local hostName=$1
+	local re='^[0-9]'
+	local char1=${hostName:0:1}
+	local result=true
+	
+	if [[ $char1 =~ $re ]]; then 
+			result=false
+	fi
+	
+	echo $result
+}
+
+
+
+function isLocalHost {
+	# function receiving a hostname, and returning whether that host
+	# resolves to an IP on the local machine (boolean)
+	
+	local thisNode=$1
+
+	if $(isName $thisNode); then 
+		local target=$(host $thisNode | awk ' { print $4;}')
+	else
+		local target=$thisNode
+	fi
+	
+	local IPonHost=$(ip addr show | grep $target)
+	local resp=true
+
+	if [ -z "$IPonHost" ]; then
+		resp=false
+	fi
+
+	echo $resp
+}
+
+
+
+
 function getLocalBrick {
 
 	# I assume that all the bricks across the cluster are formatted in a consistent 
@@ -314,8 +329,9 @@ function getLocalBrick {
 		IFS=":"
 		set -- $brick
 		node=$1
-		if [ $node == $thisHost ]; then 
-			echo $2
+		if [ $node == $localNode ]; then
+			local mountPath=$(dirname $2)
+			echo $mountPath
 			break
 		fi
 		unset IFS
@@ -328,12 +344,13 @@ function getLV {
 	# output is written directly to stdout	
 	
 	local node=$1
-	local pathName=$2
+	local mountPoint=$2
+	#local mountPoint=$(dirname $pathName)
 	
-	if [ $node != 'localhost' ]; then 
-		ssh $node "awk -v fs=$pathName '{ if(\$2 == fs) { print \$1;}}' /proc/mounts"
+	if [ $node != $localNode ]; then 
+		ssh $node "awk -v fs=$mountPoint '{ if(\$2 == fs) { print \$1;}}' /proc/mounts"
 	else
-		awk -v fs=$pathName '{ if($2 == fs) { print $1;}}' /proc/mounts	
+		awk -v fs=$mountPoint '{ if($2 == fs) { print $1;}}' /proc/mounts	
 	fi
 
 }
@@ -343,13 +360,14 @@ function getPool {
 	local node=$1
 	local lv=$2
 	
-	if [ $node != 'localhost' ]; then 
+	if [ $node != $localNode ]; then 
 		ssh $node "lvs $lv --noheading -o pool_lv | xargs"
 	else
 		lvs $lv --noheading -o pool_lv | xargs
 	fi
 
 }
+
 
 	
 function getPV {
@@ -358,7 +376,7 @@ function getPV {
 	
 	local node=$1
 	local vg=$2
-	if [ $node != 'localhost' ]; then 
+	if [ $node != $localNode ]; then 
 		ssh $node "vgs $vg -o pv_name --noheadings | xargs"	
 	else
 		vgs $vg -o pv_name --noheadings | xargs
@@ -369,7 +387,7 @@ function getVG {
 	local node=$1
 	local lv=$2
 
-	if [ $node != 'localhost' ] ; then 
+	if [ $node != $localNode ] ; then 
 		ssh $node "lvs $lv --noheadings -o vg_name | xargs"
 	else 
 		lvs $lv --noheadings -o vg_name | xargs
@@ -377,8 +395,51 @@ function getVG {
 }
 
 
+function getNodes {
+	local nodes=$(gluster peer status | awk '/Hostname:/ { print $2; }')
+	echo $nodes "localhost"
+}
+
+function createNodeCounters {
+	# Sets up the associated arrays to track the number of bricks per node
+	# and establishes which node is the localhost (localNode variable)
+	
+	local brickPath=($@)
+
+	IFS=":"
+	for brick in "${brickPath[@]}"; do
+		set -- $brick
+		local node=$1
+		local path=$2
+
+		local chkLocal=$(isLocalHost $node)
+		if [ "$chkLocal" = true ]; then
+			localNode=$node
+		fi
+
+		if [ -z ${totalDisks[$node]} ]; then
+			totalDisks[$node]=1
+			disksProcessed[$node]=0
+		else
+			let totalDisks[$node]=${totalDisks[$node]}+1
+		fi
+
+	done
+	
+	unset IFS
+}
+
+
+
 function main {
 	
+	
+	# Define associative arrays to track the bricks by node for clusters that have 
+	# more than one brick defined in a volume from a given node
+	declare -A totalDisks
+	declare -A disksProcessed
+
+	localNode=''
 	thisHost=$(hostname -s)
 	nodeList=$(getNodes)
 	pfx=""					# pfx is only set in debug mode to show
@@ -434,20 +495,26 @@ function main {
 			exit 12
 	fi
 	
+	# set the arrays to track bricks per node, and establish the node
+	# from the brick list that is the local host
+	createNodeCounters "$brickList"
+	
 	localBrick=$(getLocalBrick "$brickList")
 	
-	lvName=$(getLV 'localhost' $localBrick)
+	
+	lvName=$(getLV $localNode $localBrick)
+		
 
-	vgName=$(getVG 'localhost' $lvName)
+	vgName=$(getVG $localNode $lvName)
 
  	brickType=$(awk -v fs=$localBrick '{ if($2 == fs) { print $3;}}' /proc/mounts)
 	
 	echo -e "Actions to undertake are as follows;"
-	echo -e "\t- drop gluster volume called $volName"
+	echo -e "\t- drop gluster volume called '$volName'"
 	echo -e "\t- drop cluster definition ($numNodes nodes)"
 	echo -e "\t- drop brick filesystem ($brickType)"
-	echo -e "\t- drop associated LVM volume group ($vgName) and all associated LV's & PV's"
-	echo -e "\t- remove fstab entries for filesystems used for the bricks"
+	echo -e "\t- drop associated LVM volume group(s) and all associated LV's & PV's"
+	echo -e "\t- remove fstab entries for filesystems used by the bricks"
 
 	while true; do
 		read -r -p "Are you Sure (y/n)?" confirm
@@ -463,6 +530,9 @@ function main {
 	done
 
 	if $goAhead ; then 
+
+
+
 		
 		resetCluster "$brickList"
 

@@ -47,6 +47,9 @@ class Brick:
 		self.thinSize = 0
 		self.poolSize = 0
 		self.metadSize = 0
+		
+		self.tuned = ''						# setting used as a trigger during the 
+											# the format to set the 'tuned' profile
 		self.useCase = ""
 		self.vgName = ""
 		self.lvName = ""
@@ -118,6 +121,9 @@ class Brick:
 						
 		if cfg.STRIPEUNIT:
 			scriptParms += "-r %d -w %d "%(cfg.STRIPEUNIT, cfg.STRIPEWIDTH)
+			
+		if self.tuned:
+			scriptParms += " -T %s "%(self.tuned)
 						
 		scriptName = scriptPath + scriptParms
 		
@@ -125,11 +131,16 @@ class Brick:
 
 		cfg.MSGSTACK.pushMsg("%s format on %s starting" %(self.deviceID, self.nodeName))
 
-		if self.localDisk:
-			(rc, resp) = issueCMD(scriptName)
-		else:
-			ssh=SSHsession('root',self.nodeName,userPassword)
-			(rc, resp) = ssh.sshScript(scriptName,300)	# 300 sec timeout on the ssh session
+		
+		# All formats are done over ssh including the local disks. If not
+		# when tuned-adm is invoked by the formatDisk.sh script running under
+		# the main thread, tuned 'acquires' the tcp port of gluster-deploy's
+		# httpserver !
+		#if self.localDisk:
+		#	(rc, resp) = issueCMD(scriptName)
+		#else:
+		ssh=SSHsession('root',self.nodeName,userPassword)
+		(rc, resp) = ssh.sshScript(scriptName,300)	# 300 sec timeout on the ssh session
 			
 		self.formatStatus = 'success' if (rc == 0) else 'failed'
 		
@@ -161,6 +172,7 @@ class Node:
 		self.memGB = 0
 		self.cpuCount = 0
 		self.osVersion = ''
+		self.tunedProfiles = []				# list of tuned profiles
 		
 		
 	def pushKey(self):
@@ -227,6 +239,8 @@ class Node:
 			self.cpuCount = int(sysInfo.attrib['cpucount'])
 			self.raidCard = sysInfo.attrib['raidcard']
 			self.osVersion = sysInfo.attrib['osversion']
+			
+			self.tunedProfiles = sysInfo.attrib['tunedprofiles'].split(',')
 			
 			# Process the disk information
 			for disk in freeDisks:
@@ -301,6 +315,21 @@ class Cluster:
 		self.opStatus['failed'] = 0
 		return
 
+	def tunedProfiles(self):
+		""" Process the nodes in the cluster to return a list of tuned 
+			profiles common to all nodes
+		"""
+		
+		allProfiles = []			# list of lists
+		
+		for nodeName in self.node:
+			allProfiles.append(self.node[nodeName].tunedProfiles)
+		
+		# calculate common tuned profiles across all nodes
+		commonProfiles = set.intersection(*map(set,allProfiles))
+			
+		return list(commonProfiles)
+		
 
 class Volume:
 	
@@ -314,6 +343,7 @@ class Volume:
 		volumeDefinition = xmlDoc.find('volume')
 		self.volName = volumeDefinition.attrib['name']
 		self.volType = volumeDefinition.attrib['type']
+		self.volDirectory = volumeDefinition.attrib['voldirectory']
 		self.useCase = volumeDefinition.attrib['usecase'].lower()
 		self.replicaParm = ' ' if ( volumeDefinition.attrib['replica'] == 'none') else (' replica ' + volumeDefinition.attrib['replica'])
 		
@@ -348,9 +378,9 @@ class Volume:
 		# create volume syntax
 		createCMD = "gluster vol create " + self.volName + self.replicaParm + " transport tcp "
 		for brick in self.bricks:
-			createCMD += brick + " "
+			createCMD += brick + "/" + self.volDirectory + " "
 		
-		createCMD += " force"		# added to allow the root of the brick to be used (glusterfs 3.4)
+		#createCMD += " force"		# added to allow the root of the brick to be used (glusterfs 3.4)
 		
 		cmdQueue.append(createCMD)
 		
@@ -409,36 +439,59 @@ class Volume:
 		retCode = 0
 		stepNum = 1
 		
-		for cmd in cmdQueue:
+		# Volumes are defined on directories on the brick, so the first thing to do 
+		# is prepare the brick with the required directory
+
+		for brick in self.bricks:
+			(hostName, brickPath) = brick.split(':')
+			node = cfg.CLUSTER.node[hostName]
 			
-			cmdType = ' '.join(cmd.split()[1:3]) + ' ...'
-			cfg.MSGSTACK.pushMsg("Step %d/%d starting (%s)" %(stepNum, numCmds,cmdType))
+			cfg.MSGSTACK.pushMsg("Creating directory on %s" %(hostName))
+			cfg.LOGGER.info("%s Creating %s/%s directory on node %s", time.asctime(), brickPath + '/', self.volDirectory, hostName)
 			
-			(rc, cmdOutput) = issueCMD(cmd)
+			s=SSHsession(node.userName, node.nodeName)
+			(rc, mkdirOut) = s.ssh('mkdir %s/%s'%(brickPath, self.volDirectory))
 			
-			self.createMsgs += cmdOutput
-			
-			if rc == 0:	# retcode is 1st element, so check it's 0
-							
-				# push this cmd to the queue for reporting in the UI
-				cfg.MSGSTACK.pushMsg("Step %d/%d completed" %(stepNum, numCmds))
+			if ( rc > 0):
 				
-				# Log the cmd being run as successful
-				cfg.LOGGER.info("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
-				cfg.LOGGER.debug("%s Command successful : %s", time.asctime(), cmd)
+				cfg.MSGSTACK.pushMsg("Directory preparation failed")
+				cfg.LOGGER.debug("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
 				
-			else:
-				cfg.LOGGER.info("%s vol create step failed", time.asctime())
-				
-				cfg.LOGGER.debug("%s command failure - %s", time.asctime(), cmd)
-				
-				cfg.MSGSTACK.pushMsg("Step %d/%d failed - sequence aborted" %(stepNum, numCmds))
-				
-				# problem executing the command, log the response and return
-				retCode = 8
+				retCode = 12
 				break
+			
+		
+		if retCode == 0:
+			for cmd in cmdQueue:
 				
-			stepNum +=1
+				cmdType = ' '.join(cmd.split()[1:3]) + ' ...'
+				cfg.MSGSTACK.pushMsg("Step %d/%d starting (%s)" %(stepNum, numCmds,cmdType))
+				
+				(rc, cmdOutput) = issueCMD(cmd)
+				
+				self.createMsgs += cmdOutput
+				
+				if rc == 0:	# retcode is 1st element, so check it's 0
+								
+					# push this cmd to the queue for reporting in the UI
+					cfg.MSGSTACK.pushMsg("Step %d/%d completed" %(stepNum, numCmds))
+					
+					# Log the cmd being run as successful
+					cfg.LOGGER.info("%s step %d/%d successful", time.asctime(), stepNum, numCmds)
+					cfg.LOGGER.debug("%s Command successful : %s", time.asctime(), cmd)
+					
+				else:
+					cfg.LOGGER.info("%s vol create step failed", time.asctime())
+					
+					cfg.LOGGER.debug("%s command failure - %s", time.asctime(), cmd)
+					
+					cfg.MSGSTACK.pushMsg("Step %d/%d failed - sequence aborted" %(stepNum, numCmds))
+					
+					# problem executing the command, log the response and return
+					retCode = 8
+					break
+					
+				stepNum +=1
 	
 		
 		self.state = "Created" if retCode == 0 else "Failed"

@@ -1,0 +1,17 @@
+<h3>Snapshot Support</h3>
+
+<p>Although the underlying nodes in the cluster can provide a snapshot capability,
+ the version of gluster you have installed does not provide snapshots.Snapshots are available from 
+ version <strong>3.6</strong> onwards.
+</p>
+<p>You can still choose to configure the bricks for snapshots now, to make the transition 
+to a later gluster release that does support snapshots easier, by clicking '<strong>OK</strong>'.</p>
+<p>Clicking on '<strong>Cancel</strong>' will return you to the brick definition page, allowing you to change 
+your selection.
+</p>
+
+
+<span class="ctr_button">
+	<button id="modal-btn-cancel" value="cancel" onclick="showModal();">Cancel</button>
+	<button id="modal-btn-ok" value="ok" onclick="showModal(); buildFmtRequest();" >OK</button> 
+</span>

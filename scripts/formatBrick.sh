@@ -239,6 +239,24 @@ function mount_filesystem {
 	return $?
 }
 
+function set_tuned {
+	
+	/usr/bin/tuned-adm profile $tunedProfile
+
+	rc=$?
+	
+	if [ $rc -eq 0 ]; then 
+		logger "formatBrick.sh set tuned profile to $tunedProfile"
+		
+	else
+		logger "formatBrick.sh tuned set command failed with RC=$rc"
+	fi
+	
+	return $rc
+	
+}
+
+
 function create_brick {
 	
 	local devPath
@@ -280,6 +298,11 @@ function create_brick {
 	# mount it
 	mount_filesystem || return $?
 
+	# set the requested tuned profile
+	if [ -n "$tunedProfile" ] ; then 
+		set_tuned || return $?
+	fi
+	
 }
 
 
@@ -300,6 +323,7 @@ function dump_parms {
 	logger "inodesz : $inodeSize"
 	logger "SU : $stripeUnit"
 	logger "SW : $stripeWidth"
+	logger "Tuned Profile : $tunedProfile"
 
 }
 
@@ -315,10 +339,13 @@ function main {
 	args=("$@")
 	logger "Invocation parms: $args"
 	
-	while getopts "tDu:c:s:l:p:b:v:m:n:d:r:w:M:" OPT; do
+	while getopts "tDu:c:s:l:p:b:v:m:n:d:r:w:M:T:" OPT; do
 		case "$OPT" in
 			t)
 				dryrun=1
+				;;
+			T)
+				tunedProfile=$OPTARG
 				;;
 			D)
 				debug=true 

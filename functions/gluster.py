@@ -85,10 +85,11 @@ class Brick:
 			else:
 				# otherwise, allocate 0.1% of the size as metadata rounded 
 				# to nearest 4M (default PE size)
-				temp = int(float(usable * 0.001))
+				temp = int(float(usable * 0.001)) 
 				self.metadSize = temp if ( temp%4 ==0) else 4*((temp/4)+1)
-			
-			self.poolSize = int(usable - self.metadSize)
+				
+			# meta data allocation is x2 due to the mirror of the metadata region			
+			self.poolSize = int(usable - (self.metadSize*2))
 			self.thinSize = int((self.poolSize / 100) * pct)
 			
 			# BZ998347 prevents a thinpool being defined with 100%PVS, so

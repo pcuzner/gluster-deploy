@@ -29,7 +29,7 @@ import logging
 import time
 import os
 
-from threading 	import active_count
+from threading 	import active_count,enumerate
 from optparse 	import OptionParser			# command line option parsing
 
 from 	functions.network 		import getHostIP
@@ -112,18 +112,26 @@ def main():
 			# Run the httpd service
 			httpd.serve_forever()
 			
-		# User has hit CTRL-C, so catch it to stop an error being thrown
+			# User has hit CTRL-C, so catch it to stop an error being thrown
 		except KeyboardInterrupt:
 			print '\ngluster-deploy web server stopped by user hitting - CTRL-C\n'
 
 		# Wait for threads to quiesce
 		print "\t\tWaiting for active threads(" + str(active_count()) + ") to quiesce"
 		
+		if active_count() > 1:
+			threadList = enumerate()
+			threadNames = [ t.getName() for t in threadList ]
+			cfg.LOGGER.debug('%s http server threads running %s', time.asctime(), ','.join(threadNames))
+			
 		while active_count() > 1:
-			time.sleep(0.1)
-
-		httpd.server_close()
+			try:
+				time.sleep(0.1)
+			except KeyboardInterrupt:
+				break
 		
+		httpd.server_close()
+
 		cfg.LOGGER.info('%s http server stopped', time.asctime())	
 
 	else:

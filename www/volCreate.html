@@ -1,11 +1,11 @@
 <h2>Create a Volume</h2>
 		<p style="position:relative; top:-15px;line-height:2;">
-			Volume Name: 
+			<span style="display:inline-block; width:125px;">Volume Name:</span> 
 			<input id="volNameInput" type="text" size=26 onkeyup="updateSummary('volume')">
 			<br>
 			
-			Use Case:&nbsp;
-			<select id="volUseCase" style="position:relative; left:21px; width:130px;" onchange="addOptions(this.options[this.selectedIndex].value);">
+			<span style="display:inline-block; width:125px;">Use Case:</span> 
+			<select id="volUseCase" style="position:relative;  width:130px;" onchange="addOptions(this.options[this.selectedIndex].value);">
 				<option>Generic</option>
 				<option>Virtualisation</option>
 				<option>Streaming</option>
@@ -24,7 +24,7 @@
 			<span id="genericInput">
 			</span>
 			<br>
-			Volume Type:&nbsp;
+			<span style="display:inline-block; width:128px;">Volume Type:</span>
 			<select id="volType" onchange="addOptions(this.options[this.selectedIndex].value)" >
 				<option>Distributed</option>
 				<option>Replicated</option>
@@ -35,6 +35,7 @@
 					<option>2</option>
 				</select>
 			</span>
+			<!-- commented out for now!
 			<br>
 			Automatic brick selection:
 			<span id="brickautoselect">
@@ -44,6 +45,10 @@
 				<span class="switch-handle"></span>
 			</label>
 			</span>
+			-->
+			<br>
+			<span style="display:inline-block; width:128px;">Directory Name</span>
+			<input id="volDir" type="text" size=26>
 			<br>
 			Additional Protocols:
 			<span id="protocols" >

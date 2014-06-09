@@ -3,12 +3,17 @@
 		This configuration page, gathers the metrics that allow bricks to be defined optimally for a given workload. </p>
 		<p>Complete the items below, then click on the "Build Bricks" button to start the formatting process.
 		</p>
-		Use Case
+		<span  style="display:inline-block; width:120px;">Use Case</span>
 		<select id="useCase">
 			<option value="generic" selected="selected">Generic File Serving</option>
 			<option value="virtualisation">Virtualisation</option>
 			<option value="object">Object Storage</option>
 		</select>
+		<div id="tunedSelect" >
+		<p><span  style="display:inline-block; width:120px;">'tuned' Profile</span>
+		<select id="tunedProfile">
+		</select>
+		</p></div>
 		<p>
 		Brick Filesystem Provided by&nbsp;
 		<select id="brickProvider" onchange="switchProvider(this.value)">
@@ -17,26 +22,27 @@
 		</p>
 		<div id="lvm">
 			<div id="snapRequired">
-				Volume Snapshots&nbsp;
+				<span style="position:relative; display:inline-block; width:130px;">Volume Snapshots</span>
 				<label id="snapshotSwitch" class="switch" >
 					<input id="snapshotsRequired" type="checkbox" onclick="snapToggle(this.checked)" class="switch-input">
 					<span class="switch-label" data-on="On" data-off="Off"></span>
 					<span class="switch-handle"></span>
 				</label>
 				<div id="snapReserve">
-					Snapshot Space&nbsp;<span id="snapshotValue" >10%</span>&nbsp;&nbsp;&nbsp;<strong>0</strong>
+					Snapshot Space&nbsp;<span id="snapshotValue"  >10%</span><span style="display:inline-block; width: 30px; text-align:right;"><strong>0</strong></span>
 					<input id="snapshotSpace" oninput="updateSnapshot();" onkeyup="updateSnapshot();" onmouseup="updateSnapshot();" type='range' min="0" max="30" value="10" >
-					<span style="position:relative; left:-15px;" ><strong>30</strong></span>
+					<span style="width:30px; text-align:right; display:inline-block;"><strong>30</strong></span>
 				</div>
 
 			</div>
-	
-			Volume Group to create&nbsp;  
+			<p>
+			<span  style="display:inline-block; width:170px;">Volume Group Name</span>
 			<input type='text' id="vgName" class="brickInputField" value="gluster" onkeyup="updateLV();" onchange="validateBrickParms(this);" ></p>
-			Logical Volume Name&nbsp;  
+			<span  style="display:inline-block; width:170px;">Logical Volume Name</span>
 			<input type='text' id="lvName" value="gluster"  class="brickInputField" onfocus="validateBrickParms(this)" onchange="validateBrickParms(this);"></p>
+			</p>
 
 		</div>
-		<p>Mount point for the brick&nbsp;
+		<p><span  style="display:inline-block; width:170px;">Brick mount point</span>
 		<input type="text" id="mountPoint" class="brickInputField" onchange="validateBrickParms(this);"></p>
 		<button id="buildBricks" class="bricksButton" type="button" onclick="buildBricks()"><i class="icon-commit-config"></i>Build Bricks</button>

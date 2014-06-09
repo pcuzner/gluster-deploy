@@ -96,6 +96,10 @@ function create_lv {
 		local poolName=$lvName"pool"
 		echo "lvcreate -l $poolSize -T $vgName/$poolName -c 1M --poolmetadatasize $metadSize"
 		#lvcreate -L "$poolSize"m -T $vgName/$poolName -c 1M --poolmetadatasize ${metadSize}m
+		
+		# Under later releases of lvm2, an additional option is available to enable a spare
+		# metadata lv called --poolmetadataspare y|n. Under RHS 3.x this is enabled by default
+		# for other distributions this setting (if available) is recommended!
 		lvcreate -L ${poolSize}m -T $vgName/$poolName -c 1M --poolmetadatasize ${metadSize}m
 		rc=$?
 		

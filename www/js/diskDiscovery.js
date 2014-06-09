@@ -89,7 +89,7 @@ function findDisks() {
 
 function registerHandler(req) {
 
-	xmlDoc = req.responseXML;
+	var xmlDoc = req.responseXML;
 	
 	// Example XML input
 	// <response>
@@ -111,10 +111,42 @@ function registerHandler(req) {
 		var snapshotEnabled = features.getNamedItem('snapshot').value;
 		var btrfsEnabled = features.getNamedItem('btrfs').value;
 		
+		// snapshotCapable defaults to False, so check for YES to flip it to true
+		if ( features.getNamedItem('glustersnapshot').value == 'YES') {
+			glusterSnapshots = true;
+		}
+				
 		var brickInfo = xmlDoc.getElementsByTagName('brick')[0].attributes;
 		var brickPath = brickInfo.getNamedItem('path').value;
 		var brickVG   = brickInfo.getNamedItem('vgname').value;
 		var brickLV   = brickInfo.getNamedItem('lvname').value;
+		
+		
+		
+		
+		if ( xmlDoc.getElementsByTagName('tunedprofile').length > 0) {
+			// server has sent a list of tuned profiles for the user 
+			// to select from, so update the select box with these options
+			
+			// populate with options
+			var profiles = xmlDoc.getElementsByTagName('tunedprofile');
+			var target = document.getElementById('tunedProfile');
+			for (var i=0; i<profiles.length -1; i++) {
+				var tunedName = profiles[i].childNodes[0].nodeValue;
+				var newOption = document.createElement('option');
+				newOption.text = tunedName;
+				target.add(newOption, null);
+			}
+			
+			
+		}
+		else {
+			// no tuned profiles have been received so hide the element
+			document.getElementById('tunedSelect').className = 'hide';
+		}
+		
+		
+		
 		
 		
 		document.getElementById('mountPoint').value = brickPath;
@@ -177,8 +209,6 @@ function registerBricks() {
 			}
 		}
 		xmlString += '</data>';
-		//callerString = 'registerBricks|' + callerParms;
-		// showBusy('Creating 	' + numBricks + ' bricks');
 		
 		xml_http_post('../www/main.html', xmlString, registerHandler);
 	

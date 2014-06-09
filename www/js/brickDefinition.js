@@ -9,6 +9,13 @@ function updateSnapshot() {
 	document.getElementById('snapshotValue').innerHTML = num.toString() + "%";
 }
 
+function snapshotWarning(req) {
+	var xmlDoc = req.responseXML;
+	
+	populateDiv(xmlDoc);
+	
+	showModal('on');
+}
 
 
 function buildBricks() {
@@ -22,9 +29,9 @@ function buildBricks() {
 		// turn boolean value into yes or no
 		var snapRequired = (document.getElementById('snapshotsRequired').checked ? 'YES' : 'NO');
 		
-		// If snapshots are requested or the brickProvider is btrfs, we need to 
-		// confirm with the user since these are upstream experimental features
-		if (( snapRequired == 'YES') || ( brickProvider == 'BTRFS')) {
+		// Issue a warning dialog, of the gluster environment does not support snapshots
+		// but a brick config that supports snapshots has been selected by the user.
+		if (( snapRequired == 'YES') || ( brickProvider == 'BTRFS') && (! glusterSnapshots)) {
 			
 			// Confirmation is required to use these features. Using the js confirm dialog, is the
 			// easiest way to do this, but the look and feel is not consistent with the UI's theme.
@@ -32,24 +39,28 @@ function buildBricks() {
 			// interaction, which allows the UI theme to be applied for a consistent look and feel.
 			
 			// Add text to the modal title div
-			document.getElementById('modal-title').innerHTML = '<h3>Experimental Features Selected</h3>';
+			//document.getElementById('modal-title').innerHTML = '<h3>Experimental Features Selected</h3>';
 			
-			// add text to the modal text div area
-			var mdContent = "<p>Enabling snapshot support through the Logical Volume Manager ";
-			mdContent +=    "or the 'btrfs' filesystem are features that are still under development.</p>";
-			mdContent +=    "<p>They are included to enable easier testing of these features within ";
-			mdContent +=    "the glusterfs developer community, and are therefore not suitable for ";
-			mdContent +=    "production deployments</p>";
-			mdContent +=    "<p>By clicking 'OK' bricks will be configured with these experimental features enabled.</p>"; 
+			//// add text to the modal text div area
+			//var mdContent = "<p>Enabling snapshot support through the Logical Volume Manager ";
+			//mdContent +=    "or the 'btrfs' filesystem are features that are still under development.</p>";
+			//mdContent +=    "<p>They are included to enable easier testing of these features within ";
+			//mdContent +=    "the glusterfs developer community, and are therefore not suitable for ";
+			//mdContent +=    "production deployments</p>";
+			//mdContent +=    "<p>By clicking 'OK' bricks will be configured with these experimental features enabled.</p>"; 
 
-			document.getElementById('modal-text').innerHTML = mdContent;
+			//document.getElementById('modal-text').innerHTML = mdContent;
 			
-			// setup the buttons in the modal window to call appropriate function
-			document.getElementById('modal-btn-cancel').onclick = function(){ showModal(); } ;
-			document.getElementById('modal-btn-ok').onclick = function(){ showModal(); buildFmtRequest(); };
+			//// setup the buttons in the modal window to call appropriate function
+			//document.getElementById('modal-btn-cancel').onclick = function(){ showModal(); } ;
+			//document.getElementById('modal-btn-ok').onclick = function(){ showModal(); buildFmtRequest(); };
+
+			var xmlString = "<data><request-type>get-modal</request-type>"
+			xmlString += 	"<page-request htmlfile='www/modal-snapshot-warning.html' />"
+			xmlString +=	"</data>"
 			
-			// enable the modal dialog
-			showModal('on');
+			xml_http_post('../www/main.html', xmlString, snapshotWarning);
+
 		
 		}
 		else {
@@ -88,6 +99,13 @@ function buildFmtRequest() {
 		xmlString += "lvname='" + lvName + "' ";
 		xmlString += "volgroup='" + volumeGroup + "' ";				
 	}
+
+	// if the 'tuned' pulldown is active, grab the current setting and pass back
+	if (document.getElementById('tunedProfile').length > 0) {
+		xmlString += "tuned='" + document.getElementById('tunedProfile').value + "' ";
+	}
+	
+
 
 	xmlString += "mountpoint='" + mountPoint + "'/></data>";
 	

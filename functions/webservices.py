@@ -256,8 +256,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		
 		# Add the nodes successfully added to the response	(sorted for display purposes)		
 		for nodeName in cfg.CLUSTER.nodeList():
-			if not cfg.CLUSTER.node[nodeName].localNode:
-				response += "<node name='" + nodeName + "' />"
+			#if not cfg.CLUSTER.node[nodeName].localNode:
+			response += "<node name='" + nodeName + "' />"
 		
 		# Pass the client the html and next div to use in the UI
 		response += nextPageXML('www/keys.html','keys') + "</response>" 
@@ -275,7 +275,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		return response
 
 	def __rqstPushKeys(self, xmlDoc):
-		"""Handle the distrubution of the local users public key for passwordless
+		"""Handle the distribution of the local users public key for passwordless
 		ssh
 		"""
 		success = 0

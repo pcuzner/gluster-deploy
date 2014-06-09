@@ -40,7 +40,8 @@ import 	functions.config as cfg				# global variables/settings
 
 
 def sshKeyOK():
-	"""	Ensure local ssh key is in place, if not create it """
+	"""Ensure local ssh key is in place, if not create it 
+	"""
 
 	keyOK = False	
 	
@@ -57,7 +58,7 @@ def sshKeyOK():
 				cfg.LOGGER.info('%s SSH key has been generated successfully', time.asctime())
 				keyOK = True
 				break
-		
+	
 	return keyOK
 
 

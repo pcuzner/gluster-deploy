@@ -134,6 +134,17 @@ display:block;
 
 
 }
+#tunedSelect {
+position:relative;
+height:30px;
+visibility:visible;
+display:block;
+}
+#tunedSelect.hide {
+visibility: hidden;
+display:none;
+}
+
 #snapRequired {
 position:relative;
 height:30px;
@@ -155,7 +166,7 @@ left:170px;
 #snapshotSpace {
 position:relative;
 top:5px;
-left:-10px;
+left:5px;
 
 }
 
@@ -183,7 +194,7 @@ margin-left: 15px;
 	background: white;
 	position: relative;
 	border-radius: 8px;
-	height:240px;
+	height:300px;
 	padding:10px;
 	margin: 0 auto;
 	box-shadow: 5px 5px 5px #888888;
@@ -692,12 +703,22 @@ position: relative;
 }
 
 .useBrick {
+	position:relative;
+	left:8px;
+	top:-280px;
+	width:37px;
+	margin-top:8px;
+}
+
+/*
+.useBrick {
 	position:absolute;
 	left:214px;
 	width:37px;
 	margin-top:8px;
 
 }
+*/
 
 .delbtn {
 	padding: 0px 0px 2px 8px ;

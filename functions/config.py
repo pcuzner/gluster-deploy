@@ -44,11 +44,14 @@ def init():
 	global CLUSTER
 	global STRIPEUNIT
 	global STRIPEWIDTH
+	global SNAPSHOTVERSION
 	
 	# import is placed inside the function to prevent circular imports 
 	from functions.utils 	import MsgStack
 	from functions.gluster 	import Cluster
 
+	
+	SNAPSHOTVERSION = '3.6'
 	
 	LOGFILE = 'gluster-deploy.log'
 	LOGLEVEL = logging.getLevelName('DEBUG')		# DEBUG | INFO | ERROR

@@ -277,7 +277,7 @@ function createVolHandler(req) {
 	}
 	else {
 		document.getElementById('busyGraphic').className = 'fail';
-		document.getElementById('busyButton').onclick = function() { showError;};
+		document.getElementById('busyButton').onclick = function() { showError();};
 	}
 																										
 	document.getElementById('busyButton').disabled = false;
@@ -289,11 +289,11 @@ function createVolHandler(req) {
 function createVolume() {
 	
 	var volName = document.getElementById('volNameInput').value;
-
+	var volDirectory = document.getElementById('volDir').value;
 
 	// First check that the user has provided a volume name and used some
 	// bricks for the create volume request to work with
-	if (( volName.length == 0 ) || ( BRICKSUSED == 0 )) {
+	if (( volName.length == 0 ) || ( BRICKSUSED == 0 ) || (volDirectory.length == 0)) {
 		return;
 	}
 	
@@ -316,9 +316,10 @@ function createVolume() {
 	var nfs     = document.getElementById('nfsRequired').checked;
 	var cifs	= document.getElementById('cifsRequired').checked;
 	
+
 	var xmlString = "<data><request-type>vol-create</request-type>"
 					+ "<volume name='" + volName + "' type='" + volType + "' usecase='" + useCase + "'"
-					+ " replica='" + replica + "' >"
+					+ " replica='" + replica + "' voldirectory='" + volDirectory + "' >"
 					+ "<protocols nfs='" + nfs.toString() + "' cifs='" + cifs.toString() + "' />";
 					
 	if ( useCase == 'Virtualisation') {
@@ -332,15 +333,25 @@ function createVolume() {
 	// the intended replication relationships are honoured
 	var brickTable = document.getElementById('brickTable');
 	var numRows = (thisTable.tBodies[0].rows.length) - 1;	// there's always an empty row at the end!
+	var brickListStr = '';
 
 	for ( var i = 0; i<numRows; i++) {
 		var cellContents = brickTable.rows[i].cells[0].innerHTML;
 		var bricks = cellContents.split(", ");
 		for (var ptr = 0, numBricks = bricks.length; ptr < numBricks; ptr++) {
 			xmlString += "<brick fullpath='" + bricks[ptr] + "' />";
+			brickListStr += bricks[ptr] + ",";
 		}
 		
 	}
+	
+	// Temporary code to hold the definition of the local volume object
+	
+	// remove trailing ','
+	brickListStr = brickListStr.substring(0,brickListStr.length - 1);
+	
+	var newVol = new GlusterVolume(volName, useCase, volDirectory, volType, nfs, cifs, brickListStr) ;
+	glusterVolumeList[volName] = newVol;
 	
 	xmlString += "</bricklist></volume></data>";
 	
@@ -348,10 +359,6 @@ function createVolume() {
 	disableDiv('brickLayout');				// Need to disable separately, since it's a div within a div
 	disableDiv('volCreate');
 	
-	//document.getElementById('volCreateBtn').disabled = true;
-	//document.getElementById('volNameInput').disabled = true;
-		
-	//callerString = "volCreate|" + xmlString;
 	xml_http_post('../www/main.html', xmlString, createVolHandler);
 	
 	enableMsgLog();

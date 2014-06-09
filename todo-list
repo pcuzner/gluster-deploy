@@ -75,12 +75,18 @@ Development Log
   - sync'd the summary info in the UI finish page with the summary info in the CLI - DONE
   - updated the closing remarks on the final page to change if the user aborts the wizard early - DONE
   - implement the quit button (only active when tasks are not active) - DONE
-  - moved all dialog pages out of main.html to separate files, adding them to the interface as needed - DONE
-  - added pv offset global variable to the config file enabling disk alignment to be honoured for raid cards
+  - moved all dialog pages out of main.html into separate files, adding them to the interface as needed - DONE
+  - added pv offset global variable to the config file enabling disk alignment to be honoured for raid cards - DONE
+  - undodeploy updated for thinp lvs - DONE
+  - adopted lv best practices for thinp as per BZ 1074452 - DONE
+  - moved modal dialog content to separate files for easy mgmt - DONE
+  - added parms to support raid alignment to the config file - DONE
+
 
   
 Items under consideration (aka Backlog)
 
+  - when hadoop use case selected on vol create screen, add additional option which if selected would mount the volume across all nodes and update fstab (Jeff Vance)
   - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
 
   - add a help button to the toolbar, for step related guidance reusing the modal interface
@@ -115,7 +121,6 @@ Items under consideration (aka Backlog)
   
   - issue a warning if the version of glusterfs across the nodes is not consistent (Jeff Vance)
   
-  - when hadoop use case selected on vol create screen, add additional option which if selected would mount the volume across all nodes and update fstab (Jeff Vance)
 
   - when thin provisioning selected, add a cron job to each node to run discard (fstrim brick-path) 
   

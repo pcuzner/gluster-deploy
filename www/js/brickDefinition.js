@@ -31,7 +31,7 @@ function buildBricks() {
 		
 		// Issue a warning dialog, of the gluster environment does not support snapshots
 		// but a brick config that supports snapshots has been selected by the user.
-		if (( snapRequired == 'YES') || ( brickProvider == 'BTRFS') && (! glusterSnapshots)) {
+		if ((( snapRequired == 'YES') || ( brickProvider == 'BTRFS')) && (! glusterSnapshots)) {
 			
 			// Confirmation is required to use these features. Using the js confirm dialog, is the
 			// easiest way to do this, but the look and feel is not consistent with the UI's theme.

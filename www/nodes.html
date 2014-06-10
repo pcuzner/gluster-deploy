@@ -13,7 +13,8 @@
 	  <div id="nodeSelect">
 		<select id="candidateNodes" onchange="enableButton('addNodes')" multiple size=28>
 		</select>
-		<button id="addNodes" type="button" disabled onclick="promoteNodes()"><i class="icon-right-big"></i></button>
+		<button id="addNodes" type="button" disabled onclick="moveNodes('candidateNodes','selectedNodes')"><i class="icon-right-big"></i></button>
+		<button id="rejectNodes" type="button" disabled onclick="moveNodes('selectedNodes','candidateNodes')"><i class="icon-left"></i></button>
 		<select id="selectedNodes"  multiple size=28>
 		</select>
 		<button id="createCluster" type="button" disabled onclick="createCluster()">Create</button>

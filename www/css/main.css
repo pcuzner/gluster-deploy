@@ -598,7 +598,13 @@ position: relative;
 	left:230px; 
 	width:37px;
 }
-
+#rejectNodes{ 
+	position:absolute;
+	left: 230px;
+    top:40px;
+	width: 37px;
+}
+	
 #createCluster {
 	position:absolute;
 	left:520px; 

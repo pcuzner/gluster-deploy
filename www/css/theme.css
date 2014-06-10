@@ -348,7 +348,7 @@ table tr:hover td {
  
 .icon-cancel:before { content: '\e800'; } 
 .icon-right-big:before { margin-left: .4em;content: '\e801'; } /* -> */
-.icon-left-big:before { margin-left: .4em;content: '\e812'; } /* <- */
+.icon-left:before { margin-left: .4em;content: '\e812'; } /* <- */
 .icon-ccw:before { content: '\e802'; } 
 .icon-filter:before { content: '\e803'; } 
 .icon-commit-config:before { content: '\e804'; } 

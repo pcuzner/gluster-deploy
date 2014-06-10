@@ -81,7 +81,7 @@ Development Log
   - adopted lv best practices for thinp as per BZ 1074452 - DONE
   - moved modal dialog content to separate files for easy mgmt - DONE
   - added parms to support raid alignment to the config file - DONE
-
+  - added button for add/remove nodes within the node discovery page - DONE
 
   
 Items under consideration (aka Backlog)

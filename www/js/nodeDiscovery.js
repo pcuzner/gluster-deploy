@@ -148,33 +148,93 @@ function scanSubnet(scanType) {
 }
 
 
-function promoteNodes() {
+//function promoteNodes() {
 	
-	// move the nodes from candidate to selected nodes
+	//// move the nodes from candidate to selected nodes
+	//var candidate = document.getElementById('candidateNodes');
+	//var selected = document.getElementById('selectedNodes');
+	
+	//// Copy the selected items over to the selected box
+	//for (var n = 0; n < candidate.options.length; n++) {
+		//if (candidate.options[n].selected == true) {
+			//selected[selected.length] = new Option(candidate.options[n].value);
+		//}
+	//}	
+	
+	//// remove the items copied from the candidate box (must be done bottom up!)
+	//for (var n=candidate.options.length-1; n >=0; n--) {
+		//if (candidate.options[n].selected == true) {
+			//candidate.remove(n);
+		//}
+	//}
+	
+	//// enable the create cluster button
+	//document.getElementById('createCluster').disabled = false;	
+	
+	//// if the select nodes box is empty, disable the add nodes button
+	//if (candidate.options.length == 0) {
+		//document.getElementById('addNodes').disabled=true;
+	//}
+//}
+
+function moveNodes(source, target) {
+	// function to move nodes between the candidate and selected boxes
+	// and vice-versa
+
+	// static references to the candidate and selected boxes
 	var candidate = document.getElementById('candidateNodes');
 	var selected = document.getElementById('selectedNodes');
 	
-	// Copy the selected items over to the selected box
-	for (var n = 0; n < candidate.options.length; n++) {
-		if (candidate.options[n].selected == true) {
-			selected[selected.length] = new Option(candidate.options[n].value);
-		}
-	}	
 	
-	// remove the items copied from the candidate box (must be done bottom up!)
-	for (var n=candidate.options.length-1; n >=0; n--) {
-		if (candidate.options[n].selected == true) {
-			candidate.remove(n);
+	var inbox = document.getElementById(source);
+	var outbox = document.getElementById(target);
+	
+	// Copy the selected items over to the selected box
+	for (var n = 0; n < inbox.options.length; n++) {
+		if (inbox.options[n].selected == true) {
+			var nodeSelected = inbox.options[n].value;
+			if (nodeSelected.slice(-1) == '*') {
+				inbox.options[n].selected = false;
+			}
+			else {
+				outbox[outbox.length] = new Option(inbox.options[n].value);
+			}
 		}
 	}
 	
-	// enable the create cluster button
-	document.getElementById('createCluster').disabled = false;	
-	
-	// if the select nodes box is empty, disable the add nodes button
+	// remove the items copies from the source box
+	for (var n=inbox.options.length-1; n >=0; n--) {
+		if (inbox.options[n].selected == true) {
+			inbox.remove(n);
+		}
+	}
+
+	// Handle the enabled/disabled state of the add/remove nodes 
+	// buttons
 	if (candidate.options.length == 0) {
 		document.getElementById('addNodes').disabled=true;
 	}
+	else {
+		document.getElementById('addNodes').disabled=false;
+	}
+	
+	if (selected.options.length == 1) {
+		document.getElementById('rejectNodes').disabled=true;
+	}
+	else {
+		document.getElementById('rejectNodes').disabled=false;
+	}
+	
+	
+	// disable the create cluster button if there aren't any nodes in the 
+	// 'nodes selected' box
+	if (selected.options.length > 1) {
+		document.getElementById('createCluster').disabled = false;
+	}
+	else {
+		document.getElementById('createCluster').disabled = true;
+	}
+	
 }
 
 

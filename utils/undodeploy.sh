@@ -491,7 +491,7 @@ function main {
 	#brickList=$(gluster vol status $volName | tr ":" " " | awk '/Brick/ {print $3;}')
 	brickList=$(gluster vol status $volName | awk '/^Brick/ {print $2;}')
 	if [ -z "$brickList" ] ; then
-			echo "-> Volume '$volName' does not exit. undodeploy.sh run aborted"
+			echo "-> Volume '$volName' is not available. undodeploy.sh run aborted"
 			exit 12
 	fi
 	

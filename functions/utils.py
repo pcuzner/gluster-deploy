@@ -130,12 +130,12 @@ def processConfigFile(configFileName):
 	try:
 		stripeUnit = config.get("brick","stripeUnit")
 	except:
-		pass
+		stripeUnit = cfg.STRIPEUNIT
 		
 	try:
 		stripeWidth = config.get("brick","stripeWidth")
 	except:
-		pass
+		stripeWidth = cfg.STRIPEWIDTH
 
 	
 	if nodeNames:

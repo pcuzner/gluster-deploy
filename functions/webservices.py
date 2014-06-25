@@ -570,32 +570,36 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 		"""
 		
 		
-		cfg.LOGGER.info('%s Initiating vol create process', time.asctime())
+		volumes = xmlDoc.findall('volume')
+				
+		cfg.LOGGER.info('%s Initiating vol create process for %d volume(s)', time.asctime(), len(volumes))
+
+		rcSum = 0
+
+		for volXML in volumes:
+			volName = volXML.find('settings').attrib['name']
+			cfg.CLUSTER.addVolume(volXML)
 		
-		cfg.CLUSTER.addVolume(xmlDoc)
+			# Look at the return code from the create process
+			rc = cfg.CLUSTER.volume[volName].retCode
 		
-		# Get the last volume from the cluster's volume list
-		volName = cfg.CLUSTER.volumeList()[-1]
+			if rc == 0:
+				# Create volume was successful
+				cfg.LOGGER.info("%s Volume creation was successful for '%s'", time.asctime(), volName)
+				msg = "Gluster volume '%s' created successfully"%(volName) 
+			else:
+				# Problem creating the volume
+				cfg.LOGGER.info("%s Create failed for volume '%s', rc=%d", time.asctime(), volName, rc)
+				msg = "Gluster volume create failed for '%s'"%(volName)
+
+			RequestHandler.taskLog.append(msg)
+			print "\t\t" + msg
+			
+			rcSum += rc		# keep a running total of re codes, if 0 all is well!
 		
-		# Look at the return code from the create process
-		rc = cfg.CLUSTER.volume[volName].retCode
-		
-		if rc == 0:
-			# Create volume was successful
-			cfg.LOGGER.info('%s Volume creation was successful', time.asctime())
-			createMsg = 'OK'
-			msg = "Gluster volume '%s' created successfully"%(volName) 
-		else:
-			# Problem creating the volume
-			cfg.LOGGER.info('%s Volume creation failed rc=%d', time.asctime(), rc)
-			createMsg = 'FAILED'
-			msg = "Gluster volume create failed for '%s'"%(volName)
+		createMsg = 'OK' if rcSum == 0 else 'FAILED'
 		
 		response = "<response><status-text>" + createMsg + "</status-text></response>"
-		
-		RequestHandler.taskLog.append(msg)
-			
-		print "\t\t" + msg
 					
 		RequestHandler.pollingEnabled = False			
 		

@@ -1,0 +1,17 @@
+<h3>No Disks Found!</h3>
+
+<p>The deploy tool has been unable to find usable disks on any of your servers and can not continue.<br><br>
+A usable disk is defined as a disk which is;<br>
+<ul>
+	<li type="circle">a device denoted by /dev/hdX, /dev/sdX or /dev/vdX</li>
+	<li type="circle">not paritioned</li>
+	<li type="circle">not already defined to LVM or btrfs</li>
+</ul>
+</p>
+<p>The "Node Discovery" and "SSH Keys" phases can be rerun without issue. Once your disk environment meets the requirements above, you can rerun this tool.
+</p>
+
+
+<span class="ctr_button">
+	<button id="modal-btn-ok" value="next" onclick="showModal(); getSummary();" >Next</button> 
+</span>

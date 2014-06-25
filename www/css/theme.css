@@ -96,7 +96,7 @@ h2 {
 select {
 	position:relative;
 	border: 1px solid #c0c0c0; 
-	background: #f8f8f8;
+	background: #ffffff;
 	color: #505050;
 	min-height:20px;
 	min-width:100px;
@@ -110,7 +110,7 @@ select:disabled {
 	
 select:not([disabled]):hover {
 	box-shadow: 0 1px 0 #2392F3 inset, 0 -1px 0 #2392F3 inset, 1px 0 0 #2392F3 inset, -1px 0 0 #2392F3 inset, 0 0 4px rgba(35,146,243,0.5);
-	background: #ffffff;
+	/*background: #ffffff;*/
 }
 
 select:focus {
@@ -125,7 +125,7 @@ input[type='text'] {
 	border:1px solid #c0c0c0;
 	font-family: monospace;
 	font-size: 14px;
-	background-color: #f8f8f8;
+	background-color: #ffffff; /* #f8f8f8 */
 	color: #505050;
 	
 	font-weight:bold;
@@ -346,8 +346,8 @@ table tr:hover td {
 
 }
  
-.icon-cancel:before { content: '\e800'; } 
-.icon-right-big:before { margin-left: .4em;content: '\e801'; } /* -> */
+.icon-cancel:before {  content: '\e800'; } 
+.icon-right-big:before { margin-left: 7px; content: '\e801'; } /* -> */
 .icon-left:before { margin-left: .4em;content: '\e812'; } /* <- */
 .icon-ccw:before { content: '\e802'; } 
 .icon-filter:before { content: '\e803'; } 
@@ -360,3 +360,7 @@ table tr:hover td {
 .icon-info:before { content: '\e810'; margin-left:.65em;font-size:14px;}
 .icon-wand:before { content: '\e80c'; }
 .icon-replicate:before { content: '\e811'; }
+.icon-define:before { content: '\e814'; }
+.icon-trash:before { content: '\e815'; }
+.icon-add:before { content: '\e816'; }
+

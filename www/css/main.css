@@ -266,22 +266,21 @@ margin-left: 15px;
 #container {
 	overflow:hidden;
 	position:relative;
-	/*border:1px solid gray; */
 	left:250px;
 	top:-120px;
-	width:650px;
-	height:650px;
+	width:700px;
+	height:670px;
 	z-index:1;
 	background-color:#ededed;
 }
 
 #overview {
 	position: absolute;
-	left: 650px;
+	left: 700px;
 	overflow:hidden;
 	top:0px;
-	width:650px;
-	height:650px;
+	width:700px;
+	height:670px;
 	z-index:2;
 	text-align:justify;
 	transition: left .7s linear;
@@ -295,11 +294,11 @@ left:0px;
 
 #nodes {
 	position: absolute;
-	left: 650px;
+	left: 700px;
 		overflow:hidden;
 	top:0px;
-	width:650px;
-	height:650px;
+	width:700px;
+	height:670px;
 	z-index:3;
 	text-align:justify;
 	transition: left .7s linear;
@@ -340,11 +339,11 @@ left:0px;
 /* ****************************************************************** */
 #keys {
 	position: absolute;
-	left: 650px;
+	left: 700px;
 	overflow:hidden;
 	top:0px;
-	width:650px;
-	height:650px;
+	width:700px;
+	height:670px;
 	z-index:4;
 	text-align:justify;
 	transition: left .7s linear;
@@ -400,11 +399,11 @@ left:0px;
 /* ****************************************************************** */
 #disks {
 	position: absolute;
-	left: 650px;
+	left: 700px;
 	overflow:hidden;
 	top:0px;
-	width:650px;
-	height:650px;
+	width:700px;
+	height:670px;
 	z-index:5;
 	text-align:justify;
 	transition: left .7s linear;
@@ -484,11 +483,11 @@ position:absolute;}
 
 #bricks {
 	position: absolute;
-	left: 650px;
+	left: 700px;
 	overflow:hidden;
 	top:0px;
-	width:650px;
-	height:650px;
+	width:700px;
+	height:670px;
 	z-index:6;
 	text-align:justify;
 	transition: left .7s linear;
@@ -506,12 +505,13 @@ position:absolute;}
 
 #volCreate {
 	position: absolute;
-	left: 650px;
+	left: 700px;
 	overflow:hidden;
 	top:0px;
-	width:650px;
-	height:650px;
+	width:700px;
+	height:670px;
 	z-index:7;
+	line-height:2;
 	text-align:justify;
 	transition: left .7s linear;
 	opacity: 1;
@@ -539,11 +539,11 @@ position: relative;
 
 #finish {
 	position: absolute;
-	left: 650px;
+	left: 700px;
 		overflow:hidden;
 	top:0px;
-	width:650px;
-	height:650px;
+	width:700px;
+	height:670px;
 	z-index:50;
 	text-align:justify;
 	transition: left .7s linear;
@@ -556,11 +556,11 @@ position: relative;
 
 #error {
 	position: absolute;
-	left: 650px;
+	left: 700px;
 		overflow:hidden;
 	top:0px;
-	width:650px;
-	height:650px;
+	width:700px;
+	height:670px;
 	z-index:98;
 	text-align:justify;
 	transition: left .7s linear;
@@ -702,19 +702,23 @@ position: relative;
 		/********************************/
 
 .brickPool {
+    top:-5px;
 	width: 208px;
-	min-height:305px;
+	min-height:285px;
 	font-size:12px;
 	font-family:monospace;
 }
 
 .useBrick {
-	position:relative;
-	left:8px;
-	top:-280px;
-	width:37px;
-	margin-top:8px;
+	position:absolute;
+	left:217px;
+	top:200px;
+	width:33px;
+	/*margin-top:8px;*/
+    height:25px;
 }
+
+
 
 /*
 .useBrick {
@@ -736,9 +740,99 @@ position: relative;
 	height:25px;
 	font-size:12px;
 	font-weight:bold;
-	width:80px;
+	width:85px;
+    position:relative;
+    left:587px;
+    top:-210px;
 }
 
+.queueVolume {
+	height:25px;
+	font-size:12px;
+	font-weight:bold;
+    top:200px;
+	width:75px;
+    position:absolute;
+    left:605px;
+    
+}
+
+#volumeQueue {
+    /*border: 1px solid red;*/
+    position:relative;
+    top:-58px;
+    width:585px;
+    height:120px;
+    overflow-y:auto;
+    
+}
+
+#replicaCount {
+    display:inline-block;
+position:relative;  
+left:57px;
+/*height:20px; */
+    top:-0px;
+    /*width:300px;*/
+/*visibility:hidden;*/
+opacity:0;
+transition:opacity .75s;
+}
+
+#replicaCount.show {
+visibility:visible;
+opacity:1;
+}
+
+#replicaCountInput {
+min-width:40px;
+}
+
+#useCaseInputs {
+    
+position:relative;
+    left:290px;
+    top:-28px;
+
+
+}
+
+#virtInput {
+position:absolute;
+height:20px;
+opacity:0;
+    display:inline-block;
+visibility: hidden;
+transition:opacity .75s
+}
+#virtInput.show {
+visibility:visible;
+opacity:1;
+}
+
+#hadoopInput {
+visibility:hidden;
+    position:absolute;
+    display:inline-block;
+    height:20px;
+    /*left:290px;
+    top:-28px;*/
+opacity:0;
+transition: opacity .75s;
+
+}
+
+#hadoopInput.show {
+opacity:1;
+visibility:visible;
+}
+
+#brickHeaders {
+	position:absolute;
+	top:170px;
+	left:240px;
+	width:330px;
+}
 
 #brickLayout {
 	position:absolute;
@@ -746,7 +840,7 @@ position: relative;
 	border:0px solid black; /*debug only */
 	top:232px;
 	left:260px;
-	width:343px;
+	width:348px;
 	height:275px;
 }
 #brickTable {
@@ -759,12 +853,7 @@ position: relative;
 #brickTable td:last-child {
 	width:35px;
 }
-#brickHeaders {
-	position:absolute;
-	top:182px;
-	left:240px;
-	width:330px;
-}
+
 
 #protocols {
 	position:relative;
@@ -775,16 +864,70 @@ position: relative;
 	top:4px;
 }
 
-#configSummary {
+#configSummaryHeading {
     position: relative;
-    top:-25px;
+    top:-35px;
 	/*margin:5px auto;*/
 	width:550px;
-	height:60px;
+	height:20px;
 }
-#configSummary th {
-	padding:5px 10px 5px 10px; 
+#configSummaryHeading th {
+	padding:5px 5px 5px 5px; 
 }
+#configSummaryHeading th:first-child {
+	width:165px;
+	}
+#configSummaryHeading th:nth-child(2) {
+	width:60px;
+	}
+#configSummaryHeading th:nth-child(3) {
+	width:60px;
+	}
+#configSummaryHeading th:nth-child(4) {
+	width:60px;
+	}
+#configSummaryHeading th:nth-child(120) {
+	width:120px;
+	}	
+#configSummaryHeading th:last-child {
+	width:40px;
+	}		
+
+
+#configSummary {
+    position: relative;
+    top:-20px;
+	/*margin:5px auto;*/
+	width:550px;
+	/*height:60px;*/
+}
+
+#configSummary td:first-child {
+	width:165px;
+	}
+#configSummary td:nth-child(2) {
+	width:60px;
+	}
+#configSummary td:nth-child(3) {
+	width:60px;
+	}
+#configSummary td:nth-child(4) {
+	width:60px;
+	}
+#configSummary td:nth-child(120) {
+	width:120px;
+	}	
+#configSummary td:last-child {
+	width:40px;
+	}		
+
+
+/*configSummary tr {
+	height: 800px;
+}
+*/
+
+
 
 #goodbye {
 	display:block;

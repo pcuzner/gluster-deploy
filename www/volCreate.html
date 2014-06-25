@@ -1,36 +1,42 @@
-<h2>Create a Volume</h2>
-		<p style="position:relative; top:-15px;line-height:2;">
-			<span style="display:inline-block; width:125px;">Volume Name:</span> 
-			<input id="volNameInput" type="text" size=26 onkeyup="updateSummary('volume')">
+<h2 style="margin-bottom:0px;line-height:1;">Create a Volume</h2>
+			<span style=";display:inline-block; width:125px;">Volume Name:</span> 
+			<input id="volNameInput" type="text" size=26 onblur="validateVolName(this.value);">
 			<br>
 			
 			<span style="display:inline-block; width:125px;">Use Case:</span> 
 			<select id="volUseCase" style="position:relative;  width:130px;" onchange="addOptions(this.options[this.selectedIndex].value);">
-				<option>Generic</option>
-				<option>Virtualisation</option>
-				<option>Streaming</option>
-				<option>Hadoop</option>
+				<option  >Generic</option>
+				<option  >Virtualisation</option>
+				<option  >Streaming</option>
+				<option  >Hadoop</option>
 			</select>
-			<span id="virtInput" style="position:relative;left:40px;opacity:0;transition: opacity .75s;">
-				Target environment&nbsp;
-				<select id="virtUser" disabled>
-					<option>glance</option>
-					<option>cinder</option>
-					<option>RHEV / oVirt</option>
-				</select>
-			</span>
-			<span id="streamingInput">
-			</span>
-			<span id="genericInput">
-			</span>
-			<br>
-			<span style="display:inline-block; width:128px;">Volume Type:</span>
+			<!-- <span id="virtInput" style="position:relative;left:40px;opacity:0;transition: opacity .75s;"> -->
+			<div id="useCaseInputs">
+				<span id="virtInput">
+					Target environment:&nbsp;
+					<select id="virtUser" disabled>
+						<option value='glance'>glance</option>
+						<option value='cinder'>cinder</option>
+						<option value='rhev'  >RHEV / oVirt</option>
+					</select>
+				</span>
+				<span id="streamingInput">
+				</span>
+				<span id="genericInput">
+				</span>
+				<span id="hadoopInput" >
+					Mount point:&nbsp;
+					<input id="hadoopMountPoint" disabled type="text" size=26>
+				</span>
+			</div>
+			<span style="position:relative:top:-20px;display:inline-block; width:125px;">Volume Type:</span>
 			<select id="volType" onchange="addOptions(this.options[this.selectedIndex].value)" >
-				<option>Distributed</option>
-				<option>Replicated</option>
+				<option >Distributed</option>
+				<option >Replicated</option>
 			</select>
-			<span id="replicaCount" style="opacity:0;transition: opacity .75s;">
-				Replica Count&nbsp;
+			<!-- <span id="replicaCount" style="opacity:0;transition: opacity .75s;"> -->
+			<span id="replicaCount">
+				Replica Count:&nbsp;
 				<select id="replicaCountInput" disabled >
 					<option>2</option>
 				</select>
@@ -47,33 +53,35 @@
 			</span>
 			-->
 			<br>
-			<span style="display:inline-block; width:128px;">Directory Name</span>
+			<span style="display:inline-block; width:125px;">Directory Name:</span>
 			<input id="volDir" type="text" size=26>
 			<br>
+			<!--</span> -->
 			Additional Protocols:
 			<span id="protocols" >
-			NFS
-			<label class="switch protocols" >
-				<input id="nfsRequired" type="checkbox" class="switch-input" >
-				<span class="switch-label" data-on="On" data-off="Off"></span>
-				<span class="switch-handle"></span>
-			</label>
+				NFS
+				<label class="switch protocols" >
+					<input id="nfsRequired" type="checkbox" class="switch-input" >
+					<span class="switch-label" data-on="On" data-off="Off"></span>
+					<span class="switch-handle"></span>
+				</label>
+				<!-- </span>
+				
+				<span id="protocols"> -->
+				&nbsp;&nbsp;CIFS
+				<label class="switch protocols" >
+					<input id="cifsRequired" type="checkbox" class="switch-input">
+					<span class="switch-label" data-on="On" data-off="Off"></span>
+					<span class="switch-handle"></span>
+				</label>
 			</span>
-			
-			<span id="protocols">
-			&nbsp;&nbsp;CIFS
-			<label class="switch protocols" >
-				<input id="cifsRequired" type="checkbox" class="switch-input">
-				<span class="switch-label" data-on="On" data-off="Off"></span>
-				<span class="switch-handle"></span>
-			</label>
-			</span>
-		</p>
-		<span style="position:relative; top:-25px;">
-		Available Bricks<br>
-		<select id="brickPool" class="brickPool" multiple >
-		</select>
-		</span>
+			<br>
+		<!-- <span style="position:relative; top:-25px;"> -->
+			<span style="font-style:italic;">Available Bricks</span><br>
+			<select id="brickPool" class="brickPool" multiple >
+			</select>
+		<!-- </span> -->
+
 		<button id="useBrick" class="useBrick" onclick="useBrick()" ><i class="icon-right-big"></i></button>
 		
 		<!-- two tables are used - one for headers, the other for data. This allows the 
@@ -100,27 +108,38 @@
 				</tbody>
 			</table>
 		</div>
-		<table id="configSummary" cellspacing="0">
+		<button id='queueVolume' class='queueVolume' disabled onclick='queueVolume();'><i class="icon-add"></i>Queue</button>
+		<br>
+		<span style="position:relative; top:-10px; left:20px;font-style:italic;">Volume Queue</span>
+		<table id="configSummaryHeading" cellspacing="0">
 			<thead style="height:20;">
 				<tr >
-					<th style="width:165px;">Volume Summary</th>
-					<th style="width:60px;"># Bricks</th>
-					<th style="width:60px;">Raw</th>
-					<th style="width:60px;">Usable</th>
-					<th style="width:120px;">Fault Tolerance</th>
-					<th style="width:85px;">&nbsp;</th>
+					<th>Volume Name</th>
+					<th># Bricks</th>
+					<th>Raw</th>
+					<th>Usable</th>
+					<th>Fault Tolerance</th>
+					<th></th>
+					<!-- <th style="width:85px;">&nbsp;</th> -->
 				</tr>
 			</thead>
-			<tbody>
-				<tr style="height:30px;">
-					<td></td>
-					<td>0</td>
-					<td>0</td>
-					<td>0</td>
-					<td>None</td>
-					<td>
-						<button id="volCreateBtn" class="createBtn" onclick="createVolume()"><i class="icon-commit-config"></i>Create</button>
-					</td>
-				</tr>
-			</tbody>
+			<tbody></tbody>
 		</table>
+		<div id="volumeQueue">
+			<table id="configSummary" cellspacing="0">
+				<tbody>
+					<tr >
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td><button class="delbtn" onclick="delVolumeRow(this)"><i class="icon-cancel"></i></button></td>
+						<!-- <td>
+							<button id="volCreateBtn" class="createBtn" onclick="createVolume()"><i class="icon-commit-config"></i>Create</button>
+						</td> -->
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<button id="volCreateBtn" disabled class="createBtn" onclick="createVolumes()"><i class="icon-commit-config"></i>Commit</button>		

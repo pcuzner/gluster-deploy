@@ -3,62 +3,6 @@
 /* volCreate.js handles the logic involved in defining a volume  */
 /* ************************************************************* */
 
-function delBrickRow(element) {
-	
-	var thisRow = element.parentNode.parentNode;
-	var numRows = thisRow.parentNode.rows.length; // move up to tbody section, where rows property available
-	
-	var rowNum = thisRow.rowIndex;
-	var brickDetails = thisRow.cells[0].innerHTML;
-
-	// return the bricks to the pool
-	if ( brickDetails.length > 1 ) {
-
-		var brickNames = brickDetails.split(" ");
-		for (var i = 0; i< brickNames.length; i++) {
-			thisBrick = brickNames[i].replace(",","");
-			brickList[thisBrick].selected = false;
-			RAWGB = RAWGB - brickList[thisBrick].sizeGB
-			BRICKSUSED--;
-			updateSummary('stats');
-		}
-		thisRow.cells[0].innerHTML = " ";
-		populateBrickPool();
-		if ( numRows > 1) {
-			thisRow.parentNode.removeChild(thisRow);
-		}
-	}
-	
-}
-
-function updateSummary(type) {
-	var usableGB = 0;
-	rowCells=document.getElementById("configSummary").rows[1].cells;		
-	switch(type) {
-		case "volume":
-			rowCells[0].innerHTML=document.getElementById("volNameInput").value;
-			break;
-		case "stats":
-			rowCells[1].innerHTML = BRICKSUSED;
-			rowCells[2].innerHTML = RAWGB;
-			volType = document.getElementById("volType").value;
-			
-			var usableGB = ( volType == "Replicated") ? RAWGB / MAXREPLICA : RAWGB ; 
-
-			rowCells[3].innerHTML = usableGB;
-			
-			break;
-		case "volType":
-			var volType = document.getElementById("volType").value;
-			
-			faultTolerance = (volType == "Replicated") ? "Single Node" : "None";
-			rowCells[4].innerHTML = faultTolerance;
-			break;
-	}
-	
-
-}
-
 function addBrickRow(tableName, numCells) {
 	
 	thisTable = document.getElementById(tableName);
@@ -75,7 +19,109 @@ function addBrickRow(tableName, numCells) {
 	
 }
 
+function delBrickRow(element) {
+	
+	var thisRow = element.parentNode.parentNode;
+	var numRows = thisRow.parentNode.rows.length; // move up to tbody section, where rows property available
+	
+	var rowNum = thisRow.rowIndex;
+	var brickDetails = thisRow.cells[0].innerHTML;
+
+	// return the bricks to the pool
+	if ( brickDetails.length > 1 ) {
+
+		var brickNames = brickDetails.split(",");
+		for (var i = 0; i< brickNames.length; i++) {
+			thisBrick = brickNames[i].replace(",","");
+			brickList[thisBrick].selected = false;
+		}
+		
+		thisRow.cells[0].innerHTML = " ";
+		populateBrickPool();
+		if ( numRows > 1) {
+			thisRow.parentNode.removeChild(thisRow);
+		}
+	}
+	
+	// ensure the input fields/buttons are all enabled
+	document.getElementById('useBrick').disabled=false;
+	
+	inputFieldsDisabled(false);
+	
+	// without bricks selected, the queuevolume button can be disabled
+	if ((bricksSelected() == 0) || ( bricksSelected() == bricksQueued() )) {
+		document.getElementById('queueVolume').disabled=true;
+		inputFieldsReset();
+	}
+	else {
+		document.getElementById('queueVolume').disabled=false;
+	}
+	
+	
+	
+}
+
+function validHadoopPath(pathName) {
+	
+	var pathOK = false;
+	
+	if ( validPathName(pathName)) {
+		
+		pathOK = true;		// path itself is valid
+		
+		// now check for this path already being provided against another
+		// volume in the 'queue'
+		for (idx in glusterVolumeList) {
+			
+			var thisVol = glusterVolumeList[idx];
+			if ( thisVol.hadoopMountPoint == pathName ) {
+				pathOK = false;
+				break;
+			}
+		}
+	}
+	
+	return pathOK;
+}
+
+
 function useBrick() {
+	
+	
+	// the volname and directory should be provided first, so check these are set
+	var volName = document.getElementById('volNameInput').value;
+	var dirName = document.getElementById('volDir').value;
+	var useCase = document.getElementById('volUseCase').value;
+	
+	var validRequest = true;
+	
+	if ( ! volNameUsable(volName) ) {
+		validRequest = false;
+	}
+	if (dirName.length == 0) {
+		document.getElementById('volDir').className = "error";
+		validRequest = false;
+	}
+	
+	// if the user has selected the hadoop usecase, the mount point field 
+	// MUST be supplied
+	if ( useCase.toLowerCase() == 'hadoop') {
+		var thisMountPoint = document.getElementById('hadoopMountPoint').value;
+		if ( ( thisMountPoint.length == 0) || ( ! validHadoopPath(thisMountPoint)) ) {
+			validRequest = false;
+			document.getElementById('hadoopMountPoint').className = "error";
+		}
+	}
+	
+	if ( ! validRequest ) {
+		return;
+	}
+	
+	
+	// At this point we have bricks selected and volume/dir specified
+	document.getElementById('volNameInput').className = " ";
+	document.getElementById('volDir').className = " ";
+	document.getElementById('hadoopMountPoint').className = " ";
 	
 	// check if number of bricks selected is appropriate for volume
 	// type, if not drop what has been selected
@@ -83,6 +129,8 @@ function useBrick() {
 	var numSelected = countSelected("brickPool");
 	
 	var volType = document.getElementById("volType").value;
+	
+	var validSelection = false;
 	
 	bricks = document.getElementById("brickPool");
 	brickTable = document.getElementById("brickTable");
@@ -103,25 +151,27 @@ function useBrick() {
 						ptr++;
 						addBrickRow("brickTable",2);
 						
-						BRICKSUSED++;
-						RAWGB = RAWGB + brickList[brickName].sizeGB;
-						updateSummary('stats');
+						//BRICKSUSED++;
+						//RAWGB = RAWGB + brickList[brickName].sizeGB;
+						
+						document.getElementById('queueVolume').disabled=false;						
+						
+						// updateSummary('stats');
 						
 						// update the corresponding brick object
 						
 					}
 				}
 				
-				// Remove the bricks selected from the "pool"
-				removeSelected("brickPool");
-
+				validSelection = true;
+				
 			}
 			
 			break;
 			
 		case "Replicated":
-			
-			if ( numSelected == MAXREPLICA ) {
+			var replicaCount = parseInt(document.getElementById('replicaCountInput').value);
+			if ( numSelected == replicaCount ) {
 				// Using an assoc array to hold the server names, then 
 				// this can be 'counted' to ensure that all the servers 
 				// providied are unique
@@ -137,26 +187,28 @@ function useBrick() {
 						var svrName = brickText.substr(0,brickText.indexOf(":"));
 
 						servers[svrName] = "OK";
-						brickString = brickString + brickName + ", ";
+						brickString = brickString + brickName + ",";
 					}
 				}
 
 				// The number of keys = number of unique servers in the array
 				if ( Object.keys(servers).length == MAXREPLICA ) {
 					// remove the last separator
-					brickString = brickString.slice(0,-2);
+					brickString = brickString.slice(0,-1);
 				
 					var ptr = (brickTable.tBodies[0].rows.length) - 1;
 					brickTable.rows[ptr].cells[0].innerHTML = brickString;
 					
 					addBrickRow("brickTable",2);
-					removeSelected("brickPool");
+					
 					for (var i = 0; i< brickNames.length; i++) {
 						brickList[brickNames[i]].selected=true;
-						RAWGB = RAWGB + brickList[brickName].sizeGB;
+						//RAWGB = RAWGB + brickList[brickName].sizeGB;
 					}
-					BRICKSUSED +=2;
-					updateSummary('stats');
+					
+					validSelection = true;
+					break;
+					
 				}
 				else { // User given bricks on same node, which is invalid 
 
@@ -169,9 +221,339 @@ function useBrick() {
 				document.getElementById("brickPool").selectedIndex = -1; // Remove all selections in the select box
 			}
 			
-				
 			break;
 	}
+	
+	if ( validSelection ) {
+		// Remove the bricks selected from the "pool"
+		removeSelected("brickPool");
+
+		// If there are no more bricks to select, disable the 'input' fields/buttons
+		if ( bricksSelected() == TOTALBRICKS ) {
+			document.getElementById('useBrick').disabled=true;
+			if (consoleOK && debugON) { console.info("UseBrick logic turning off useBrick button");}
+		}
+		else {
+			document.getElementById('useBrick').disabled=false;
+			if (consoleOK && debugON) { console.info("UseBrick logic turning on useBrick button");}
+		}
+		
+
+		// UI enable the queuevolume button
+		document.getElementById('queueVolume').disabled=false;
+	}
+	
+	
+}
+
+function inputFieldsReset() {
+	document.getElementById('volNameInput').value = '';
+	document.getElementById('volDir').value = ''; 
+	document.getElementById('nfsRequired').checked = false;
+	document.getElementById('cifsRequired').checked = false;
+	document.getElementById('hadoopMountPoint').value="";
+	
+	document.getElementById('volType').value="Distributed";
+	document.getElementById('replicaCount').className=" ";
+	document.getElementById('volUseCase').value="Generic";
+	document.getElementById('virtInput').className=" ";
+	document.getElementById('hadoopInput').className=" ";
+	
+}
+
+
+
+function inputFieldsDisabled(state) {
+	document.getElementById('volNameInput').disabled=state;
+	document.getElementById('volUseCase').disabled=state;
+	document.getElementById('volType').disabled=state;
+	document.getElementById('volDir').disabled=state;
+	document.getElementById('hadoopMountPoint').disabled=state;
+	document.getElementById('replicaCountInput').disabled=state;
+	
+	
+}
+
+function bricksQueued() {
+	var queued = 0;
+	for (idx in brickList) {
+		if ( brickList[idx].queued) {
+			queued++;
+		}
+	}
+
+	return queued;
+}
+
+function bricksSelected() {
+	var selected = 0;
+	
+	for (idx in brickList) {
+		if ( brickList[idx].selected) {
+			selected++;
+		}
+	}
+
+	return selected;
+}
+
+function volNameUsable(volumeName) {
+	
+	var volState = true;
+	
+	if ( volumesQueued() > 0) {
+						
+		if (volumeName in glusterVolumeList) {
+			volState = false; 
+		}
+	}
+	
+	if (volumeName.length == 0) {
+		volState = false;
+	}
+	
+	return volState;
+}
+
+
+
+function validateVolName(volumeName) {
+	// Check thif there are volumes in the queue
+	
+	if ( volNameUsable(volumeName) ) {
+		document.getElementById('volNameInput').className = "";				
+	}
+	else {				
+		document.getElementById('volNameInput').className = "error";
+		if (consoleOK && debugON) { console.warning("Volume name provided is invalid - error passed back to user");}
+			
+	}
+	
+}
+
+
+function volumesQueued() {
+	return Object.keys(glusterVolumeList).length;
+}
+
+
+
+function queueVolume() {
+	// take the contents of the selected brick table, and create a volume
+	// object and populate the configSummary table
+	
+	var volName = document.getElementById('volNameInput').value;
+	var volDirectory = document.getElementById('volDir').value;
+	
+	// first, the simple reasons to do Nothing!
+	if (( volName.length == 0 ) || ( bricksSelected() == 0 ) || (volDirectory.length == 0)) {
+		return;
+	}
+	
+	var volType = document.getElementById('volType').value;
+	var useCase = document.getElementById('volUseCase').value;
+	var nfs     = document.getElementById('nfsRequired').checked;
+	var cifs	= document.getElementById('cifsRequired').checked;
+	var hadoopPath = document.getElementById('hadoopMountPoint').value;
+	
+	var target	= (	useCase == 'Virtualisation') ? document.getElementById('virtUser').value : 'None';			
+
+	
+	// Loop through the table rows, extracting the bricks in this sequence to ensure 
+	// the intended replication relationships are honoured
+	var brickTable = document.getElementById('brickTable');
+	var numRows = (brickTable.tBodies[0].rows.length) - 1;	// there's always an empty row at the end!
+	var brickListStr = '';
+	var rawGB = 0;
+	var usableGB = 0;
+
+	for ( var i = 0; i<numRows; i++) {
+
+		
+		var cellContents = brickTable.rows[i].cells[0].innerHTML;
+
+				
+		var bricks = cellContents.split(",");
+		var numBricks = bricks.length ;
+		for (var ptr = 0; ptr < numBricks; ptr++) {
+			var brickPath = bricks[ptr] ;
+			rawGB += brickList[brickPath].sizeGB;
+			brickListStr += brickPath + ',';
+			
+			brickList[brickPath].queued=true;
+		}
+		
+	}
+	
+	if (consoleOK && debugON) { console.log("brick list created is %s",brickListStr);}
+	
+	// remove the bricks from the selected brick list
+	emptyTable('brickTable');
+	
+	if (document.getElementById('volType').value == 'Replicated' ) {
+		element = document.getElementById('replicaCountInput');
+		var replicaCount = parseInt(element.options[element.selectedIndex].text);
+		usableGB = rawGB / replicaCount;		
+	}
+	else {
+		
+		usableGB = rawGB
+		var replicaCount = 1;
+	}
+	
+	// remove trailing ',' from the concatenation operation
+	brickListStr = brickListStr.substring(0,brickListStr.length - 1);
+	
+	var newVol = new GlusterVolume(volName, useCase, target, volDirectory, volType, nfs, cifs, brickListStr, rawGB, usableGB, replicaCount, hadoopPath) ;
+	glusterVolumeList[volName] = newVol;
+	
+	if (consoleOK && debugON) { console.info("Creating new volume object"); console.dir(newVol);}
+	
+	var configSummary = document.getElementById('configSummary');
+	
+	// add this volumes definition to the configSummary table
+	var ptr = (configSummary.tBodies[0].rows.length) - 1;
+	updatedRow = newVol.rowOutput();
+	
+	updatedRow += "<td><button class='delbtn' onclick='delVolumeRow(this)'><i class='icon-cancel'></i></button></td>"
+	configSummary.rows[ptr].innerHTML = updatedRow;
+	
+	addVolumeRow();
+	
+	// reset volume parameters
+	inputFieldsReset();
+		
+	// enable the commit button and disable the queue button
+	document.getElementById('volCreateBtn').disabled=false;
+	document.getElementById('queueVolume').disabled=true;
+	
+	// if all the bricks are now in the queue, disable the input fields
+	if (( bricksSelected() == bricksQueued() ) && (bricksSelected() == TOTALBRICKS)) {
+		inputFieldsDisabled(true);
+	}
+	
+}
+
+function addVolumeRow() {
+	//
+	var configSummary = document.getElementById('configSummary');
+	var row = configSummary.insertRow(-1); 		// add new row to the end
+	var numCells = 6;
+	for ( var i=0 ; i< numCells; i++) {
+		var newcell = row.insertCell(i);	// add cells to new row
+		if (i < (numCells -1)) {
+			newcell.innerHTML = " ";
+		}
+		else { // this is last cell so add a button
+			newcell.innerHTML = "<button class='btn delbtn' onclick='delVolumeRow(this)'><i class='icon-cancel'></i></button>";
+		}
+	}	
+}
+
+function delVolumeRow(element) {
+	// remove a volume from the config summary
+	// 1. return current contents of selected to the candidate box
+	// 2. populate selected with volume details
+	// 3. remove volume entry from table
+	// 4. drop volume object
+	
+	// 1. 
+	// return all non queued bricks to the brick pool
+	resetBricks();
+
+	// 2. 
+	var thisRow = element.parentNode.parentNode;
+	var volName = thisRow.cells[0].innerHTML;
+	
+	// reset the elements on the page to the volume settings removed
+	// from the queue
+	var thisVol = glusterVolumeList[volName];
+	document.getElementById('volNameInput').value = thisVol.volumeName;
+	document.getElementById('volDir').value = thisVol.mountPoint;
+	document.getElementById('cifsRequired').checked = thisVol.cifsEnabled;
+	document.getElementById('nfsRequired').checked = thisVol.nfsEnabled;
+	document.getElementById('volUseCase').value = thisVol.useCase;
+	
+	document.getElementById('volType').value = thisVol.volumeType;
+	if ( thisVol.volumeType == "Replicated" ) {
+		document.getElementById('replicaCount').className="show";
+		document.getElementById('replicaCountInput').value=thisVol.replicaCount;
+	}
+	else {
+		document.getElementById('replicaCount').className=" ";
+	}
+	
+		
+	switch(thisVol.useCase) {
+		case "Virtualisation":
+			document.getElementById('virtUser').value=thisVol.target;
+			document.getElementById('virtInput').className="show";
+			document.getElementById('virtUser').disabled=false;
+			document.getElementById('hadoopInput').className=" ";
+			break;
+		case "Hadoop":
+			document.getElementById('hadoopMountPoint').value=thisVol.hadoopMountPoint;
+			document.getElementById('hadoopInput').className="show";
+			document.getElementById('virtInput').className=" ";
+			document.getElementById('hadoopMountPoint').disabled=false;
+			break;
+	}
+	
+	inputFieldsDisabled(false);
+	
+	// update the use caase and volume type fields from the volume attributes
+	
+	var brickStr = thisVol.brickList;
+	
+	if (consoleOK && debugON) { console.info("Removing volume from the queue"); console.dir(thisVol);}
+	
+	var replicaCount = thisVol.replicaCount;
+	
+	// populate the brickTable with this volumes bricks
+	var brickArray = brickStr.split(',');
+	var iterations = brickArray.length / replicaCount;
+	for (var i = 0; i < iterations; i++) {
+		var brickSet = brickArray.splice(0, replicaCount); 
+		
+		// remove the queued flag for each of the bricks
+		for (idx in brickSet){
+			var pathName = brickSet[idx];
+			brickList[pathName].queued=false;
+		}
+		
+		var ptr = (brickTable.tBodies[0].rows.length) - 1;
+		
+		brickTable.rows[ptr].cells[0].innerHTML = brickSet;
+		
+		addBrickRow("brickTable",2);
+
+	}
+	
+	// 3.
+	var numRows = thisRow.parentNode.rows.length;
+	if ( numRows > 1) {
+		thisRow.parentNode.removeChild(thisRow);
+	}
+	else {
+		var numCells = thisRow.cells.length -1;
+		for (var i = 0; i<numCells; i++) {
+			thisRow.cell[i].innerHTML=" ";
+		}
+	}
+
+	
+	
+	// 4.
+	delete glusterVolumeList[volName];
+	if (consoleOK && debugON) { console.info("Volume queue now has %d entries",volumesQueued());}
+	
+	// UI - if volumesqueued == 0 turn off the commit button
+	if ( volumesQueued() == 0 ) {
+		document.getElementById('volCreateBtn').disabled=true;
+	}
+	
+	// selected bricks pool now has entries again, so enable the queuevolume button
+	document.getElementById('queueVolume').disabled=false;
 	
 }
 
@@ -200,15 +582,14 @@ function populateBrickPool() {
 
 
 function resetBricks() {
+	
 	emptyTable("brickTable");
 	
 	for (var idx in brickList) {
-		brickList[idx].selected = false;
+		if ( brickList[idx].queued == false) {
+			brickList[idx].selected = false;
+		}
 	}
-	BRICKSUSED = 0;
-	RAWGB = 0;
-	USABLEGB=0;
-	updateSummary('stats');
 	
 	populateBrickPool();
 }
@@ -220,8 +601,9 @@ function addOptions(optionName) {
 	
 	switch (optionName) {
 		case "Replicated":
-			toggleElement("replicaCountInput");
-			document.getElementById("replicaCount").setAttribute("style","position:relative;  left:85px;height:20px;opacity:100;transition:opacity .75s;");				
+			document.getElementById("replicaCountInput").disabled=false;
+			//document.getElementById("replicaCount").setAttribute("style","position:relative;  left:85px;height:20px;opacity:100;transition:opacity .75s;");				
+			document.getElementById("replicaCount").className = "show";
 			
 			// maxSelect = 2;
 			document.getElementById("brickPool").selectedIndex = -1;
@@ -229,35 +611,47 @@ function addOptions(optionName) {
 			// empty the table, and repopulate the brick pool 
 			resetBricks();
 			
-			updateSummary("volType");
-
 			break;
 			
 		case "Distributed":
-			document.getElementById("replicaCount").setAttribute("style","position:relative;  left:85px;height:20px;opacity:0; transition:opacity .75s;");
-			toggleElement("replicaCountInput");
+			//document.getElementById("replicaCount").setAttribute("style","position:relative;  left:85px;height:20px;opacity:0; transition:opacity .75s;");
+			document.getElementById("replicaCount").className=" ";
+						document.getElementById("replicaCountInput").disabled=true;
+			//toggleElement("replicaCountInput");
 			
 			//maxSelect=999;
 			document.getElementById("brickPool").selectedIndex = -1;				
 			
 			// empty the table, and repopulate the brick pool 
 			resetBricks();
-			
-			updateSummary("volType");				
 
 			break;
 			
 		case "Virtualisation":
-			document.getElementById("virtInput").setAttribute("style","position:relative;  left:40px;height:20px;opacity:100;transition:opacity .75s;");
-			toggleElement("virtUser");
+			//document.getElementById("virtInput").setAttribute("style","position:relative;  left:40px;height:20px;opacity:100;transition:opacity .75s;");
+			document.getElementById("virtInput").className="show";
+			document.getElementById('hadoopInput').className=" ";
+			document.getElementById('hadoopMountPoint').disabled=true;
+			document.getElementById('virtUser').disabled=false;
+			//toggleElement("virtUser");
+			break;
+
+		case "Hadoop":
+			document.getElementById('hadoopInput').className="show";
+			document.getElementById('hadoopMountPoint').disabled=false;
+			document.getElementById('virtInput').className=" ";
+			document.getElementById('virtUser').disabled=true;
+			//toggleElement(';
 			break;
 			
 		case "Streaming":
-		case "Hadoop":
 		case "Generic":
-		
-			document.getElementById("virtInput").setAttribute("style","position:relative;  left:40px;height:20px;opacity:0;transition:opacity .75s;");
-			toggleElement("virtUser");
+			document.getElementById("virtInput").className=" ";
+			document.getElementById('hadoopInput').className=" ";
+			// document.getElementById("virtInput").setAttribute("style","position:relative;  left:40px;height:20px;opacity:0;transition:opacity .75s;");
+			document.getElementById('hadoopMountPoint').disabled=true;
+			document.getElementById('virtUser').disabled=true;
+			//toggleElement("virtUser");
 			
 	}
 }
@@ -286,76 +680,21 @@ function createVolHandler(req) {
 }
 
 
-function createVolume() {
-	
-	var volName = document.getElementById('volNameInput').value;
-	var volDirectory = document.getElementById('volDir').value;
-
-	// First check that the user has provided a volume name and used some
-	// bricks for the create volume request to work with
-	if (( volName.length == 0 ) || ( BRICKSUSED == 0 ) || (volDirectory.length == 0)) {
-		return;
-	}
-	
-	// At this point the volume name is given, and the user has selected 
-	// bricks to use, so build the xml string to pass back to the webserver
-	// eg.
-	// <data><request-type>vol-create</request-type>
-	//   <volume name='myvol' type='replicated' replica='2' usecase='virtualisation'>
-	//     <protocols cifs='no' nfs='no' />
-	//     <tuning target='glance' />
-	//     <bricklist>
-	//       <brick fullpath='server:/rhs/brick1' />
-	//     </bricklist>
-	//   </volume>
-	// </data>
-	
-	var volType = document.getElementById('volType').value;
-	var useCase = document.getElementById('volUseCase').value;
-	var replica = ( volType == "Replicated") ? document.getElementById('replicaCountInput').value : 'none'
-	var nfs     = document.getElementById('nfsRequired').checked;
-	var cifs	= document.getElementById('cifsRequired').checked;
+function createVolumes() {
 	
 
-	var xmlString = "<data><request-type>vol-create</request-type>"
-					+ "<volume name='" + volName + "' type='" + volType + "' usecase='" + useCase + "'"
-					+ " replica='" + replica + "' voldirectory='" + volDirectory + "' >"
-					+ "<protocols nfs='" + nfs.toString() + "' cifs='" + cifs.toString() + "' />";
-					
-	if ( useCase == 'Virtualisation') {
-		var target = document.getElementById('virtUser').value;
-		xmlString += "<tuning target='" + target + "' />";
-	}
-	
-	xmlString += "<bricklist>";
-	
-	// Loop through the table rows, extracting the bricks in this sequence to ensure 
-	// the intended replication relationships are honoured
-	var brickTable = document.getElementById('brickTable');
-	var numRows = (thisTable.tBodies[0].rows.length) - 1;	// there's always an empty row at the end!
-	var brickListStr = '';
+	var xmlString = "<data><request-type>vol-create</request-type>";
 
-	for ( var i = 0; i<numRows; i++) {
-		var cellContents = brickTable.rows[i].cells[0].innerHTML;
-		var bricks = cellContents.split(", ");
-		for (var ptr = 0, numBricks = bricks.length; ptr < numBricks; ptr++) {
-			xmlString += "<brick fullpath='" + bricks[ptr] + "' />";
-			brickListStr += bricks[ptr] + ",";
-		}
-		
+	for (idx in glusterVolumeList) {
+		xmlString += glusterVolumeList[idx].dumpXML();
 	}
 	
-	// Temporary code to hold the definition of the local volume object
+	xmlString += "</data>";
 	
-	// remove trailing ','
-	brickListStr = brickListStr.substring(0,brickListStr.length - 1);
+	var volsToCreate = volumesQueued();
+	var sfx = (volsToCreate > 1) ? 's' : '';
 	
-	var newVol = new GlusterVolume(volName, useCase, volDirectory, volType, nfs, cifs, brickListStr) ;
-	glusterVolumeList[volName] = newVol;
-	
-	xmlString += "</bricklist></volume></data>";
-	
-	showBusy("Creating '" + volName + "'");
+	showBusy("Creating " + volsToCreate + " volume" + sfx);
 	disableDiv('brickLayout');				// Need to disable separately, since it's a div within a div
 	disableDiv('volCreate');
 	

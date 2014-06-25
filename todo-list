@@ -83,10 +83,22 @@ Development Log
   - added parms to support raid alignment to the config file - DONE
   - added button for add/remove nodes within the node discovery page - DONE
 
+0.8 (complete 25/06/2014)
+  - provide the ability to create multiple volumes by using a "volume queue"
+  - add capability to remove and add volumes to the queue
+  - when volumes are removed, their settings replace the current fields, allowing alterations to be done quickly
+  - extend support for the hadoop use case by mounting across all nodes (rfe - Jeff Vance)
+  - client side debug support in vol create step added
+  - added postCreate.sh script to handle tasks distributed across the nodes after the volume
+    has been created. Currently handles 'mount' actions for hadoop volumes.
+  - added dialog displayed when no disks are found (rfe - Eco W)
+  - fix:syntax error in error handling when volCreate failed
   
-Items under consideration (aka Backlog)
+		--------------------------------------------------------------------------------------
 
-  - when hadoop use case selected on vol create screen, add additional option which if selected would mount the volume across all nodes and update fstab (Jeff Vance)
+
+Items being considered
+
   - add config page option to allow admin to get a summary of the config deployed - user can then save/pdf the page
 
   - add a help button to the toolbar, for step related guidance reusing the modal interface
@@ -103,9 +115,6 @@ Items under consideration (aka Backlog)
   - change the code to permit forward and back navigation within the steps
     -> Would need code base to include 'undo' code
 
-  - update volCreate page to allow user to build >1 volume during the run
-    -> likely need a redesign of brick to volume UI
-
   - add the capability to update /etc/hosts on nodes (when DNS is not available/resolving) 
     -> Could be an additional section in the config file (deploy.cfg)
 
@@ -114,14 +123,23 @@ Items under consideration (aka Backlog)
   - add a disk wipe capability in the event bricks are reused (i.e. lv already exists - perhaps the 
     disk selection should also include defined disks, that are empty?)
     -> although these can be detected, it leaves the tool open to user error and data loss
-  
-  - allow empty partitions to be selectable as gluster brick candidates (rfe from Ryan Nix)
-  
-  - if no disks are found invoke the modal dialog to warn the user and explain why (Eco Wilson)
+ 
+  - when thin provisioning selected, add a cron job to each node to run discard (fstrim brick-path) 
+
+  - Add a performance check phase. Once bricks are created, run a distributed dd or fio run across all bricks returning the performance data. Present the data in a table or scattergram to ensure all nodes are performing as expected.
+
+
+
+
+
+RFE's 
+-----
+ 
+  - if no disks are found invoke the modal dialog to warn the user and explain why (Eco Wilson) - DONE 0.8
   
   - issue a warning if the version of glusterfs across the nodes is not consistent (Jeff Vance)
-  
 
-  - when thin provisioning selected, add a cron job to each node to run discard (fstrim brick-path) 
+  - allow empty partitions to be selectable as gluster brick candidates (rfe from Ryan Nix)
   
-  - Add a performance check phase. Once bricks are created, run a distributed dd or fio run across all bricks returning the performance data. Present the data in a table or scattergram to ensure all nodes are performing as expected.
+  - when hadoop use case selected on vol create screen, add additional option which if selected would mount the volume across all nodes and update fstab (Jeff Vance) - DONE 0.8
+

@@ -154,6 +154,7 @@ function bricksDefined(req) {
 			var key = svr + ":" + fsname;
 			
 			brickList[key] = thisBrick;
+			TOTALBRICKS++;
 			
 		}
 			

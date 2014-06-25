@@ -14,45 +14,74 @@ function showDisks(req) {
 	
 	showBusy();
 
-
-	
-	document.getElementById('diskArea').className = 'show';
-
 	var xmlDoc = req.responseXML;
-	
-	// populate the table with the data received
-	var diskTable = document.getElementById('diskTable').getElementsByTagName('tbody')[0];
+
 	var nodes = xmlDoc.getElementsByTagName('node');	// nodes is an array
 	var numNodes = nodes.length;						// how many nodes have I got?
 	
-	for (var n = 0 ; n< numNodes; n++) {
+	if (numNodes > 0 ) {
 		
-		var nodeName = nodes[n].getElementsByTagName('nodename')[0].getAttribute('name');
-		var devices = nodes[n].getElementsByTagName('disks')[0].childNodes;
-		var numDevs = devices.length;
+		// the findDevs server side routine has passed back disks, so display
+		// them
 		
-		for (var i = 0; i< numDevs; i++) {
-			devID=devices[i].getAttribute('id');
-			devSize=devices[i].getAttribute('size');
+		document.getElementById('diskArea').className = 'show';
+		
+		// populate the table with the data received
+		var diskTable = document.getElementById('diskTable').getElementsByTagName('tbody')[0];		
+		
+		for (var n = 0 ; n< numNodes; n++) {
 			
-			var newRow = diskTable.insertRow(-1);		// insert to the end of the table
+			var nodeName = nodes[n].getElementsByTagName('nodename')[0].getAttribute('name');
+			var devices = nodes[n].getElementsByTagName('disks')[0].childNodes;
+			var numDevs = devices.length;
 			
-			var col1 = newRow.insertCell(0); 	// Insert the column for Server Name
-			
-
-			var col2 = newRow.insertCell(-1); // device ID
-			var col3 = newRow.insertCell(-1); // Size (GB)
-			var col4 = newRow.insertCell(-1); // checkbox
-			
-			col1.innerHTML=nodeName;
-			col2.innerHTML=devID;
-			col3.innerHTML=devSize;
-			checkBox = "<input type='checkbox' name='selectDisk' id='" +nodeName + "_" + devID + "' onchange='resetSelectAll()'/>"
-			col4.innerHTML=checkBox;
-		}
-	}
-	document.getElementById('registerBricks').className = 'registerButton';
+			for (var i = 0; i< numDevs; i++) {
+				devID=devices[i].getAttribute('id');
+				devSize=devices[i].getAttribute('size');
+				
+				var newRow = diskTable.insertRow(-1);		// insert to the end of the table
+				
+				var col1 = newRow.insertCell(0); 	// Insert the column for Server Name
+				
 	
+				var col2 = newRow.insertCell(-1); // device ID
+				var col3 = newRow.insertCell(-1); // Size (GB)
+				var col4 = newRow.insertCell(-1); // checkbox
+				
+				col1.innerHTML=nodeName;
+				col2.innerHTML=devID;
+				col3.innerHTML=devSize;
+				checkBox = "<input type='checkbox' name='selectDisk' id='" +nodeName + "_" + devID + "' onchange='resetSelectAll()'/>"
+				col4.innerHTML=checkBox;
+			}
+		}
+		
+		document.getElementById('registerBricks').className = 'registerButton';
+	}
+	else { 
+		// no nodes with disks have been discovered, so ask the server for the 
+		// modal dialog to display and pass control to it's handler
+		
+		var xmlString = "<data><request-type>get-modal</request-type>";
+		xmlString += "<page-request htmlfile='www/modal-no-disks.html' />"
+		xmlString += "</data>";
+		
+		xml_http_post('../www/main.html', xmlString, noDisksHandler);
+		
+		
+	}
+	
+}
+
+function noDisksHandler(req) {
+	
+	// populate the modal dialog with the html received
+	var xmlDoc = req.responseXML;
+	
+	populateDiv(xmlDoc);
+	
+	showModal('on');
+
 }
 
 function selectAll() {

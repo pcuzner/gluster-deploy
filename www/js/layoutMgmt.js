@@ -1,4 +1,18 @@
 
+/*
+ * This package provides generic functions that are used within the UI
+ * across all the other functional components 
+ * 
+ */
+ 
+
+function validPathName(pathName) {
+	// use a regex to validate a given path
+	
+	var pathRegex = /^\/[a-z0-9\/]*$/;
+	return (pathName.match(pathRegex) ) ? true :false;
+	
+}
 
 function fade(elementName,state) {
 	
@@ -35,7 +49,7 @@ function slide(newDiv) {
 	switch (newDiv) {
 		
 		case 'error' :
-			disableDiv(toolbar);
+			disableDiv('toolbar');
 			document.getElementById('toolbar').className = 'invisible'
 			break;
 		
@@ -113,12 +127,12 @@ function disableRadio(radioName) {
 	}
 }
 
-function toggleElement(elementName) {
+//function toggleElement(elementName) {
 	// Simply toggle the disabled true or false of a given element
 	
-	currentState = document.getElementById(elementName).disabled; 
-	document.getElementById(elementName).disabled = !currentState; 
-}
+//	currentState = document.getElementById(elementName).disabled; 
+//	document.getElementById(elementName).disabled = !currentState; 
+//}
 
 
 function formatGB(gb) {

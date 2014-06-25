@@ -341,22 +341,25 @@ class Volume:
 		self.virtTarget = ''
 		
 		# Volume parameters
-		volumeDefinition = xmlDoc.find('volume')
-		self.volName = volumeDefinition.attrib['name']
-		self.volType = volumeDefinition.attrib['type']
-		self.volDirectory = volumeDefinition.attrib['voldirectory']
-		self.useCase = volumeDefinition.attrib['usecase'].lower()
-		self.replicaParm = ' ' if ( volumeDefinition.attrib['replica'] == 'none') else (' replica ' + volumeDefinition.attrib['replica'])
+		volumeSettings = xmlDoc.find('settings')
+		self.volName = volumeSettings.attrib['name']
+		self.volType = volumeSettings.attrib['type']
+		self.volDirectory = volumeSettings.attrib['voldirectory']
+		self.useCase = volumeSettings.attrib['usecase'].lower()
+		self.replicaParm = ' ' if ( volumeSettings.attrib['replica'] == '1') else (' replica ' + volumeSettings.attrib['replica'])
 		
 		if self.useCase == 'virtualisation':
-			self.virtTarget = xmlDoc.find('./volume/tuning').attrib['target']
+			self.virtTarget = xmlDoc.find('./usecase/virttarget').text.lower()
+		
+		if self.useCase == "hadoop":
+			self.hadoopMountPoint = xmlDoc.find('./usecase/hadooppath').text
 
 
-		for child in xmlDoc.findall('./volume/bricklist/brick'):
+		for child in xmlDoc.findall('.//brick'):
 			self.bricks.append(child.attrib['fullpath'])
 
-		self.protocols['nfs'] = 'off' 	if ( xmlDoc.find('./volume/protocols').attrib['nfs'] == 'true' )  else 'on'
-		self.protocols['cifs'] = 'on' 	if ( xmlDoc.find('./volume/protocols').attrib['cifs'] == 'true' ) else 'off'
+		self.protocols['nfs'] = 'off' 	if ( xmlDoc.find('protocols').attrib['nfs'] == 'true' )  else 'on'
+		self.protocols['cifs'] = 'on' 	if ( xmlDoc.find('protocols').attrib['cifs'] == 'true' ) else 'off'
 
 
 		self.settings = []					# list of vol set commands used
@@ -407,11 +410,11 @@ class Volume:
 				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-gid 165')
 				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-uid 165')
 				pass
-			elif 'rhev' in self.virtTarget:
+			elif self.virtTarget == 'rhev':
 				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-gid 36')
 				cmdQueue.append('gluster vol set ' + self.volName + ' storage.owner-uid 36')				
 			
-			if ('rhev' in self.virtTarget) or (self.virtTarget == 'cinder'):
+			if ( self.virtTarget in ['cinder','rhev'] ):
 				
 				# Is the virt group available to use
 				if os.path.isfile('/var/lib/glusterd/groups/virt'):
@@ -436,10 +439,15 @@ class Volume:
 		numCmds = len(cmdQueue)
 		cfg.LOGGER.debug("%s Creating volume %s - %d steps", time.asctime(), self.volName, numCmds)
 		
+		cfg.MSGSTACK.pushMsg(" ")
+		cfg.MSGSTACK.pushMsg("Processing '%s'"%(self.volName))
+		
 		# Process the command sequence	
 		retCode = 0
 		stepNum = 1
 		
+		
+		# Pre CREATE phase ##############################################################
 		# Volumes are defined on directories on the brick, so the first thing to do 
 		# is prepare the brick with the required directory
 
@@ -448,7 +456,7 @@ class Volume:
 			node = cfg.CLUSTER.node[hostName]
 			
 			cfg.MSGSTACK.pushMsg("Creating directory on %s" %(hostName))
-			cfg.LOGGER.info("%s Creating %s/%s directory on node %s", time.asctime(), brickPath + '/', self.volDirectory, hostName)
+			cfg.LOGGER.info("%s Creating %s/%s directory on node %s", time.asctime(), brickPath, self.volDirectory, hostName)
 			
 			s=SSHsession(node.userName, node.nodeName)
 			(rc, mkdirOut) = s.ssh('mkdir %s/%s'%(brickPath, self.volDirectory))
@@ -494,10 +502,64 @@ class Volume:
 					
 				stepNum +=1
 	
+	
+		# post CREATE phase ###################################################
+		#
+		if retCode == 0:
 		
-		self.state = "Created" if retCode == 0 else "Failed"
+			if self.useCase == 'hadoop':
+				msg = "Mounting '%s' on all nodes"%(self.volName)
+				cfg.LOGGER.debug("%s Post configuration for hadoop volume use case", time.asctime())
+				cfg.MSGSTACK.pushMsg("'hadoop' use case post processing...")
+				
+				retCode = self.mountVolume()	# Mounts this volume across all nodes
+				
+			else:
+				pass
+			
+			
+		
+		
+		
+		
+		self.state = "Succeeded" if retCode == 0 else "Failed"
 		
 		self.retCode = retCode
+		
+		cfg.MSGSTACK.pushMsg("'%s' creation - %s"%(self.volName, self.state))
+
+		
+	def mountVolume(self):
+		"""Mount the volume across all nodes in the cluster"""
+		
+		rc = 0
+		
+		for node in cfg.CLUSTER.nodeList():
+			thisNode = cfg.CLUSTER.node[node]
+			host = thisNode.nodeName
+			vol = self.volName
+			path = self.hadoopMountPoint
+			
+			scriptPath = os.path.join(cfg.PGMROOT,'scripts/postCreate.sh')
+			scriptParms = " -a mount -n %s -m %s -v %s"%(host, path, vol)
+			scriptName = scriptPath + scriptParms
+			
+			cfg.LOGGER.info("%s postCreate.sh invoked against %s", time.asctime(), host)
+			cfg.MSGSTACK.pushMsg("Mounting '%s' on %s"%(vol, host))
+			
+			
+			s=SSHsession(thisNode.userName, thisNode.nodeName)
+			(rc, resp) = s.sshScript(scriptName,30)	# 30 sec timeout for the mount script
+			
+			cfg.LOGGER.info("%s postCreate.sh completed on %s, with RC= - %d", time.asctime(), host, rc)
+			
+			if ( rc > 0 ):
+				
+				break
+			
+		return rc	
+			
+
 
 class FormatDisks(threading.Thread):
 	

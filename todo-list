@@ -93,6 +93,18 @@ Development Log
     has been created. Currently handles 'mount' actions for hadoop volumes.
   - added dialog displayed when no disks are found (rfe - Eco W)
   - fix:syntax error in error handling when volCreate failed
+
+
+0.85 (planning)
+  - switch to "setuptools", and provide rpm spec file based on work from Niels
+  - update findDevs.py to determine if ctdb is available (/usr/bin/ctdb present?)
+  - add globals and deploy.cfg overrides for user credentials to enable systems to be subscribed to support services
+    user, password, subscriptiontarget
+  - update postCreate.sh to support registration of systems to RHN
+
+
+
+
   
 		--------------------------------------------------------------------------------------
 

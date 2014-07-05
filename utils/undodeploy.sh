@@ -255,7 +255,7 @@ function resetCluster {
 		local snapList=$(gluster snap list)
 		if [ "$snapList" != "No snapshots present" ]; then
 			echo "undodeploy can not continue - one or more volumes still have snapshots"
-			echo "associated with them."
+			echo "associated with them.Remove the snapshots, and then rerun this tool."
 			return 12
 		fi 
 	fi

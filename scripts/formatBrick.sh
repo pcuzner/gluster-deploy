@@ -210,7 +210,7 @@ function update_fstab {
 		if [ $brickType == "LVM" ]; then 
 			echo "UUID=$uuid $mountPoint xfs "\
 			  "defaults,allocsize=4096,inode64,logbsize=256K,logbufs=8,noatime "\
-			  "0 2" >> /etc/fstab
+			  "0 0" >> /etc/fstab
 			rc=$?
 		else
 			# Split the mountpoint up to yield a high level and low level name

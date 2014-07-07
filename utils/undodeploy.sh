@@ -340,7 +340,7 @@ function resetCluster {
 function snapsOK {
 	resp=true
 	local snapPGM=$(rpm -ql glusterfs | grep snap)
-	if [ -z $snapPGM ]; then
+	if [ -z "$snapPGM" ]; then
 		resp=false
 	fi
 

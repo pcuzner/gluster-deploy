@@ -150,7 +150,7 @@ function dropVolume {
 		# delete the volume
 		echo -e "\t-> Deleting volume '$volName'..."
 		cmd="yes | gluster vol del $volName 2>&1"
-		cmdOut=($pfx eval $cmd)
+		cmdOut=$($pfx eval $cmd)
 		fmtCmdOut "$cmdOut"
 		rc=$?
 	fi

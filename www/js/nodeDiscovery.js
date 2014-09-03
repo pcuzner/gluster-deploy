@@ -302,7 +302,7 @@ function createCluster() {
 	
 	// Just use the number of items in the select box - local node to 
 	// describe the number of nodes to peer probe.
-	showBusy('Adding ' + ( selected.options.length - 1) + ' nodes') ;	
+	showBusy('Adding ' + ( selected.options.length - 1) + ' node(s)') ;	
 	
 	xmlString = xmlString + "</data>";
 	

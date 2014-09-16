@@ -21,6 +21,10 @@
 #  MA 02110-1301, USA.
 #  
 #  
+#  ###############################################################
+#  # NB. This script MUST run as root to be able to detect btrfs #
+#  #     filesystems properly                                    #
+#  ###############################################################
 
 import subprocess
 import sys
@@ -44,7 +48,10 @@ def issueCMD(command):
 
 def filterDisks(partList):
 	""" Take a list of devices from proc/partitions and return only the disk devices """
-
+	
+	if DEBUG:
+		print "filterDisks processing"
+		
 	validDevs = ('sd', 'vd', 'hd')
 	
 	for partDetail in reversed(partList):
@@ -54,7 +61,10 @@ def filterDisks(partList):
 				print "filterDisks removing " + partDetail
 			
 			partList.remove(partDetail)
-	
+			
+	if DEBUG:
+		print "filterDisks complete"
+			
 	return partList
 
 def filterPartitions(partitions):
@@ -62,6 +72,8 @@ def filterPartitions(partitions):
 	Look at the parition list (devices), and build a dict of unique device
 	names that don't have paritions i.e. sda, but not sda1 or sda2 
 	"""
+	if DEBUG:
+		print "filterPartitions processing"		
 		
 	disks = {}
 	
@@ -82,7 +94,9 @@ def filterPartitions(partitions):
 			
 		disks[device] = blocks	
 		
-	pass
+	if DEBUG:
+		print "filterPartitions complete"				
+
 	return disks
 	
 def filterLVM(disks):
@@ -90,7 +104,9 @@ def filterLVM(disks):
 	Receive a list of potenial disks and compare them with existing disks (pv's)
 	used by the LVM, filtering out any disk known to the LVM 
 	"""
-		
+	if DEBUG:
+		print "filterLVM processing"
+				
 	(rc, pvsOut) = issueCMD('pvs --noheading')
 	
 	for pvData in pvsOut:
@@ -105,6 +121,9 @@ def filterLVM(disks):
 					
 				del disks[diskName]
 				
+	if DEBUG:
+		print "filterLVM complete"				
+		
 	return disks
 
 def filterBTRFS(disks):
@@ -115,22 +134,31 @@ def filterBTRFS(disks):
 	
 	NB. This needs to run under root to work
 	"""
-	
+	if DEBUG:
+		print "filterBTRFS processing"
+		
 	toDelete =[]
 	for disk in disks:
 		
-		(rc, btrfsOut) = issueCMD('btrfs filesystem show /dev/' + disk)
 		
-		if 'command not found' in btrfsOut[0]:
-			continue
-		elif btrfsOut[0].startswith('Label'):
-			toDelete.append(disk)
+		if os.path.exists('/usr/sbin/btrfs'):
+			(rc, btrfsOut) = issueCMD('btrfs filesystem show /dev/' + disk)
+
+			if rc == 0:
+				btrfsOut[0].startswith('Label')
+				toDelete.append(disk)
+			else:
+				if DEBUG: 
+					print "btrfs command failed" 
 			
 	for btrfsDisk in toDelete:
 		if DEBUG:
 			print "filterBTRFS dropping " + btrfsDisk
 		del disks[btrfsDisk]
-	
+		
+	if DEBUG:
+		print "filterBTRFS complete"	
+		
 	return disks
 
 def getRaid():

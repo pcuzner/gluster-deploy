@@ -19,6 +19,7 @@
 # 
 
 FSBLOCKSIZE=8192
+THINP_CHUNKSIZE="256K"
 
 function create_pv {
 	local devID=$1
@@ -94,13 +95,12 @@ function create_lv {
 	if [ $snapRequired == "YES" ]; then 
 		# need to allocate the thinpool then the thindev
 		local poolName=$lvName"pool"
-		echo "lvcreate -l $poolSize -T $vgName/$poolName -c 1M --poolmetadatasize $metadSize"
-		#lvcreate -L "$poolSize"m -T $vgName/$poolName -c 1M --poolmetadatasize ${metadSize}m
+		echo "lvcreate -l $poolSize -T $vgName/$poolName -c $THINP_CHUNKSIZE --poolmetadatasize $metadSize"
 		
 		# Under later releases of lvm2, an additional option is available to enable a spare
 		# metadata lv called --poolmetadataspare y|n. Under RHS 3.x this is enabled by default
 		# for other distributions this setting (if available) is recommended!
-		lvcreate -L ${poolSize}m -T $vgName/$poolName -c 1M --poolmetadatasize ${metadSize}m
+		lvcreate -L ${poolSize}m -T $vgName/$poolName -c $THINP_CHUNKSIZE --poolmetadatasize ${metadSize}m
 		rc=$?
 		
 		if [ $rc -eq 0 ]; then 

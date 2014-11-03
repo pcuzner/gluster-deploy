@@ -26,14 +26,18 @@
 #  #     filesystems properly                                    #
 #  ###############################################################
 
-import subprocess
-import sys
-import os
+import 	subprocess
+import 	sys
+import 	os
 
 from optparse import OptionParser
 
 def issueCMD(command):
-	""" issueCMD takes a command to issue to the host and returns the response as a list """
+	""" 
+	issueCMD takes a command to issue to the host and returns the response as a list 
+	NB. Should be replaced by python-sh, but python-sh is not in base pkgs for RHEL6
+	or RHS2.x/RHS3.
+	"""
 
 	cmdWords = command.split()
 	try:
@@ -44,122 +48,67 @@ def issueCMD(command):
 		response = 'command not found\n'
 		rc=12
 	
-	return (rc, response.split('\n'))							# use split to return a list
+	return (rc, response.split('\n')[:-1])		# use split to return a list,
+												# and skip the last null element
 
-def filterDisks(partList):
-	""" Take a list of devices from proc/partitions and return only the disk devices """
-	
-	if DEBUG:
-		print "filterDisks processing"
-		
-	validDevs = ('sd', 'vd', 'hd')
-	
-	for partDetail in reversed(partList):
-		(major, minor, blocks, device) = partDetail.split()
-		if not device.startswith(validDevs):
-			if DEBUG:
-				print "filterDisks removing " + partDetail
-			
-			partList.remove(partDetail)
-			
-	if DEBUG:
-		print "filterDisks complete"
-			
-	return partList
-
-def filterPartitions(partitions):
-	""" 
-	Look at the parition list (devices), and build a dict of unique device
-	names that don't have paritions i.e. sda, but not sda1 or sda2 
+def getDisks():
 	"""
-	if DEBUG:
-		print "filterPartitions processing"		
-		
-	disks = {}
+	use lsblk to determine a list of potentially usable empty drives
+	"""
+	disks = dict()
 	
-	for partDetail in partitions:
-		(major, minor, blocks, device) = partDetail.split()
-
-		if device[-1].isdigit():
-			num = filter(str.isdigit,device)
-			disk = device.replace(num,'')
-			if disks.has_key(disk):
-				
-				if DEBUG:
-					print "filterPartitions dropping " + disk
-					
-				del disks[disk]
-				
-			continue
+	if DEBUG:
+		print "\nLooking for available and unused disks;"
+	
+	#
+	# PKNAME would be useful, but this is not available in RHEL6	
+	(rc, lsblkOutput) = issueCMD('lsblk -l -n -b -t -o NAME,ROTA,SIZE,TYPE')
+	
+	# Look at the output (skip last null list element) 
+	for devStr in lsblkOutput:
+		
+		devInfo = devStr.split()
+		diskName = devInfo[0]
+		action = 'discarded'
+		if devInfo[3] == 'disk':
 			
-		disks[device] = blocks	
-		
-	if DEBUG:
-		print "filterPartitions complete"				
+			# we have a disk, but before we accept this as a candidate does
+			# it have any child devices (LVM, partitions)
+			(rc, depList) = issueCMD('lsblk -n -l /dev/%s'%(diskName))
 
-	return disks
-	
-def filterLVM(disks):
-	""" 
-	Receive a list of potenial disks and compare them with existing disks (pv's)
-	used by the LVM, filtering out any disk known to the LVM 
-	"""
-	if DEBUG:
-		print "filterLVM processing"
+			if len(depList) == 1:		# Just itself, we like these :)
 				
-	(rc, pvsOut) = issueCMD('pvs --noheading')
-	
-	for pvData in pvsOut:
-		if pvData:
-		
-			fullDevName = pvData.split()[0]
-			diskName = fullDevName.replace('/dev/','')
-			if diskName in disks:
-				
-				if DEBUG:
-					print "filterLVM dropping " + diskName
-					
-				del disks[diskName]
-				
-	if DEBUG:
-		print "filterLVM complete"				
-		
-	return disks
-
-def filterBTRFS(disks):
-	""" 
-	Receive potential disks to use for gluster, and attempt to query btrfs to see
-	if they are btrfs devices. If so, filter them out and return remaining devices
-	to the caller 
-	
-	NB. This needs to run under root to work
-	"""
-	if DEBUG:
-		print "filterBTRFS processing"
-		
-	toDelete =[]
-	for disk in disks:
-		
-		
-		if os.path.exists('/usr/sbin/btrfs'):
-			(rc, btrfsOut) = issueCMD('btrfs filesystem show /dev/' + disk)
-
-			if rc == 0:
-				btrfsOut[0].startswith('Label')
-				toDelete.append(disk)
+				if not btrfsDevice(diskName):
+					diskType = 'SSD' if devInfo[1] == 0 else 'HDD'
+					sizeKB = int(devInfo[2]) / 1024
+					disks[diskName] = {'disktype' : diskType, 'size' : sizeKB}
+					action='ACCEPTED - %s is a %d KB, empty %s'%(diskName,sizeKB,diskType)
+				else:
+					action += ", is a btrfs device"
 			else:
-				if DEBUG: 
-					print "btrfs command failed" 
-			
-	for btrfsDisk in toDelete:
+				action+=", has child devices"
+		else:
+			action += ", is an existing partition/LV"		
+
 		if DEBUG:
-			print "filterBTRFS dropping " + btrfsDisk
-		del disks[btrfsDisk]
-		
-	if DEBUG:
-		print "filterBTRFS complete"	
-		
+			print "  %s ... %s"%(diskName.ljust(42), action)
+			
+	
 	return disks
+
+def btrfsDevice(disk):
+	""" Check if the supplied device name is known to btrfs """
+	
+	response = False
+	
+	if os.path.exists('/usr/sbin/btrfs'):
+
+		(rc, btrfsOut) = issueCMD('btrfs filesystem show /dev/' + disk)
+		if rc == 0:
+			response = True
+	
+	return response
+
 
 def getRaid():
 	""" Look for a raid card and if found, return the type """
@@ -167,7 +116,7 @@ def getRaid():
 	cmd = "lspci | grep -i raid"
 	(rc, pciOutput) = issueCMD(cmd)
 
-	if pciOutput[0] == "":
+	if rc > 0:
 		raidCard = "none"
 	else:							# lspci has returned something
 		pciInfo = pciOutput[0].lower()
@@ -182,6 +131,7 @@ def getRaid():
 			raidCard = 'unknown'
 		
 	return raidCard
+	
 
 def getSysInfo():
 	""" Extract system attributes to associate with this node """
@@ -222,21 +172,13 @@ def getSysInfo():
 
 def main():
 	""" 
-	Invoke the filters to determine if there are any devices unused on the 
-	current host. 
-	
-	NB. MUST be run as root 
+	Generate an xml string of all eligible devices, and write to stdout
 	"""
 	
 	sysInfo = getSysInfo()
 	
-	# get list of partitions on this host
-	(rc, partList) = issueCMD('cat /proc/partitions')		# take element 2 onwards
-
-	devices = filterDisks(partList[2:-1])	# 1st two lines are headers, so ignore
-	disks = filterPartitions(devices)		# dict
-	noLVM = filterLVM(disks)
-	unusedDisks = filterBTRFS(noLVM)
+	freeDisks = getDisks()		# returns a dict - key is device name, each element is also
+								# a dict of 'disktype' and 'size'
 	
 	if OUTPUTTYPE == 'xml':
 		
@@ -247,8 +189,10 @@ def main():
 			 	+ "' osversion='" + sysInfo['osversion'] + "' tunedprofiles='" + sysInfo['tunedprofiles'] + "' />" ) 
 	
 	
-		for disk in unusedDisks:
-			deviceInfo += "<disk device='" + disk + "' sizeKB='" + unusedDisks[disk] + "' />"
+		for diskName in freeDisks:
+			deviceInfo += ( "<disk device='" + diskName + "' sizeKB='" + str(freeDisks[diskName]['size'])
+						+ "' diskType='" + freeDisks[diskName]['disktype'] 
+						+ "' />" )
 	
 		deviceInfo += "</data>"
 		
@@ -270,8 +214,9 @@ def main():
 					+   "\nGluster Version - " + sysInfo['glustervers'] + "\n\n"
 					+   "Unused Device List\n"
 					)
-		for disk in unusedDisks:
-			deviceInfo += "\t" + disk.ljust(6) + " "*4 + unusedDisks[disk] + " KB\n"
+		
+		for diskName in freeDisks:
+			deviceInfo += "\t" + "%s(%s)".ljust(10)%(diskName, freeDisks[diskName]['disktype']) + " "*4 + "%d KB\n"%(freeDisks[diskName]['size'])
 			
 		deviceInfo += "\n"
 
@@ -282,7 +227,7 @@ def main():
 if __name__ == '__main__':
 	
 	usageInfo = "usage: %prog [options]"
-	parser = OptionParser(usage=usageInfo,version="%prog 1.1")
+	parser = OptionParser(usage=usageInfo,version="%prog 1.2")
 	parser.add_option("-f","--format",dest="outputFormat",default="xml",type="choice",choices=['xml','txt'],help="Output format - xml (default) or txt")
 	parser.add_option("-d","--debug",dest="debug",action="store_true", default=False, help="provide more debug info")
 
@@ -291,5 +236,8 @@ if __name__ == '__main__':
 	DEBUG = options.debug
 	OUTPUTTYPE = options.outputFormat
 
-	main()
-
+	if os.getuid() == 0:
+		main()
+	else:
+		print "findDevs needs to be invoked as the root user\n"
+		

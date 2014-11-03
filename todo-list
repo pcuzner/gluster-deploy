@@ -95,7 +95,11 @@ Development Log
   - fix:syntax error in error handling when volCreate failed
 
 
-0.85 (planning)
+0.85 (pending)
+  - Updated findDevs to use lsblk, and added detection of ssd/hdd for candidate devices - DONE
+  - Changed default thinp chunk size from 1M to 256K in formatBrick.sh - DONE 
+  - Add device type to the UI
+  - Add ability to specify uid/guid at volume creation 
   - switch to "setuptools", and provide rpm spec file based on work from Niels
   - update findDevs.py to determine if ctdb is available (/usr/bin/ctdb present?)
   - add globals and deploy.cfg overrides for user credentials to enable systems to be subscribed to support services

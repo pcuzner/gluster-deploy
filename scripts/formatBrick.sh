@@ -245,7 +245,7 @@ function mount_filesystem {
 
 function set_tuned {
 	
-	/usr/bin/tuned-adm profile $tunedProfile
+	tuned-adm profile $tunedProfile
 
 	rc=$?
 	

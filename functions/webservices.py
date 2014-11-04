@@ -399,7 +399,7 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			
 			if thisNode.dmthinp == False:
 				thinpSupport = "NO"
-			if (thisNode.btrfs == False) or (not kernelCompare(thisNode.kernelVersion[:2])):
+			if (thisNode.btrfs == False) or (not kernelCompare(thisNode.kernelVersion)):
 				btrfsSupport = "NO"
 		
 		# For the cluster to support gluster snapshots, all versions must be >=
@@ -668,9 +668,9 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_QUIT(self):
 		"""Internal quit handler to terminate additional request threads """
 		
-		self.send_response(200)         # completed ok
+		#self.send_response(200)         # completed ok
 		#self.end_headers()              # blank line end of http response
-		self.server.stop=True
+		#self.server.stop=True
 		self.finish()
 
 		 
@@ -807,8 +807,8 @@ class RequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	
 		conn = httplib.HTTPConnection('localhost:%d'%(cfg.HTTPPORT))
 		conn.request('QUIT','/')
-		self.server.stop=True
-		conn.getresponse()
+		#self.server.stop=True
+		#conn.getresponse()
 		conn.close()
 						
 
@@ -825,7 +825,8 @@ class StoppableHTTPServer (SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServe
 		capability - SocketServer.ThreadingMixIn
 	"""
 	
-	daemon_threads = True 	# Ensure ctrl-c kills all spawned threads
+	daemon_threads = True 		# Ensure ctrl-c kills all spawned threads
+	allow_reuse_address = True	# faster rebinding to the tcp port
 	
 	def serve_forever(self):
 		"""Overridden method to insert the stop process"""

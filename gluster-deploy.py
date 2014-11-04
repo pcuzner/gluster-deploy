@@ -25,12 +25,15 @@
 #     so code changes will be necessary later
 #
 
-import logging
-import time
-import os
+import 	logging
+import 	time
+import 	os
+import 	sys
+import	threading
 
-from threading 	import active_count,enumerate
-from optparse 	import OptionParser			# command line option parsing
+
+
+from 	optparse 				import OptionParser			# command line option parsing
 
 from 	functions.network 		import getHostIP
 from 	functions.syscalls 		import issueCMD, generateKey
@@ -118,20 +121,27 @@ def main():
 			print '\ngluster-deploy web server stopped by user hitting - CTRL-C\n'
 
 		# Wait for threads to quiesce
-		print "\t\tWaiting for active threads(" + str(active_count()) + ") to quiesce"
+		numThreads = threading.active_count()
+		print "\t\tWaiting for %d active threads to quiesce"%(numThreads)
 		
-		if active_count() > 1:
-			threadList = enumerate()
-			threadNames = [ t.getName() for t in threadList ]
-			cfg.LOGGER.debug('%s http server threads running %s', time.asctime(), ','.join(threadNames))
+		threadsTerminated = True		
+		if numThreads > 1:
+			cfg.LOGGER.debug('%s http server has %d threads running', time.asctime(), numThreads)
+			mainThread = threading.currentThread()
+			threadList = threading.enumerate()
+		
+			for t in threadList:
+				if t is mainThread:
+					continue
+				t.join(1)				# wait for the thread to quiesce
+				if t.is_alive():
+					threadsTerminated = False
 			
-		while active_count() > 1:
-			try:
-				time.sleep(0.1)
-			except KeyboardInterrupt:
-				break
-		
-		httpd.server_close()
+		httpd.server_close()	
+		if not threadsTerminated:
+			cfg.LOGGER.debug('%s http server has %d threads running after quiesce time', time.asctime(), threading.active_count())
+			httpd.shutdown()
+
 
 		cfg.LOGGER.info('%s http server stopped - Now your work starts!', time.asctime())	
 
@@ -140,7 +150,7 @@ def main():
 		
 	print '\ngluster-deploy stopped.'
 	
-	exit()
+
 		
 
 if __name__ == '__main__':
@@ -180,3 +190,4 @@ if __name__ == '__main__':
 
 	main()
 
+	sys.exit(0)

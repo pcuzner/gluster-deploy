@@ -80,8 +80,8 @@ def kernelCompare(thisKernel, kernelTarget=''):
 		
 	result = False
 	
-	(k1version, k1release) = thisKernel.split('.')
-	(k2version, k2release) = kernelTarget.split('.')
+	(k1version, k1release) = thisKernel.split('.')[:2]
+	(k2version, k2release) = kernelTarget.split('.')[:2]
 	
 	if k1version >= k2version:
 		if int(k2release) >= int(k1release):

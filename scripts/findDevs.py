@@ -104,7 +104,8 @@ def btrfsDevice(disk):
 	if os.path.exists('/usr/sbin/btrfs'):
 
 		(rc, btrfsOut) = issueCMD('btrfs filesystem show /dev/' + disk)
-		if rc == 0:
+
+		if btrfsOut[0].lower().startswith('label'):
 			response = True
 	
 	return response
@@ -141,7 +142,9 @@ def getSysInfo():
 	sysInfo['kernel'] = '.'.join(os.uname()[2].split('.')[:3])
 	sysInfo['thinp'] = 'yes' if os.path.exists('/usr/sbin/thin_check') else 'no'
 	sysInfo['btrfs'] = 'yes' if os.path.exists('/usr/sbin/btrfs') else 'no'
-	sysInfo['glustervers'] = os.listdir('/usr/lib64/glusterfs')[0]
+	
+	(rc, gfsVersion) = issueCMD('glusterfs --version')
+	sysInfo['glustervers'] = gfsVersion[0].split()[1]
 	
 	sysInfo['memsize'] = open('/proc/meminfo').readlines()[0].split()[1]
 	sysInfo['cpucount'] = str(len([ p for p in open('/proc/cpuinfo').readlines() if p.startswith('processor')]))
@@ -154,7 +157,7 @@ def getSysInfo():
 
 	profileList = ['Not Available']
 	
-	if os.path.exists('/usr/bin/tuned-adm'):
+	if os.path.exists('/usr/bin/tuned-adm') or (os.path.exists('/usr/sbin/tuned-adm')):
 		
 		(rc, tunedOutput) = issueCMD('tuned-adm list')
 		if rc == 0:

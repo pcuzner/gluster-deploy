@@ -7,7 +7,7 @@ var consoleOK = (typeof console != "undefined") ? true : false;
 
 var debugON = true;
 
-var MAXREPLICA = 2;
+var MAXREPLICA = 3;
 var	TOTALBRICKS = 0;
 //var RAWGB = 0;
 //var BRICKSUSED = 0;

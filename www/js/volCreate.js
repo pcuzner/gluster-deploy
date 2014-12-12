@@ -174,7 +174,7 @@ function useBrick() {
 			if ( numSelected == replicaCount ) {
 				// Using an assoc array to hold the server names, then 
 				// this can be 'counted' to ensure that all the servers 
-				// providied are unique
+				// provided are unique
 
 				
 				var servers = {}, brickNames = [], brickString = "";
@@ -192,7 +192,7 @@ function useBrick() {
 				}
 
 				// The number of keys = number of unique servers in the array
-				if ( Object.keys(servers).length == MAXREPLICA ) {
+				if ( Object.keys(servers).length == replicaCount ) {
 					// remove the last separator
 					brickString = brickString.slice(0,-1);
 				

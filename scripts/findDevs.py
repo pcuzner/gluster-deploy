@@ -104,9 +104,11 @@ def btrfsDevice(disk):
 	if os.path.exists('/usr/sbin/btrfs'):
 
 		(rc, btrfsOut) = issueCMD('btrfs filesystem show /dev/' + disk)
+		
+		if rc == 0:
+			if btrfsOut[0].lower().startswith('label'):
+				response = True
 
-		if btrfsOut[0].lower().startswith('label'):
-			response = True
 	
 	return response
 

@@ -300,7 +300,12 @@ function create_brick {
 	update_fstab $devPath  || return $?
 	
 	# mount it
-	mount_filesystem || return $?
+	if [ -e "/usr/bin/systemctl" ]; then
+		logger "formatBrick.sh reloading systemd to pick up fstab change"
+		/usr/bin/systemctl daemon-reload
+	else
+		mount_filesystem || return $?
+	fi
 
 	# set the requested tuned profile
 	if [ -n "$tunedProfile" ] ; then 

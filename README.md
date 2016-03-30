@@ -15,6 +15,9 @@ Currently the 'wizard' implements the following;
  - gather information about the use case for gluster  
  - Apply the use case information to format and mount the bricks across all nodes
 
+**_NB._** *This project is no longer actively maintained/developed. For an automated way to deploy*
+*gluster, check out the gdeploy project https://github.com/gluster/gdeploy*
+
 **Requirements**  
  - python >= 2.6  
  - openssh server and client on each gluster node
